@@ -1,0 +1,132 @@
+:root {
+  font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: #183a35;
+  background: #f4f5ef;
+  font-synthesis: none;
+  line-height: 1.6;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 32px 28px 48px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #d2ddd6;
+  padding-bottom: 24px;
+}
+.brand {
+  font-weight: 750;
+  font-size: 19px;
+}
+.badge {
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 1px solid #becdc2;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.intro {
+  padding: 48px 0 22px;
+}
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.13em;
+  font-weight: 700;
+  color: #536b5d;
+}
+h1 {
+  font-size: clamp(32px, 6vw, 48px);
+  letter-spacing: -0.03em;
+  line-height: 1.3;
+  margin: 14px 0 20px;
+}
+.summary {
+  max-width: 580px;
+  color: #53645b;
+  font-size: 17px;
+}
+.card {
+  padding: 24px 28px;
+  margin-top: 18px;
+  background: #fffef9;
+  border: 1px solid #d6ded3;
+  border-radius: 12px;
+}
+h2 {
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+p {
+  margin: 8px 0;
+}
+.muted {
+  color: #647368;
+  font-size: 14px;
+}
+.health {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.success {
+  color: #21633f;
+}
+.error {
+  color: #a3322d;
+}
+button {
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 7px;
+  padding: 11px 18px;
+  background: #183a35;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+button:hover {
+  background: #2d5547;
+}
+button:focus-visible {
+  outline: 3px solid #ac7225;
+  outline-offset: 3px;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+footer {
+  margin-top: 28px;
+  font-size: 12px;
+  color: #647368;
+}
+@media (max-width: 520px) {
+  main {
+    padding: 24px 18px;
+  }
+  header {
+    flex-wrap: wrap;
+  }
+  .intro {
+    padding-top: 32px;
+  }
+  .card {
+    padding: 22px;
+  }
+  .health {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+}

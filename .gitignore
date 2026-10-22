@@ -1,0 +1,19 @@
+# Local credentials and configuration (at every directory level)
+.env
+.env.*
+!.env.example
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+# Frontend and local verification artifacts
+node_modules/
+dist/
+*.tsbuildinfo
+output/
+.playwright-cli/
+*.log
+.DS_Store
