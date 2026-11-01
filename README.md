@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度：Day 1 工程骨架。** 已有 FastAPI 健康接口和可检查后端连接的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；尚无模型、Agent、RAG、数据库或工单能力。今天运行无需密钥，也不产生模型费用。
+**当前进度：Day 2 数据与评测雏形。** 已有 FastAPI 健康接口和可检查后端连接的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；尚无模型、Agent、RAG、数据库或工单能力。今天运行无需密钥，也不产生模型费用。
 
 ## 快速启动（Windows PowerShell）
 
@@ -85,3 +85,11 @@ git check-ignore .env .env.local apps/web/.env.local
 范围：[产品与项目约束](docs/scope.md) · 进度：[Day 1 开发日志](docs/devlog/2026-10-22-day-01.md) · 计划：[56 天每日计划](doc/planning/SupportOps-Agent-56天每日计划.md)。
 
 版本兼容参考：[Vite 环境要求](https://vite.dev/guide/)、[FastAPI 最小应用](https://fastapi.tiangolo.com/tutorial/first-steps/)。安装版本以锁定文件和本次实际检查结果为准。
+
+## Day 2 离线数据
+
+合成数据见 [数据说明](data/demo/README.md)，含2个租户、8篇文档、10条历史工单和12条开发案例。
+
+运行 `.\.venv\Scripts\python.exe scripts/validate_demo.py` 检查结构与关联。开发集不是冻结测试集；当前未运行模型或检索评测。
+
+[Day 2 报告](docs/devlog/2026-11-01-day-02.md) · [故障检查原始结果](reports/day-02-data-validation.json)。

@@ -1,0 +1,10 @@
+{"id": "ticket-001", "tenant_id": "tenant-alpha", "workspace_id": "ws-alpha", "synthetic": true, "title": "分钟限流", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "降低并发并按 Retry-After 重试"}
+{"id": "ticket-002", "tenant_id": "tenant-beta", "workspace_id": "ws-beta", "synthetic": true, "title": "分钟限流", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "降低并发并按 Retry-After 重试"}
+{"id": "ticket-003", "tenant_id": "tenant-alpha", "workspace_id": "ws-alpha", "synthetic": true, "title": "月额度耗尽", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "停止自动重试，转人工调整额度"}
+{"id": "ticket-004", "tenant_id": "tenant-beta", "workspace_id": "ws-beta", "synthetic": true, "title": "月额度耗尽", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "停止自动重试，转人工调整额度"}
+{"id": "ticket-005", "tenant_id": "tenant-alpha", "workspace_id": "ws-alpha", "synthetic": true, "title": "无效凭据", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "更新凭据，不记录 token"}
+{"id": "ticket-006", "tenant_id": "tenant-beta", "workspace_id": "ws-beta", "synthetic": true, "title": "无效凭据", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "更新凭据，不记录 token"}
+{"id": "ticket-007", "tenant_id": "tenant-alpha", "workspace_id": "ws-alpha", "synthetic": true, "title": "工作区权限不足", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "联系管理员核对授权"}
+{"id": "ticket-008", "tenant_id": "tenant-beta", "workspace_id": "ws-beta", "synthetic": true, "title": "工作区权限不足", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "联系管理员核对授权"}
+{"id": "ticket-009", "tenant_id": "tenant-alpha", "workspace_id": "ws-alpha", "synthetic": true, "title": "升级后仍有429", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "升级不重置额度，检查用量和日志"}
+{"id": "ticket-010", "tenant_id": "tenant-beta", "workspace_id": "ws-beta", "synthetic": true, "title": "升级后仍有429", "description": "虚构历史案例，用于后续工具样例，不代表当前工作区事件。", "status": "resolved", "resolution": "升级不重置额度，检查用量和日志"}

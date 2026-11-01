@@ -1,0 +1,40 @@
+{
+  "data_version": "clouddesk-demo-v1",
+  "synthetic": true,
+  "product": "CloudDesk",
+  "versions": [
+    "1.0",
+    "2.0"
+  ],
+  "plans": {
+    "starter": {
+      "requests_per_minute": 60,
+      "monthly_requests": 10000
+    },
+    "team": {
+      "requests_per_minute": 300,
+      "monthly_requests": 100000
+    }
+  },
+  "errors": {
+    "401": "invalid_or_expired_token",
+    "403": "resource_forbidden",
+    "429": [
+      "minute_rate_limit",
+      "monthly_quota_exhausted"
+    ]
+  },
+  "roles": {
+    "member": "仅查看本租户资源；仅批准本人动作",
+    "support": "查看被分配租户资源；不能自行跨租户或绕过审批"
+  },
+  "retry": {
+    "minute_limit": "等待 Retry-After 秒，有限次数重试并加入抖动",
+    "monthly_quota": "停止自动重试，等待额度重置或人工调整"
+  },
+  "version_behavior": {
+    "1.0": "429 只有 HTTP 状态，需结合用量和日志判断原因",
+    "2.0": "429 提供 reason；分钟限流附带 Retry-After 秒数"
+  },
+  "quota_reset": "每月首日 00:00 UTC；升级版本不重置额度"
+}

@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-01",
+  "data_version": "clouddesk-demo-v1",
+  "fault_checks": [
+    {
+      "fault": "unknown_source",
+      "exit_code": 1,
+      "stderr": "validation failed: unknown source: dev-001: missing#section"
+    },
+    {
+      "fault": "duplicate_id",
+      "exit_code": 1,
+      "stderr": "validation failed: duplicate case id"
+    },
+    {
+      "fault": "tenant_mismatch",
+      "exit_code": 1,
+      "stderr": "validation failed: ticket tenant mismatch: ticket-001"
+    },
+    {
+      "fault": "missing_answer_evidence",
+      "exit_code": 1,
+      "stderr": "validation failed: 1 validation error for EvalCase\n  Value error, answer requires relevant_sources [type=value_error, input_value={'id': 'dev-001', 'scenar...wer', 'synthetic': True}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.14/v/value_error"
+    }
+  ]
+}

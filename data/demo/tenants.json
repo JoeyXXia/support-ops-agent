@@ -1,0 +1,50 @@
+[
+  {
+    "id": "tenant-alpha",
+    "name": "Alpha Demo",
+    "synthetic": true,
+    "users": [
+      {
+        "id": "user-alpha",
+        "role": "member"
+      },
+      {
+        "id": "support-alpha",
+        "role": "support"
+      }
+    ],
+    "workspaces": [
+      {
+        "id": "ws-alpha",
+        "plan": "starter",
+        "version": "2.0",
+        "minute_requests": 60,
+        "monthly_requests": 8000
+      }
+    ]
+  },
+  {
+    "id": "tenant-beta",
+    "name": "Beta Demo",
+    "synthetic": true,
+    "users": [
+      {
+        "id": "user-beta",
+        "role": "member"
+      },
+      {
+        "id": "support-beta",
+        "role": "support"
+      }
+    ],
+    "workspaces": [
+      {
+        "id": "ws-beta",
+        "plan": "team",
+        "version": "1.0",
+        "minute_requests": 30,
+        "monthly_requests": 100000
+      }
+    ]
+  }
+]
