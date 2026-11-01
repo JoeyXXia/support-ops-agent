@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "http_status": 429,
+  "code": "credit_balance_exhausted",
+  "type": "insufficient_quota",
+  "request_id": "req_aea08f31fa454909971dd30c50fb8068"
+}

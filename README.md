@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度：Day 2 数据与评测雏形。** 已有 FastAPI 健康接口和可检查后端连接的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；尚无模型、Agent、RAG、数据库或工单能力。今天运行无需密钥，也不产生模型费用。
+**当前进度：Day 3 模型适配代码完成，真实调用被API余额阻塞。** 已有 FastAPI 健康接口和可检查后端连接的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；尚无Agent loop、RAG、数据库或工单能力。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -93,3 +93,24 @@ git check-ignore .env .env.local apps/web/.env.local
 运行 `.\.venv\Scripts\python.exe scripts/validate_demo.py` 检查结构与关联。开发集不是冻结测试集；当前未运行模型或检索评测。
 
 [Day 2 报告](docs/devlog/2026-11-01-day-02.md) · [故障检查原始结果](reports/day-02-data-validation.json)。
+
+## Day 3 模型边界
+
+从根目录运行：
+
+```powershell
+.\.venv\Scripts\python.exe scripts/model_smoke.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+# 显式调用一次真实API；默认最多32输出token，无自动重试
+.\.venv\Scripts\python.exe scripts/model_smoke.py --live
+```
+
+服务端从项目根目录 `.env.local` 加载 `OPENAI_API_KEY`（已有进程环境优先），模型默认 `gpt-4.1-mini`，可通过进程环境或 `.env.local` 中的 `OPENAI_MODEL` 覆盖。`.env.example` 只提供空值模板，真实密钥不能进入版本管理或 `VITE_*`。
+
+provider使用Responses API、20秒总超时、`store=False`和SDK `max_retries=0`。接口统一文本、函数调用参数、usage与请求ID；mock明确标记，usage为空，不伪造token统计。当前只支持文本消息输入与函数调用输出，尚未实现工具结果回填、Agent loop、流式或自动重试。调用者使用完live provider需调用`await provider.close()`。
+
+错误仅暴露分类、可重试标记和请求ID，不输出原始请求、响应错误正文或密钥。`quota_exhausted`不重试，临时`rate_limit`可供后续策略决定是否重试。错误标记并不代表今天已实现重试。
+
+本次真实调用被余额耗尽阻塞；先检查[API账单](https://platform.openai.com/settings/organization/billing)，恢复额度后再手动运行一次live命令。ChatGPT订阅与API账单分别管理。当前模型为固定的连通实验选择，没有模型质量或成本对比结论。
+
+[Day 3 报告](docs/devlog/2026-11-01-day-03.md) · [真实请求安全元数据](reports/day-03-live.json)。
