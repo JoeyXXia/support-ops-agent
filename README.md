@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度：Day 3 模型适配代码完成，真实调用被API余额阻塞。** 已有 FastAPI 健康接口和可检查后端连接的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；尚无Agent loop、RAG、数据库或工单能力。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度：Day 6 本地mock页面、运行接口与离线CI配置完成；真实模型成功验收仍待API余额恢复。** 已有 FastAPI 健康接口和可检查后端连接的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；尚无RAG、数据库或工单能力。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -72,7 +72,7 @@ git check-ignore .env .env.local apps/web/.env.local
 
 故障演示：停掉后端，在页面点“重新检查”，应出现失败；重新启动后端，再点一次，应恢复正常。不能一直显示加载或沿用旧的成功状态。端口已占用时先检查已有进程；Vite 配置 `strictPort`，不会悄悄切换端口。
 
-`npm run build` 仅验证可生成前端产物；Vite 代理只用于开发，生产反向代理和部署留到后续里程碑。Day 1 不引入自动化测试框架或 CI，验收证据见开发日志。
+`npm run build` 仅验证可生成前端产物；Vite 代理只用于开发，生产反向代理和部署留到后续里程碑。Day 1 验收证据见开发日志；Day 6已补充离线测试门禁与CI配置。
 
 ## 当前目录与依赖用途
 
@@ -114,3 +114,45 @@ provider使用Responses API、20秒总超时、`store=False`和SDK `max_retries=
 本次真实调用被余额耗尽阻塞；先检查[API账单](https://platform.openai.com/settings/organization/billing)，恢复额度后再手动运行一次live命令。ChatGPT订阅与API账单分别管理。当前模型为固定的连通实验选择，没有模型质量或成本对比结论。
 
 [Day 3 报告](docs/devlog/2026-11-01-day-03.md) · [真实请求安全元数据](reports/day-03-live.json)。
+
+## Day 4 只读工具
+
+```powershell
+.\.venv\Scripts\python.exe scripts/tools_smoke.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+`ToolExecutor.execute(name, arguments, context=...)`按注册表选择工具、严格验证参数，再检查身份与工作区授权，最后调用业务函数。`definitions()`导出兼容现有模型边界的工具定义。两个工具为`get_workspace_usage`和`get_recent_errors`；它们仅返回本地合成数据。
+
+身份通过独立、不可变的`AuthContext`传入，不能放进模型参数。member只访问本租户；support只访问受信上下文明确分配的租户，默认没有分配。未知工作区和未授权工作区返回相同的`not_found`结果，避免透露存在性。结果使用`ok/data/error`统一结构；错误不包含原始参数、文件路径或私有数据。
+
+当前CLI中身份是开发者显式构造的演示上下文，尚未接入HTTP登录认证。不能把请求体直接转换成AuthContext当作认证。后续接入API时，user_id、tenant_id、role与支持人员分配必须由服务端可信会话产生。工具层不提供write工具，也不执行模型loop。
+
+[Day 4报告](docs/devlog/2026-11-02-day-04.md) · [原始检查输出](reports/day-04-validation.json)。
+
+## Day 5 原生 Agent loop
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 scripts/agent_smoke.py
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
+
+该CLI仅运行已标注mock的固定ws-alpha场景，调用真实本地只读工具，不调用模型API。预期2次模型替身调用、2次串行工具调用，返回60/60分钟用量、8000/10000月用量和Retry-After=20秒的排查结论。
+
+`AgentLoop(provider, executor).run(question, context=trusted_context)`支持注入模型provider与可信执行上下文。上限为6次模型调用、默认8次工具调用；默认每次模型/工具操作超时20秒，单操作可配置至60秒。预算耗尽、重复调用、工具错误、模型异常和超时均返回明确状态。错误后当前策略为立即停止，不尝试自动修复或重试。
+
+Responses适配器回填原始输出项，包含无状态请求需要保留的加密reasoning数据；工具输出以相同call_id对应function_call_output。该原始数据只用于协议延续，不展示为思维链。身份不会从工具参数读取。
+
+[Day 5报告](docs/devlog/2026-11-02-day-05.md) · [离线检查](reports/day-05-validation.json) · [mock运行轨迹](reports/day-05-mock-run.json)。
+
+## Day 6 本地演示与CI
+
+按上方两个终端启动后打开 http://127.0.0.1:5173 ，点击“开始排查”。页面通过POST /api/runs提交问题，取得202与运行ID，然后每500ms查询GET /api/runs/{id}，展示状态、工具步骤和最终答案。每个HTTP请求超时8秒；轮询达到约3分钟后停止等待，可重新查询同一运行。
+
+后端POST /runs只接受question（1至2000字符），固定服务端user-alpha身份和mock模式。已接受的任务独立于单个HTTP连接；关闭页面不会取消任务。GET /runs/{id}返回当前事件与结果，未知或被清理ID返回404。
+
+该版本只供本机开发：单进程内存记录，最多4个活跃任务、100条记录，满载503，记录满时先清理最旧已结束记录；重启丢失。请使用单个Uvicorn worker，不要公开部署或用于多访客隔离。没有登录、持久任务队列或断线自动恢复。
+
+离线Python门禁：`.\.venv\Scripts\python.exe -X utf8 scripts/check_offline.py`。前端门禁：`npm.cmd --prefix apps/web run format:check`、`run typecheck`、`run build`。CI使用相同命令，且不传入API密钥；依赖下载仍需网络。配置位于.github/workflows/ci.yml，推送后才能确认GitHub托管环境的实际结果。
+
+本地30秒录屏：output/playwright/day6-demo-30s.webm（被Git忽略）。演示步骤：输入ws-alpha的429问题→开始排查→观察运行ID与四条事件→阅读分钟限流结论。故障演示与截图详见[Day 6报告](docs/devlog/2026-11-02-day-06.md)。

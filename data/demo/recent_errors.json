@@ -1,0 +1,74 @@
+[
+  {
+    "workspace_id": "ws-alpha",
+    "version": "2.0",
+    "synthetic": true,
+    "event": {
+      "id": "ws-alpha-error-1",
+      "occurred_at": "2026-11-01T00:00:00Z",
+      "status_code": 429,
+      "reason": "minute_rate_limit",
+      "retry_after_seconds": 20
+    }
+  },
+  {
+    "workspace_id": "ws-alpha",
+    "version": "2.0",
+    "synthetic": true,
+    "event": {
+      "id": "ws-alpha-error-2",
+      "occurred_at": "2026-11-01T00:00:01Z",
+      "status_code": 429,
+      "reason": "minute_rate_limit",
+      "retry_after_seconds": 20
+    }
+  },
+  {
+    "workspace_id": "ws-alpha",
+    "version": "2.0",
+    "synthetic": true,
+    "event": {
+      "id": "ws-alpha-error-3",
+      "occurred_at": "2026-11-01T00:00:02Z",
+      "status_code": 429,
+      "reason": "minute_rate_limit",
+      "retry_after_seconds": 20
+    }
+  },
+  {
+    "workspace_id": "ws-beta",
+    "version": "1.0",
+    "synthetic": true,
+    "event": {
+      "id": "ws-beta-error-1",
+      "occurred_at": "2026-11-01T00:00:00Z",
+      "status_code": 429,
+      "reason": null,
+      "retry_after_seconds": null
+    }
+  },
+  {
+    "workspace_id": "ws-beta",
+    "version": "1.0",
+    "synthetic": true,
+    "event": {
+      "id": "ws-beta-error-2",
+      "occurred_at": "2026-11-01T00:00:01Z",
+      "status_code": 429,
+      "reason": null,
+      "retry_after_seconds": null
+    }
+  },
+  {
+    "workspace_id": "ws-beta",
+    "version": "1.0",
+    "synthetic": true,
+    "event": {
+      "id": "ws-beta-error-3",
+      "occurred_at": "2026-11-01T00:00:02Z",
+      "status_code": 429,
+      "reason": null,
+      "retry_after_seconds": null
+    }
+  }
+]

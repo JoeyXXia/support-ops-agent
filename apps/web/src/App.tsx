@@ -1,72 +1,100 @@
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 
-type HealthState =
-  | { kind: "loading" }
-  | { kind: "success" }
-  | { kind: "error"; message: string };
+type Run = {
+  id: string;
+  question: string;
+  mode: string;
+  status: string;
+  reason: string;
+  answer: string;
+  events: Array<{
+    kind: string;
+    step: number;
+    tool?: string;
+    call_id?: string;
+    result?: { ok: boolean };
+  }>;
+};
+
+async function api<T>(path: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`/api${path}`, {
+    ...options,
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok)
+    throw new Error(`请求失败（HTTP ${response.status}），请检查服务或输入。`);
+  return response.json() as Promise<T>;
+}
 
 export function App() {
-  const [health, setHealth] = useState<HealthState>({ kind: "loading" });
-  const [attempt, setAttempt] = useState(0);
+  const [question, setQuestion] = useState(
+    "CloudDesk ws-alpha升级后一直返回429，帮我排查原因。",
+  );
+  const [run, setRun] = useState<Run | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 5000);
+    if (!run || !["queued", "running"].includes(run.status) || error) return;
     let active = true;
-
-    async function checkHealth() {
+    let timer: ReturnType<typeof setTimeout>;
+    const startedAt = Date.now();
+    const id = run.id;
+    async function poll() {
       try {
-        const response = await fetch("/api/health", {
-          signal: controller.signal,
-          cache: "no-store",
-        });
-        if (!response.ok)
-          throw new Error(`健康检查失败（HTTP ${response.status}）。`);
-        const body: unknown = await response.json();
-        if (
-          typeof body !== "object" ||
-          body === null ||
-          !("status" in body) ||
-          body.status !== "ok" ||
-          !("service" in body) ||
-          body.service !== "supportops-api"
-        ) {
-          throw new Error("服务返回了无法识别的健康状态。");
+        const current = await api<Run>(`/runs/${id}`);
+        if (!active) return;
+        setRun(current);
+        if (["queued", "running"].includes(current.status)) {
+          if (Date.now() - startedAt >= 180000)
+            throw new Error("等待已达3分钟，请重新查询该运行。");
+          timer = setTimeout(poll, 500);
         }
-        if (active) setHealth({ kind: "success" });
-      } catch (error) {
-        if (active) {
-          setHealth({
-            kind: "error",
-            message: controller.signal.aborted
-              ? "连接超时，请检查后端是否启动。"
-              : error instanceof Error
-                ? error.message
-                : "无法连接后端服务。",
-          });
-        }
-      } finally {
-        window.clearTimeout(timeout);
+      } catch (e) {
+        if (active) setError(e instanceof Error ? e.message : "读取运行失败。");
       }
     }
-    void checkHealth();
+    timer = setTimeout(poll, 100);
     return () => {
       active = false;
-      window.clearTimeout(timeout);
-      controller.abort();
+      clearTimeout(timer);
     };
-  }, [attempt]);
+  }, [run?.id, retry, error]);
 
-  function retry() {
-    setHealth({ kind: "loading" });
-    setAttempt((value) => value + 1);
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy || !question.trim()) return;
+    setBusy(true);
+    setError("");
+    setRun(null);
+    try {
+      const created = await api<Run>("/runs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question }),
+      });
+      setRun(created);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "提交失败。");
+    } finally {
+      setBusy(false);
+    }
   }
-
+  const running = !!run && ["queued", "running"].includes(run.status);
+  const labels: Record<string, string> = {
+    queued: "等待执行",
+    running: "运行中",
+    completed: "完成",
+    failed: "失败",
+    stopped: "已停止",
+  };
   return (
     <main>
       <header>
         <span className="brand">SupportOps Agent</span>
-        <span className="badge">Day 1 · 工程起点</span>
+        <span className="badge">Day 6 · 本地 mock</span>
       </header>
       <section className="intro">
         <p className="eyebrow">CLOUDDESK / 技术支持</p>
@@ -75,38 +103,72 @@ export function App() {
           <br />
           都有据可查。
         </h1>
-        <p className="summary">
-          从 API 429
-          问题开始，逐步串起状态查询、文档检索与人工批准后的工单创建。
-        </p>
+        <p className="summary">输入问题，查看只读工具步骤和排障结果。</p>
       </section>
-      <section className="card" aria-labelledby="scenario-title">
-        <p className="eyebrow">主场景</p>
-        <h2 id="scenario-title">升级后，API 一直返回 429</h2>
-        <p>“帮我查原因；解决不了就建个技术支持工单。”</p>
+      <section className="card">
+        <h2>429 排障演示</h2>
         <p className="muted">
-          当前仅完成服务联通；排障对话、工具调用和建单将在后续开发。
+          当前为固定 ws-alpha 场景的确定性
+          mock，未调用真实模型。其他问题将提示补充信息。
         </p>
+        <form onSubmit={submit}>
+          <label htmlFor="question">你的问题</label>
+          <textarea
+            id="question"
+            value={question}
+            maxLength={2000}
+            rows={3}
+            onChange={(e) => setQuestion(e.target.value)}
+            required
+          />
+          <button disabled={busy || running || !question.trim()}>
+            {busy ? "提交中…" : running ? "排查中…" : "开始排查"}
+          </button>
+        </form>
       </section>
-      <section className="card health" aria-labelledby="health-title">
-        <div>
-          <h2 id="health-title">后端连接</h2>
-          <div role="status" aria-live="polite" aria-atomic="true">
-            {health.kind === "loading" && <p>正在检查服务…</p>}
-            {health.kind === "success" && (
-              <p className="success">● 服务正常 · supportops-api</p>
-            )}
-            {health.kind === "error" && (
-              <p className="error">{health.message} 请确认服务已启动后重试。</p>
-            )}
-          </div>
-        </div>
-        <button onClick={retry} disabled={health.kind === "loading"}>
-          {health.kind === "loading" ? "检查中…" : "重新检查"}
-        </button>
-      </section>
+      {error && (
+        <section className="card" role="alert">
+          <p className="error">{error}</p>
+          {run && (
+            <button
+              onClick={() => {
+                setError("");
+                setRetry((v) => v + 1);
+              }}
+            >
+              重新查询当前运行
+            </button>
+          )}
+        </section>
+      )}
+      {run && (
+        <section className="card" aria-live="polite">
+          <h2>运行：{labels[run.status] || run.status}</h2>
+          <p className="muted">
+            ID：{run.id} · {run.mode}
+          </p>
+          <ol>
+            {run.events.map((e, i) => (
+              <li key={i}>
+                步骤 {e.step} ·{" "}
+                {e.kind === "tool.finished"
+                  ? `工具 ${e.tool} ${e.result?.ok === false ? "失败" : "完成"}（${e.call_id}）`
+                  : e.kind === "model.error"
+                    ? "模型步骤失败"
+                    : "模型步骤完成"}
+              </li>
+            ))}
+          </ol>
+          {run.answer && <p className="answer">{run.answer}</p>}
+          {["failed", "stopped"].includes(run.status) && (
+            <p className="error">
+              执行已结束：{run.reason}。请核对问题或联系开发者。
+            </p>
+          )}
+        </section>
+      )}
       <footer>
-        CloudDesk 是虚构的 SaaS 产品。本项目为合成场景演示，未接入商业生产系统。
+        CloudDesk为合成演示。固定本地演示身份；运行保存在内存，重启丢失。当前服务仅用于本机开发。
       </footer>
     </main>
   );

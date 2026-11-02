@@ -28,8 +28,11 @@ def normalize(response, model: str) -> ModelResponse:
         if response.status != "completed":
             raise ValueError("incomplete response")
         calls = []
+        output_items = []
         texts = []
         for item in response.output:
+            if hasattr(item, "model_dump"):
+                output_items.append(item.model_dump(exclude_none=True))
             if item.type == "function_call":
                 arguments = json.loads(item.arguments)
                 if not isinstance(arguments, dict):
@@ -60,6 +63,7 @@ def normalize(response, model: str) -> ModelResponse:
         )
         return ModelResponse(
             text=text,
+            output_items=output_items,
             tool_calls=calls,
             usage=usage,
             request_id=response._request_id,
@@ -100,12 +104,15 @@ class OpenAIProvider:
             async with asyncio.timeout(self.timeout):
                 response = await self.client.responses.create(
                     model=self.model,
-                    input=[m.model_dump() for m in request.messages],
+                    input=[
+                        m.model_dump() if hasattr(m, "model_dump") else m for m in request.messages
+                    ],
                     tools=[
                         dict(type="function", strict=False, **t.model_dump()) for t in request.tools
                     ],
                     max_output_tokens=request.max_output_tokens,
                     store=False,
+                    include=["reasoning.encrypted_content"],
                 )
             result = normalize(response, self.model)
             logger.info("model.finished mode=live request_id=%s", result.request_id)

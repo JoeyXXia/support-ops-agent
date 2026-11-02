@@ -1,0 +1,73 @@
+{
+  "status": "completed",
+  "reason": "answer",
+  "answer": "[mock] ws-alpha分钟用量60/60，月用量8000/10000；日志表明分钟限流，按Retry-After等待20秒并降低请求频率。",
+  "model_calls": 2,
+  "tool_calls": 2,
+  "events": [
+    {
+      "step": 1,
+      "kind": "model.finished",
+      "mode": "mock",
+      "request_id": null
+    },
+    {
+      "step": 1,
+      "kind": "tool.finished",
+      "call_id": "usage-1",
+      "tool": "get_workspace_usage",
+      "result": {
+        "tool": "get_workspace_usage",
+        "ok": true,
+        "data": {
+          "workspace_id": "ws-alpha",
+          "plan": "starter",
+          "version": "2.0",
+          "minute_requests": 60,
+          "minute_limit": 60,
+          "monthly_requests": 8000,
+          "monthly_limit": 10000,
+          "synthetic": true
+        },
+        "error": null
+      }
+    },
+    {
+      "step": 1,
+      "kind": "tool.finished",
+      "call_id": "errors-1",
+      "tool": "get_recent_errors",
+      "result": {
+        "tool": "get_recent_errors",
+        "ok": true,
+        "data": {
+          "workspace_id": "ws-alpha",
+          "events": [
+            {
+              "id": "ws-alpha-error-3",
+              "occurred_at": "2026-11-01T00:00:02Z",
+              "status_code": 429,
+              "reason": "minute_rate_limit",
+              "retry_after_seconds": 20
+            },
+            {
+              "id": "ws-alpha-error-2",
+              "occurred_at": "2026-11-01T00:00:01Z",
+              "status_code": 429,
+              "reason": "minute_rate_limit",
+              "retry_after_seconds": 20
+            }
+          ],
+          "synthetic": true
+        },
+        "error": null
+      }
+    },
+    {
+      "step": 2,
+      "kind": "model.finished",
+      "mode": "mock",
+      "request_id": null
+    }
+  ]
+}

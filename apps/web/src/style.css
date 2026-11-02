@@ -130,3 +130,25 @@ footer {
     gap: 12px;
   }
 }
+
+textarea {
+  width: 100%;
+  resize: vertical;
+  margin: 10px 0 16px;
+  padding: 12px;
+  font: inherit;
+  border: 1px solid #becdc2;
+  border-radius: 7px;
+  background: white;
+  color: #183a35;
+}
+.answer {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.muted {
+  overflow-wrap: anywhere;
+}
+li {
+  margin: 8px 0;
+}

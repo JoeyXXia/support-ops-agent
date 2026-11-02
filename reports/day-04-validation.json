@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-02",
+  "synthetic": true,
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -v",
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "test_configuration (test_providers.ProvidersTest.test_configuration) ... ok\ntest_http_failures (test_providers.ProvidersTest.test_http_failures) ... ok\ntest_incomplete_and_unknown_output (test_providers.ProvidersTest.test_incomplete_and_unknown_output) ... ok\ntest_mock_deterministic (test_providers.ProvidersTest.test_mock_deterministic) ... ok\ntest_success_and_request_options (test_providers.ProvidersTest.test_success_and_request_options) ... ok\ntest_timeout (test_providers.ProvidersTest.test_timeout) ... ok\ntest_tool_calls (test_providers.ProvidersTest.test_tool_calls) ... ok\ntest_bad_arguments_never_reach_business (test_tools.ToolTests.test_bad_arguments_never_reach_business) ... ok\ntest_empty_and_corrupt_event_data (test_tools.ToolTests.test_empty_and_corrupt_event_data) ... tool.failed tool=get_recent_errors code=internal_error\nok\ntest_errors_order_limit_and_version (test_tools.ToolTests.test_errors_order_limit_and_version) ... ok\ntest_identity_not_accepted_from_dictionary (test_tools.ToolTests.test_identity_not_accepted_from_dictionary) ... ok\ntest_limit_strictness (test_tools.ToolTests.test_limit_strictness) ... ok\ntest_registry_schema_excludes_identity (test_tools.ToolTests.test_registry_schema_excludes_identity) ... ok\ntest_role_mismatch_and_unknown_user (test_tools.ToolTests.test_role_mismatch_and_unknown_user) ... ok\ntest_support_requires_explicit_assignment (test_tools.ToolTests.test_support_requires_explicit_assignment) ... ok\ntest_tenant_denial_matches_unknown (test_tools.ToolTests.test_tenant_denial_matches_unknown) ... ok\ntest_unauthorized_never_reads_events (test_tools.ToolTests.test_unauthorized_never_reads_events) ... ok\ntest_unknown_tool (test_tools.ToolTests.test_unknown_tool) ... ok\ntest_usage_matches_facts (test_tools.ToolTests.test_usage_matches_facts) ... ok\n\n----------------------------------------------------------------------\nRan 19 tests in 0.108s\n\nOK\n"
+    },
+    {
+      "command": "python -m ruff check apps/api packages scripts tests evals",
+      "exit_code": 0,
+      "stdout": "All checks passed!\n",
+      "stderr": ""
+    },
+    {
+      "command": "python -m ruff format --check apps/api packages scripts tests evals",
+      "exit_code": 0,
+      "stdout": "14 files already formatted\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/validate_demo.py",
+      "exit_code": 0,
+      "stdout": "{\"data_version\": \"clouddesk-demo-v1\", \"tenants\": 2, \"tickets\": 10, \"documents\": 8, \"dev_cases\": 12, \"clarify_or_abstain\": 3}\n",
+      "stderr": ""
+    },
+    {
+      "command": "python scripts/tools_smoke.py",
+      "exit_code": 0,
+      "stdout": "{\"tool\": \"get_workspace_usage\", \"ok\": true, \"data\": {\"workspace_id\": \"ws-alpha\", \"plan\": \"starter\", \"version\": \"2.0\", \"minute_requests\": 60, \"minute_limit\": 60, \"monthly_requests\": 8000, \"monthly_limit\": 10000, \"synthetic\": true}, \"error\": null}\n{\"tool\": \"get_recent_errors\", \"ok\": true, \"data\": {\"workspace_id\": \"ws-alpha\", \"events\": [{\"id\": \"ws-alpha-error-3\", \"occurred_at\": \"2026-11-01T00:00:02Z\", \"status_code\": 429, \"reason\": \"minute_rate_limit\", \"retry_after_seconds\": 20}, {\"id\": \"ws-alpha-error-2\", \"occurred_at\": \"2026-11-01T00:00:01Z\", \"status_code\": 429, \"reason\": \"minute_rate_limit\", \"retry_after_seconds\": 20}, {\"id\": \"ws-alpha-error-1\", \"occurred_at\": \"2026-11-01T00:00:00Z\", \"status_code\": 429, \"reason\": \"minute_rate_limit\", \"retry_after_seconds\": 20}], \"synthetic\": true}, \"error\": null}\n",
+      "stderr": ""
+    }
+  ]
+}

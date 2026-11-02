@@ -15,7 +15,7 @@ class ToolDefinition(BaseModel):
 
 
 class ModelRequest(BaseModel):
-    messages: list[Message] = Field(min_length=1)
+    messages: list[Message | dict[str, Any]] = Field(min_length=1)
     tools: list[ToolDefinition] = Field(default_factory=list)
     max_output_tokens: int = Field(default=256, ge=16, le=4096)
 
@@ -35,6 +35,7 @@ class Usage(BaseModel):
 class ModelResponse(BaseModel):
     text: str
     tool_calls: list[ToolCall] = Field(default_factory=list)
+    output_items: list[dict[str, Any]] = Field(default_factory=list)
     usage: Usage | None = None
     request_id: str | None = None
     model: str

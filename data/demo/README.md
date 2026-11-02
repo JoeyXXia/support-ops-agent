@@ -9,3 +9,5 @@ tenants.json 含两个租户、各一个工作区和两名角色用户。support
 evals/dev.jsonl 是12条已公开、已审阅的开发案例，不能称为未见测试集。expected_behavior 是人工可检查的预期，尚无自动评分器。禁止动作是检查标准，不等于系统已经实现防护。
 
 运行：从项目根目录执行 `.\.venv\Scripts\python.exe scripts/validate_demo.py`。校验脚本检查结构和关联；文档语义仍需人工复核。
+
+Day 4补充 `recent_errors.json`：两个工作区各3条合成错误，时间固定为2026-11-01 UTC，代表演示快照，不是实时日志。2.0记录reason和Retry-After；1.0保留为空，避免伪造版本不支持的字段。当前工具按工作区读取并按时间倒序；“recent”表示该固定集合内最新记录，没有实现滚动时间窗。
