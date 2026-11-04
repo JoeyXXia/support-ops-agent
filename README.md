@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度：Day 6 本地mock页面、运行接口与离线CI配置完成；真实模型成功验收仍待API余额恢复。** 已有 FastAPI 健康接口和可检查后端连接的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；尚无RAG、数据库或工单能力。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度：Day 7 第一周复盘与本地 v0.1-loop 版本整理完成；真实模型成功验收仍未完成。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；尚无RAG、数据库或工单能力。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -38,7 +38,7 @@ if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 npm.cmd --prefix apps/web run dev
 ```
 
-打开 [前端页面](http://127.0.0.1:5173)，应显示“服务正常 · supportops-api”。[后端健康接口](http://127.0.0.1:8000/health) 返回：
+打开 [前端页面](http://127.0.0.1:5173)，应显示“429 排障演示”表单和“Day 6 · 本地 mock”标记。点击“开始排查”，应看到运行完成、两个工具步骤和明确标注的 mock 答案。[后端健康接口](http://127.0.0.1:8000/health) 返回：
 
 ```json
 {"status":"ok","service":"supportops-api"}
@@ -48,9 +48,9 @@ npm.cmd --prefix apps/web run dev
 
 ## 请求如何到达后端
 
-浏览器加载 React → 页面请求同源 `/api/health` → Vite 开发代理去掉 `/api` → 请求 `http://127.0.0.1:8000/health` → FastAPI 返回 JSON → 页面校验状态与服务名后显示结果。
+浏览器加载 React → POST 同源 `/api/runs` → Vite 去掉 `/api` 并代理到后端 `/runs` → 返回202与运行ID → 页面轮询 `/api/runs/{id}`，展示步骤和结果。页面不再自动请求健康接口；可手动访问上方健康链接验证进程与代理。
 
-页面会在 5 秒后停止等待，展示失败并允许重新检查。后端 `/health` 仅表示 API 进程存活，不证明数据库或模型可用。未增加跨域通配符配置。
+每个页面请求最多等待8秒；轮询约3分钟停止等待，可重新查询同一运行。后端 `/health` 仅表示API进程存活，不证明模型可用。未增加跨域通配符配置。
 
 根目录 `.env` 中的 `API_PROXY_TARGET` 只供 Vite 服务端代理读取，修改后重启前端。`.env` 与变体被 Git 忽略；不要将任何密钥放进浏览器代码或 `VITE_*` 变量。`.env.example` 是无凭据模板。
 
@@ -70,7 +70,7 @@ git check-ignore .env .env.local apps/web/.env.local
 
 格式修复使用 `python -m ruff format apps/api`（请使用项目 Python）及 `npm.cmd --prefix apps/web run format`。Python 的直接依赖写在 `pyproject.toml`，完整安装版本记录在 `requirements.lock`；前端精确版本与完整解析分别记录在 `package.json`、`package-lock.json`。
 
-故障演示：停掉后端，在页面点“重新检查”，应出现失败；重新启动后端，再点一次，应恢复正常。不能一直显示加载或沿用旧的成功状态。端口已占用时先检查已有进程；Vite 配置 `strictPort`，不会悄悄切换端口。
+故障演示：后端不可用时点击“开始排查”，页面应显示请求失败；恢复后端后可以再次提交。若已有运行且轮询失败，点击“重新查询当前运行”只查询原ID。后端重启后内存记录丢失，原ID返回404。端口占用时先检查已有进程；Vite配置strictPort，不会悄悄切换端口。
 
 `npm run build` 仅验证可生成前端产物；Vite 代理只用于开发，生产反向代理和部署留到后续里程碑。Day 1 验收证据见开发日志；Day 6已补充离线测试门禁与CI配置。
 
@@ -107,7 +107,7 @@ git check-ignore .env .env.local apps/web/.env.local
 
 服务端从项目根目录 `.env.local` 加载 `OPENAI_API_KEY`（已有进程环境优先），模型默认 `gpt-4.1-mini`，可通过进程环境或 `.env.local` 中的 `OPENAI_MODEL` 覆盖。`.env.example` 只提供空值模板，真实密钥不能进入版本管理或 `VITE_*`。
 
-provider使用Responses API、20秒总超时、`store=False`和SDK `max_retries=0`。接口统一文本、函数调用参数、usage与请求ID；mock明确标记，usage为空，不伪造token统计。当前只支持文本消息输入与函数调用输出，尚未实现工具结果回填、Agent loop、流式或自动重试。调用者使用完live provider需调用`await provider.close()`。
+provider使用Responses API、20秒总超时、`store=False`和SDK `max_retries=0`。接口统一文本、函数调用参数、usage与请求ID；mock明确标记，usage为空，不伪造token统计。当前支持文本输入、函数调用及Day 5加入的结果回填与原生loop；尚无流式或自动重试。调用者使用完live provider需调用`await provider.close()`。
 
 错误仅暴露分类、可重试标记和请求ID，不输出原始请求、响应错误正文或密钥。`quota_exhausted`不重试，临时`rate_limit`可供后续策略决定是否重试。错误标记并不代表今天已实现重试。
 
@@ -156,3 +156,7 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 离线Python门禁：`.\.venv\Scripts\python.exe -X utf8 scripts/check_offline.py`。前端门禁：`npm.cmd --prefix apps/web run format:check`、`run typecheck`、`run build`。CI使用相同命令，且不传入API密钥；依赖下载仍需网络。配置位于.github/workflows/ci.yml，推送后才能确认GitHub托管环境的实际结果。
 
 本地30秒录屏：output/playwright/day6-demo-30s.webm（被Git忽略）。演示步骤：输入ws-alpha的429问题→开始排查→观察运行ID与四条事件→阅读分钟限流结论。故障演示与截图详见[Day 6报告](docs/devlog/2026-11-02-day-06.md)。
+
+## Day 7 第一周复盘
+
+[Day 7报告](docs/devlog/2026-11-04-day-07.md)记录三个踩坑、版本边界和口述提纲。`v0.1-loop`是本地mock里程碑；真实模型成功验收、远端CI结果及用户亲自口述仍分别保留状态。
