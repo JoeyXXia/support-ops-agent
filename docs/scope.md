@@ -62,3 +62,7 @@
 ## Day 7 范围（2026-11-04）
 
 回顾第一周实际提交、整理三个踩坑、修正README与页面不一致、复验现有门禁和本地mock流程，创建本地v0.1-loop附注标签。不新增服务、框架、依赖或业务功能，不执行真实模型请求；远端推送另按用户指令执行。
+
+## Day 8 范围（2026-11-05）
+
+PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/document_versions/chunks三张表，可信本机操作员Markdown导入与查询，内容及修订哈希、公共/租户范围、事务/并发去重和持久化验证。chunks仅建表；不接页面、Agent检索、切块、embedding、向量索引、HTTP认证、运行持久化或写工具。既有mock无需数据库；提交推送依用户本轮明确指令执行。

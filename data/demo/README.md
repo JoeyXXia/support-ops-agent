@@ -1,6 +1,6 @@
 # CloudDesk 合成数据 v1
 
-全部内容为本项目自写虚构数据（synthetic），没有使用真实客户、生产日志或外部工单。产品事实以 product_facts.json 为规范；8篇Markdown将其整理为可引用章节。当前没有模型生成效果、生产接入或权限实现。
+全部内容为本项目自写虚构数据（synthetic），没有使用真实客户、生产日志或外部工单。产品事实以 product_facts.json 为规范；8篇Markdown将其整理为可引用章节。本材料本身不证明模型效果或生产接入；后续执行层权限与文档存储能力以代码及对应报告为准。
 
 tenants.json 含两个租户、各一个工作区和两名角色用户。support 用户只被分配到其所属样例租户。用量为固定快照，不代表实时数据。tickets.jsonl 的10条工单是独立历史案例，不证明当前快照发生过对应错误。
 
@@ -11,3 +11,5 @@ evals/dev.jsonl 是12条已公开、已审阅的开发案例，不能称为未�
 运行：从项目根目录执行 `.\.venv\Scripts\python.exe scripts/validate_demo.py`。校验脚本检查结构和关联；文档语义仍需人工复核。
 
 Day 4补充 `recent_errors.json`：两个工作区各3条合成错误，时间固定为2026-11-01 UTC，代表演示快照，不是实时日志。2.0记录reason和Retry-After；1.0保留为空，避免伪造版本不支持的字段。当前工具按工作区读取并按时间倒序；“recent”表示该固定集合内最新记录，没有实现滚动时间窗。
+
+Day 8：8篇公共Markdown可导入独立PostgreSQL文档存储；全部按public范围保存，不据正文推断ACL或自动复制到租户。现有fixtures仍为原始合成材料，未修改其业务事实。版本导入步骤见docs/database.md。

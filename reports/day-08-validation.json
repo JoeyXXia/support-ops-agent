@@ -1,0 +1,168 @@
+{
+  "date": "2026-11-05",
+  "timezone": "Asia/Shanghai",
+  "baseline": "f5ae4b5",
+  "live_api_called": false,
+  "remote_ci_verified": false,
+  "commands": [
+    {
+      "command": [
+        "python",
+        "scripts/documents_smoke.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"server_version\": \"17.11\",\n  \"pgvector_version\": \"0.8.7\",\n  \"public_version_count\": 8,\n  \"public_document_count\": 8,\n  \"durable_digest\": \"170c6ae1a2ea2ffcd23e4c849e56f858c345b9a5c205f4a343167b934981f807\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "C:\\Users\\27019\\AppData\\Local\\Temp\\supportops-day8-pg\\pgsql\\bin\\pg_ctl.exe",
+        "-D",
+        "C:\\Users\\27019\\AppData\\Local\\Temp\\supportops-day8-pg\\data",
+        "-l",
+        "C:\\Users\\27019\\AppData\\Local\\Temp\\supportops-day8-pg\\postgres.log",
+        "-o",
+        "-h 127.0.0.1 -p 55432",
+        "-m",
+        "fast",
+        "-w",
+        "restart"
+      ],
+      "exit_code": 0,
+      "stdout": "waiting for server to shut down.... done\nserver stopped\nwaiting for server to start.... done\nserver started\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "scripts/documents_smoke.py"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"server_version\": \"17.11\",\n  \"pgvector_version\": \"0.8.7\",\n  \"public_version_count\": 8,\n  \"public_document_count\": 8,\n  \"durable_digest\": \"170c6ae1a2ea2ffcd23e4c849e56f858c345b9a5c205f4a343167b934981f807\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "-m",
+        "alembic",
+        "upgrade",
+        "head"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "scripts/import_documents.py",
+        "import",
+        "--scope",
+        "public",
+        "--product-version",
+        "1.0",
+        "--product-version",
+        "2.0"
+      ],
+      "exit_code": 0,
+      "stdout": "[\n  {\n    \"document_key\": \"auth\",\n    \"created\": false,\n    \"id\": \"f355c50d-06cc-47cc-952e-c602bb70e1e7\",\n    \"version_number\": 1\n  },\n  {\n    \"document_key\": \"monthly-quota\",\n    \"created\": false,\n    \"id\": \"73867d90-ddc8-4e80-a61d-9bd576ef81fa\",\n    \"version_number\": 1\n  },\n  {\n    \"document_key\": \"quotas\",\n    \"created\": false,\n    \"id\": \"09605dbb-b05c-4c4e-83fc-8d0d7131629d\",\n    \"version_number\": 1\n  },\n  {\n    \"document_key\": \"rate-limit\",\n    \"created\": false,\n    \"id\": \"4b0c8369-fa9a-4d08-8d30-80f3e28de6bd\",\n    \"version_number\": 1\n  },\n  {\n    \"document_key\": \"retry\",\n    \"created\": false,\n    \"id\": \"c03c8360-defb-4864-b360-6f0723a65ebb\",\n    \"version_number\": 1\n  },\n  {\n    \"document_key\": \"roles\",\n    \"created\": false,\n    \"id\": \"f28197b0-5a2e-4a05-bb9a-4b4a4725b877\",\n    \"version_number\": 1\n  },\n  {\n    \"document_key\": \"tickets\",\n    \"created\": false,\n    \"id\": \"21e5a8d5-7615-46f3-ad51-194c9467e8f9\",\n    \"version_number\": 1\n  },\n  {\n    \"document_key\": \"versions\",\n    \"created\": false,\n    \"id\": \"0ced6e71-43af-4c7d-a4a5-d94f834589d6\",\n    \"version_number\": 1\n  }\n]\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "exit_code": 0,
+      "stdout": "No broken requirements found.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "-X",
+        "utf8",
+        "scripts/check_offline.py"
+      ],
+      "exit_code": 0,
+      "stdout": "All checks passed!\n33 files already formatted\n{\"data_version\": \"clouddesk-demo-v1\", \"tenants\": 2, \"tickets\": 10, \"documents\": 8, \"dev_cases\": 12, \"clarify_or_abstain\": 3}\n{\n  \"status\": \"completed\",\n  \"reason\": \"answer\",\n  \"answer\": \"[mock] ws-alpha分钟用量60/60，月用量8000/10000；日志表明分钟限流，按Retry-After等待20秒并降低请求频率。\",\n  \"model_calls\": 2,\n  \"tool_calls\": 2,\n  \"events\": [\n    {\n      \"step\": 1,\n      \"kind\": \"model.finished\",\n      \"mode\": \"mock\",\n      \"request_id\": null\n    },\n    {\n      \"step\": 1,\n      \"kind\": \"tool.finished\",\n      \"call_id\": \"usage-1\",\n      \"tool\": \"get_workspace_usage\",\n      \"result\": {\n        \"tool\": \"get_workspace_usage\",\n        \"ok\": true,\n        \"data\": {\n          \"workspace_id\": \"ws-alpha\",\n          \"plan\": \"starter\",\n          \"version\": \"2.0\",\n          \"minute_requests\": 60,\n          \"minute_limit\": 60,\n          \"monthly_requests\": 8000,\n          \"monthly_limit\": 10000,\n          \"synthetic\": true\n        },\n        \"error\": null\n      }\n    },\n    {\n      \"step\": 1,\n      \"kind\": \"tool.finished\",\n      \"call_id\": \"errors-1\",\n      \"tool\": \"get_recent_errors\",\n      \"result\": {\n        \"tool\": \"get_recent_errors\",\n        \"ok\": true,\n        \"data\": {\n          \"workspace_id\": \"ws-alpha\",\n          \"events\": [\n            {\n              \"id\": \"ws-alpha-error-3\",\n              \"occurred_at\": \"2026-11-01T00:00:02Z\",\n              \"status_code\": 429,\n              \"reason\": \"minute_rate_limit\",\n              \"retry_after_seconds\": 20\n            },\n            {\n              \"id\": \"ws-alpha-error-2\",\n              \"occurred_at\": \"2026-11-01T00:00:01Z\",\n              \"status_code\": 429,\n              \"reason\": \"minute_rate_limit\",\n              \"retry_after_seconds\": 20\n            }\n          ],\n          \"synthetic\": true\n        },\n        \"error\": null\n      }\n    },\n    {\n      \"step\": 2,\n      \"kind\": \"model.finished\",\n      \"mode\": \"mock\",\n      \"request_id\": null\n    }\n  ]\n}\n",
+      "stderr": "test_duplicate_call_ids_rejected_before_execution (test_loop.LoopTests.test_duplicate_call_ids_rejected_before_execution) ... ok\ntest_empty_output_and_provider_failure (test_loop.LoopTests.test_empty_output_and_provider_failure) ... ok\ntest_invalid_and_unauthorized_arguments (test_loop.LoopTests.test_invalid_and_unauthorized_arguments) ... ok\ntest_invalid_json_before_execution (test_loop.LoopTests.test_invalid_json_before_execution) ... ok\ntest_message_pairing_and_sequential_execution (test_loop.LoopTests.test_message_pairing_and_sequential_execution) ... ok\ntest_model_timeout_and_cancellation (test_loop.LoopTests.test_model_timeout_and_cancellation) ... ok\ntest_no_progress (test_loop.LoopTests.test_no_progress) ... ok\ntest_openai_stateless_output_roundtrip (test_loop.LoopTests.test_openai_stateless_output_roundtrip) ... ok\ntest_scenario_determinism (test_loop.LoopTests.test_scenario_determinism) ... ok\ntest_step_budget (test_loop.LoopTests.test_step_budget) ... ok\ntest_tool_budget_rejects_whole_batch (test_loop.LoopTests.test_tool_budget_rejects_whole_batch) ... ok\ntest_tool_timeout (test_loop.LoopTests.test_tool_timeout) ... ok\ntest_unknown_tool_stops (test_loop.LoopTests.test_unknown_tool_stops) ... ok\ntest_bad_metadata_and_encoding (test_markdown.MarkdownTests.test_bad_metadata_and_encoding) ... ok\ntest_bom_line_endings_and_version_order (test_markdown.MarkdownTests.test_bom_line_endings_and_version_order) ... ok\ntest_demo_batch (test_markdown.MarkdownTests.test_demo_batch) ... ok\ntest_metadata_participates_in_revision (test_markdown.MarkdownTests.test_metadata_participates_in_revision) ... ok\ntest_path_and_version_boundaries (test_markdown.MarkdownTests.test_path_and_version_boundaries) ... ok\ntest_scope_validation (test_markdown.MarkdownTests.test_scope_validation) ... ok\ntest_configuration (test_providers.ProvidersTest.test_configuration) ... ok\ntest_http_failures (test_providers.ProvidersTest.test_http_failures) ... ok\ntest_incomplete_and_unknown_output (test_providers.ProvidersTest.test_incomplete_and_unknown_output) ... ok\ntest_mock_deterministic (test_providers.ProvidersTest.test_mock_deterministic) ... ok\ntest_success_and_request_options (test_providers.ProvidersTest.test_success_and_request_options) ... ok\ntest_timeout (test_providers.ProvidersTest.test_timeout) ... ok\ntest_tool_calls (test_providers.ProvidersTest.test_tool_calls) ... ok\ntest_accept_poll_and_answer (test_runs.RunApiTests.test_accept_poll_and_answer) ... Executing <Task pending name='Task-100' coro=<RunApiTests.test_accept_poll_and_answer() running at H:\\codex\\项目\\supportops-agent\\tests\\test_runs.py:36> wait_for=<Future pending cb=[Task.task_wakeup()] created at C:\\Users\\27019\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\asyncio\\base_events.py:448> cb=[_run_until_complete_cb() at C:\\Users\\27019\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\asyncio\\base_events.py:181] created at C:\\Users\\27019\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\asyncio\\runners.py:100> took 0.156 seconds\nok\ntest_admission_limit (test_runs.RunApiTests.test_admission_limit) ... ok\ntest_clarify_other_question (test_runs.RunApiTests.test_clarify_other_question) ... ok\ntest_eviction_and_shutdown (test_runs.RunApiTests.test_eviction_and_shutdown) ... ok\ntest_failure_is_terminal_and_redacted (test_runs.RunApiTests.test_failure_is_terminal_and_redacted) ... ok\ntest_missing_and_invalid_id (test_runs.RunApiTests.test_missing_and_invalid_id) ... ok\ntest_partial_events_visible (test_runs.RunApiTests.test_partial_events_visible) ... ok\ntest_validation_and_identity_rejection (test_runs.RunApiTests.test_validation_and_identity_rejection) ... ok\ntest_bad_arguments_never_reach_business (test_tools.ToolTests.test_bad_arguments_never_reach_business) ... ok\ntest_empty_and_corrupt_event_data (test_tools.ToolTests.test_empty_and_corrupt_event_data) ... tool.failed tool=get_recent_errors code=internal_error\nok\ntest_errors_order_limit_and_version (test_tools.ToolTests.test_errors_order_limit_and_version) ... ok\ntest_identity_not_accepted_from_dictionary (test_tools.ToolTests.test_identity_not_accepted_from_dictionary) ... ok\ntest_limit_strictness (test_tools.ToolTests.test_limit_strictness) ... ok\ntest_registry_schema_excludes_identity (test_tools.ToolTests.test_registry_schema_excludes_identity) ... ok\ntest_role_mismatch_and_unknown_user (test_tools.ToolTests.test_role_mismatch_and_unknown_user) ... ok\ntest_support_requires_explicit_assignment (test_tools.ToolTests.test_support_requires_explicit_assignment) ... ok\ntest_tenant_denial_matches_unknown (test_tools.ToolTests.test_tenant_denial_matches_unknown) ... ok\ntest_unauthorized_never_reads_events (test_tools.ToolTests.test_unauthorized_never_reads_events) ... ok\ntest_unknown_tool (test_tools.ToolTests.test_unknown_tool) ... ok\ntest_usage_matches_facts (test_tools.ToolTests.test_usage_matches_facts) ... ok\n\n----------------------------------------------------------------------\nRan 46 tests in 2.634s\n\nOK\n"
+    },
+    {
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/integration",
+        "-v"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "test_batch_failure_rolls_back (test_documents.DocumentDatabaseTests.test_batch_failure_rolls_back) ... ok\ntest_concurrent_first_import_no_duplicates (test_documents.DocumentDatabaseTests.test_concurrent_first_import_no_duplicates) ... ok\ntest_concurrent_revisions_numbered (test_documents.DocumentDatabaseTests.test_concurrent_revisions_numbered) ... ok\ntest_constraints (test_documents.DocumentDatabaseTests.test_constraints) ... ok\ntest_idempotent_batch_and_new_connection (test_documents.DocumentDatabaseTests.test_idempotent_batch_and_new_connection) ... ok\ntest_migrations_repeat_and_downgrade (test_documents.DocumentDatabaseTests.test_migrations_repeat_and_downgrade) ... ok\ntest_new_content_and_metadata_keep_old_versions (test_documents.DocumentDatabaseTests.test_new_content_and_metadata_keep_old_versions) ... ok\ntest_public_and_private_scopes (test_documents.DocumentDatabaseTests.test_public_and_private_scopes) ... ok\n\n----------------------------------------------------------------------\nRan 8 tests in 2.334s\n\nOK\n"
+    },
+    {
+      "command": [
+        "npm.cmd",
+        "--prefix",
+        "apps/web",
+        "run",
+        "format:check"
+      ],
+      "exit_code": 0,
+      "stdout": "\n> supportops-web@0.1.0 format:check\n> prettier --check .\n\nChecking formatting...\nAll matched files use Prettier code style!\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "npm.cmd",
+        "--prefix",
+        "apps/web",
+        "run",
+        "typecheck"
+      ],
+      "exit_code": 0,
+      "stdout": "\n> supportops-web@0.1.0 typecheck\n> tsc --noEmit\n\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "npm.cmd",
+        "--prefix",
+        "apps/web",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "stdout": "\n> supportops-web@0.1.0 build\n> tsc --noEmit && vite build\n\nvite v8.3.5 building client environment for production...\ntransforming...\n✓ 16 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                   0.51 kB │ gzip:  0.34 kB\ndist/assets/index-D09Ls7i2.css    1.79 kB │ gzip:  0.83 kB\ndist/assets/index-cEa7bzZG.js   222.98 kB │ gzip: 70.45 kB\n\n✓ built in 228ms\n",
+      "stderr": ""
+    }
+  ],
+  "restart_verification": {
+    "before": {
+      "server_version": "17.11",
+      "pgvector_version": "0.8.7",
+      "public_version_count": 8,
+      "public_document_count": 8,
+      "durable_digest": "170c6ae1a2ea2ffcd23e4c849e56f858c345b9a5c205f4a343167b934981f807"
+    },
+    "after": {
+      "server_version": "17.11",
+      "pgvector_version": "0.8.7",
+      "public_version_count": 8,
+      "public_document_count": 8,
+      "durable_digest": "170c6ae1a2ea2ffcd23e4c849e56f858c345b9a5c205f4a343167b934981f807"
+    },
+    "equal": true,
+    "actual_postgres_restart": true
+  },
+  "offline_tests": 46,
+  "database_tests": 8,
+  "passed": true
+}

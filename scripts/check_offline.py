@@ -6,8 +6,19 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 for args in (
-    ["-m", "ruff", "check", "apps/api", "packages", "scripts", "tests", "evals"],
-    ["-m", "ruff", "format", "--check", "apps/api", "packages", "scripts", "tests", "evals"],
+    ["-m", "ruff", "check", "apps/api", "packages", "scripts", "tests", "evals", "migrations"],
+    [
+        "-m",
+        "ruff",
+        "format",
+        "--check",
+        "apps/api",
+        "packages",
+        "scripts",
+        "tests",
+        "evals",
+        "migrations",
+    ],
     ["-m", "unittest", "discover", "-s", "tests", "-v"],
     ["scripts/validate_demo.py"],
     ["scripts/agent_smoke.py"],

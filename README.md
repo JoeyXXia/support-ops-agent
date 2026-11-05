@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度：Day 7 第一周复盘与本地 v0.1-loop 版本整理完成；真实模型成功验收仍未完成。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；尚无RAG、数据库或工单能力。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度：Day 8 文档持久化、迁移与版本导入完成；真实模型成功验收仍未完成。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -160,3 +160,19 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 ## Day 7 第一周复盘
 
 [Day 7报告](docs/devlog/2026-11-04-day-07.md)记录三个踩坑、版本边界和口述提纲。`v0.1-loop`是本地mock里程碑；真实模型成功验收、远端CI结果及用户亲自口述仍分别保留状态。
+
+## Day 8 文档入库与版本
+
+新增独立PostgreSQL文档存储、Alembic迁移及可信本机操作员Markdown CLI；应用启动和mock排障不依赖数据库。先准备PostgreSQL+pgvector并在忽略的`.env.database.local`设置DATABASE_URL，再执行：
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.lock
+.\.venv\Scripts\python.exe -m alembic upgrade head
+.\.venv\Scripts\python.exe -X utf8 scripts/import_documents.py import --scope public --product-version 1.0 --product-version 2.0
+.\.venv\Scripts\python.exe -X utf8 scripts/import_documents.py list --scope public
+.\.venv\Scripts\python.exe scripts/documents_smoke.py
+```
+
+相同文档与修订元数据复用版本，内容或元数据变化追加版本；公共文档与租户私有文档分范围保存。chunks今日仅建表，不切块、不生成embedding、不创建向量索引。全部8篇现有公共规则已实际导入，本机正常重启数据库后摘要一致。
+
+[数据库准备、表结构、版本与删除策略](docs/database.md) · [Day 8报告](docs/devlog/2026-11-05-day-08.md) · [实际检查记录](reports/day-08-validation.json)。独立数据库测试命令：`python -m unittest discover -s tests/integration -v`，必须显式设置专用TEST_DATABASE_URL（库名以_test结尾）；默认离线门禁不连接数据库，不用SQLite模拟PostgreSQL验收。
