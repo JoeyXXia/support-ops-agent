@@ -3,7 +3,7 @@
   "timezone": "Asia/Shanghai",
   "baseline": "f5ae4b5",
   "live_api_called": false,
-  "remote_ci_verified": false,
+  "remote_ci_verified": true,
   "commands": [
     {
       "command": [
@@ -164,5 +164,30 @@
   },
   "offline_tests": 46,
   "database_tests": 8,
-  "passed": true
+  "passed": true,
+  "remote_ci": {
+    "run_id": 41952267584,
+    "head_sha": "c65e073969bc0970f65b9fd78f343303e7710c0d",
+    "url": "https://github.com/JoeyXXia/support-ops-agent/actions/runs/41952267584",
+    "jobs": [
+      {
+        "id": 126998744367,
+        "name": "offline",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-05T02:00:18Z",
+        "completed_at": "2026-11-05T02:00:44Z",
+        "html_url": "https://github.com/JoeyXXia/support-ops-agent/actions/runs/41952267584/job/126998744367"
+      },
+      {
+        "id": 126998744678,
+        "name": "database",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-05T02:00:18Z",
+        "completed_at": "2026-11-05T02:00:50Z",
+        "html_url": "https://github.com/JoeyXXia/support-ops-agent/actions/runs/41952267584/job/126998744678"
+      }
+    ]
+  }
 }
