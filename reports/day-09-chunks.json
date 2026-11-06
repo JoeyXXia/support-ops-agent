@@ -1,0 +1,298 @@
+[
+  {
+    "document_key": "auth",
+    "source_path": "data/demo/docs/auth.md",
+    "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+    "policy": "heading-paragraph-v1:800:100",
+    "chunks": [
+      {
+        "ordinal": 0,
+        "body": "# 鉴权与权限错误\n\n文档 ID：auth\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "start_char": 0,
+        "end_char": 86,
+        "start_line": 1,
+        "end_line": 7,
+        "heading_path": [
+          "鉴权与权限错误"
+        ],
+        "content_hash": "3c3390e625dc38324f50b5329b77da1edf3c8ebb366caa1f72256676794cd5ed",
+        "embedding_input": "鉴权与权限错误\n\n# 鉴权与权限错误\n\n文档 ID：auth\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "input_hash": "a4d2900751d4de3737a5f27db45b11fde57598d5ff4741dd044f5a5f940b5a36"
+      },
+      {
+        "ordinal": 1,
+        "body": "## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+        "start_char": 86,
+        "end_char": 187,
+        "start_line": 8,
+        "end_line": 10,
+        "heading_path": [
+          "鉴权与权限错误",
+          "errors"
+        ],
+        "content_hash": "6e66d7ebe40e0593f56dcf2706652739db714dd98624632316f8791960a6bad6",
+        "embedding_input": "鉴权与权限错误 / errors\n\n## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+        "input_hash": "6a9a1402125050a7f4e3b218d8075a4aeea8ff0dc82696726bdd8b7d7381cae3"
+      }
+    ]
+  },
+  {
+    "document_key": "monthly-quota",
+    "source_path": "data/demo/docs/monthly-quota.md",
+    "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+    "policy": "heading-paragraph-v1:800:100",
+    "chunks": [
+      {
+        "ordinal": 0,
+        "body": "# 月额度耗尽\n\n文档 ID：monthly-quota\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "start_char": 0,
+        "end_char": 93,
+        "start_line": 1,
+        "end_line": 7,
+        "heading_path": [
+          "月额度耗尽"
+        ],
+        "content_hash": "2eb8111deca132b7786cc0adb0c0d538816b8ea215e1846b3e394a2bd941d079",
+        "embedding_input": "月额度耗尽\n\n# 月额度耗尽\n\n文档 ID：monthly-quota\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "input_hash": "8b01355dcab4ffbdddf83161936447eb4af8e47466cb31610674aeca2f8f050f"
+      },
+      {
+        "ordinal": 1,
+        "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+        "start_char": 93,
+        "end_char": 234,
+        "start_line": 8,
+        "end_line": 10,
+        "heading_path": [
+          "月额度耗尽",
+          "diagnosis"
+        ],
+        "content_hash": "989cf4e87831093428c41de1af29db6b0607d287f689efa0ab5b6a3392319072",
+        "embedding_input": "月额度耗尽 / diagnosis\n\n## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+        "input_hash": "66c6ba46addb7fac2cd2113f74a40613e3c2253d0269e298fe7f80701a2ec982"
+      }
+    ]
+  },
+  {
+    "document_key": "quotas",
+    "source_path": "data/demo/docs/quotas.md",
+    "revision_hash": "24198ca6ab4ca7ba1fe15b5b4ef98711ebb473882badae473dcf3afc76926007",
+    "policy": "heading-paragraph-v1:800:100",
+    "chunks": [
+      {
+        "ordinal": 0,
+        "body": "# 套餐与额度\n\n文档 ID：quotas\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "start_char": 0,
+        "end_char": 86,
+        "start_line": 1,
+        "end_line": 7,
+        "heading_path": [
+          "套餐与额度"
+        ],
+        "content_hash": "3f667e791e66c8f3d308d6a1ee23c31521952e78ebc06ecfb20ebc291d19365b",
+        "embedding_input": "套餐与额度\n\n# 套餐与额度\n\n文档 ID：quotas\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "input_hash": "59c3eff38a7b711f2d74a34835ba111ca8227c9a3b163d0f986ac7239c7cd183"
+      },
+      {
+        "ordinal": 1,
+        "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+        "start_char": 86,
+        "end_char": 215,
+        "start_line": 8,
+        "end_line": 10,
+        "heading_path": [
+          "套餐与额度",
+          "limits"
+        ],
+        "content_hash": "20f8b04d939b29460e6205dd145137cf90f2da5031ed137777b7e6d08cee9aa0",
+        "embedding_input": "套餐与额度 / limits\n\n## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+        "input_hash": "cab28ab2d683873708d3f94dbb4830e67d8bff7917ef6e7a472290c0cf77e55f"
+      }
+    ]
+  },
+  {
+    "document_key": "rate-limit",
+    "source_path": "data/demo/docs/rate-limit.md",
+    "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+    "policy": "heading-paragraph-v1:800:100",
+    "chunks": [
+      {
+        "ordinal": 0,
+        "body": "# 分钟限流排障\n\n文档 ID：rate-limit\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "start_char": 0,
+        "end_char": 91,
+        "start_line": 1,
+        "end_line": 7,
+        "heading_path": [
+          "分钟限流排障"
+        ],
+        "content_hash": "76e05ef249c80950948cff9bc7d9598c7c38a77fe33b72f95c8b48ca8c477702",
+        "embedding_input": "分钟限流排障\n\n# 分钟限流排障\n\n文档 ID：rate-limit\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "input_hash": "87076411fbc310a95a781d5a5ee954bf6a9bed185df30ca07ea232fb0d8e7c9f"
+      },
+      {
+        "ordinal": 1,
+        "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+        "start_char": 91,
+        "end_char": 241,
+        "start_line": 8,
+        "end_line": 10,
+        "heading_path": [
+          "分钟限流排障",
+          "diagnosis"
+        ],
+        "content_hash": "8268f34bbe8d1dfb9c9527f860f0c5d5520f8128507a6667008ec1b8aa3e4d93",
+        "embedding_input": "分钟限流排障 / diagnosis\n\n## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+        "input_hash": "c78301bceb79ed9c27870d15b4f93affda00f643d1bb34bb9098ef5d56f6de12"
+      }
+    ]
+  },
+  {
+    "document_key": "retry",
+    "source_path": "data/demo/docs/retry.md",
+    "revision_hash": "2c1efd7aa09e068dd9d2ad4eb3d13d27191ea31623027c01b1a2015be862724c",
+    "policy": "heading-paragraph-v1:800:100",
+    "chunks": [
+      {
+        "ordinal": 0,
+        "body": "# 重试规则\n\n文档 ID：retry\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "start_char": 0,
+        "end_char": 84,
+        "start_line": 1,
+        "end_line": 7,
+        "heading_path": [
+          "重试规则"
+        ],
+        "content_hash": "563e60dafb41051b27c9bbbf18d1440ee0ff567e8117ea7c11b39e861b659bbe",
+        "embedding_input": "重试规则\n\n# 重试规则\n\n文档 ID：retry\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "input_hash": "879e2d64225cdaaafd6e2e8fdba43a2d8cf85bfd1e2a995c28705302b811222f"
+      },
+      {
+        "ordinal": 1,
+        "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+        "start_char": 84,
+        "end_char": 194,
+        "start_line": 8,
+        "end_line": 10,
+        "heading_path": [
+          "重试规则",
+          "policy"
+        ],
+        "content_hash": "f5731b959d442a56e539db3b60193b65dfba8af934742d26a26b239543ab4e2c",
+        "embedding_input": "重试规则 / policy\n\n## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+        "input_hash": "81bbcb244448d21aa3ee0692dca72b488115163f65f9854daff5dd60251b2397"
+      }
+    ]
+  },
+  {
+    "document_key": "roles",
+    "source_path": "data/demo/docs/roles.md",
+    "revision_hash": "0bc647ba85771a53d1e6af192c91a361b0294b380fb05eadd1dd2b8e58306e46",
+    "policy": "heading-paragraph-v1:800:100",
+    "chunks": [
+      {
+        "ordinal": 0,
+        "body": "# 租户与角色边界\n\n文档 ID：roles\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "start_char": 0,
+        "end_char": 87,
+        "start_line": 1,
+        "end_line": 7,
+        "heading_path": [
+          "租户与角色边界"
+        ],
+        "content_hash": "3098495220edca8b46f9a1d44f3db3ff39f9d90360990744631b9ad7133b8b35",
+        "embedding_input": "租户与角色边界\n\n# 租户与角色边界\n\n文档 ID：roles\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "input_hash": "3bf7a5c159b8a7e9a678c636e634e890bf1e01419b7e1acd87d3f1e63a19db46"
+      },
+      {
+        "ordinal": 1,
+        "body": "## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+        "start_char": 87,
+        "end_char": 209,
+        "start_line": 8,
+        "end_line": 10,
+        "heading_path": [
+          "租户与角色边界",
+          "access"
+        ],
+        "content_hash": "dbb57afa9d5cc6919709b54043e08ecadb727516725d0b66bb52cd1359285bb1",
+        "embedding_input": "租户与角色边界 / access\n\n## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+        "input_hash": "022a83b32b293956a0ff3484f9eeafb1983a464c8affd9b63f322445948871af"
+      }
+    ]
+  },
+  {
+    "document_key": "tickets",
+    "source_path": "data/demo/docs/tickets.md",
+    "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+    "policy": "heading-paragraph-v1:800:100",
+    "chunks": [
+      {
+        "ordinal": 0,
+        "body": "# 工单与知识不足\n\n文档 ID：tickets\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "start_char": 0,
+        "end_char": 89,
+        "start_line": 1,
+        "end_line": 7,
+        "heading_path": [
+          "工单与知识不足"
+        ],
+        "content_hash": "6de6cf31e9c7cab64e1325a878e20b84a31f78c8485c180949515633d25d9006",
+        "embedding_input": "工单与知识不足\n\n# 工单与知识不足\n\n文档 ID：tickets\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "input_hash": "a2af375bbd4253878b4df8c6f97e25fd2679e602b21dcb347366d6461f1456e5"
+      },
+      {
+        "ordinal": 1,
+        "body": "## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+        "start_char": 89,
+        "end_char": 207,
+        "start_line": 8,
+        "end_line": 10,
+        "heading_path": [
+          "工单与知识不足",
+          "approval"
+        ],
+        "content_hash": "5c72681990936b7572f91c2d525cba8a8d394c9d00a5f4b879e5147f6d0a9be7",
+        "embedding_input": "工单与知识不足 / approval\n\n## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+        "input_hash": "c0fd87625c65b4a39a7798d1a12e4fb06387c2891126def52cf96f3eb2423d56"
+      }
+    ]
+  },
+  {
+    "document_key": "versions",
+    "source_path": "data/demo/docs/versions.md",
+    "revision_hash": "ccb035fdbc06850f62f22270ba2cd0ae084f18192d258879ecb1b7cede45f710",
+    "policy": "heading-paragraph-v1:800:100",
+    "chunks": [
+      {
+        "ordinal": 0,
+        "body": "# 版本与升级\n\n文档 ID：versions\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "start_char": 0,
+        "end_char": 88,
+        "start_line": 1,
+        "end_line": 7,
+        "heading_path": [
+          "版本与升级"
+        ],
+        "content_hash": "7ab2cb941849f02db7896893d294d4caddb94f6e90d7d42473479d53458460fc",
+        "embedding_input": "版本与升级\n\n# 版本与升级\n\n文档 ID：versions\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "input_hash": "762579c15fa2f21da753e6f0ec489763caefb3c2ce84fb47cac3063056b26aaa"
+      },
+      {
+        "ordinal": 1,
+        "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+        "start_char": 88,
+        "end_char": 204,
+        "start_line": 8,
+        "end_line": 10,
+        "heading_path": [
+          "版本与升级",
+          "versions"
+        ],
+        "content_hash": "8d095dcb4ec178ce56fd76e57e3473e59a10694786cbdbc8c992b154a05cbdb6",
+        "embedding_input": "版本与升级 / versions\n\n## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+        "input_hash": "3b42124e0fea8f99854fff2a6da47cc90c73ee9f6ed46fadaf40aa96fb6bbf95"
+      }
+    ]
+  }
+]

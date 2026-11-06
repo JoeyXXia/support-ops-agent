@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度：Day 8 文档持久化、迁移与版本导入完成；真实模型成功验收仍未完成。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度：Day 9 切块与embedding工程链路完成；真实embedding请求因额度耗尽未成功，真实模型验收仍未完成。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -176,3 +176,19 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 相同文档与修订元数据复用版本，内容或元数据变化追加版本；公共文档与租户私有文档分范围保存。chunks今日仅建表，不切块、不生成embedding、不创建向量索引。全部8篇现有公共规则已实际导入，本机正常重启数据库后摘要一致。
 
 [数据库准备、表结构、版本与删除策略](docs/database.md) · [Day 8报告](docs/devlog/2026-11-05-day-08.md) · [实际检查记录](reports/day-08-validation.json)。独立数据库测试命令：`python -m unittest discover -s tests/integration -v`，必须显式设置专用TEST_DATABASE_URL（库名以_test结尾）；默认离线门禁不连接数据库，不用SQLite模拟PostgreSQL验收。
+
+## Day 9 切块与 embedding
+
+新增800字符上限、长段落100字符重叠的确定性标题/段落切块，保留标题路径与原文位置；持久化1536维embedding缓存、单版本处理锁、原子完成状态与失败恢复。网页仍mock，没有向量检索或RAG回答。
+
+```powershell
+.\.venv\Scripts\python.exe -m alembic upgrade head
+# 离线预览，不读数据库、不调用API
+.\.venv\Scripts\python.exe -X utf8 scripts/process_documents.py preview
+# 默认mock，仍需PostgreSQL；向量只用于工程验证，无语义意义
+.\.venv\Scripts\python.exe -X utf8 scripts/process_documents.py embed
+# 显式付费调用，只处理第一篇可见公共文档
+.\.venv\Scripts\python.exe -X utf8 scripts/process_documents.py embed --live --limit 1
+```
+
+真实模式固定OpenAI text-embedding-3-small/1536维；每批最多16条、每个请求20秒，最多3次尝试，仅临时错误重试；余额耗尽立即失败。当前实际小请求返回quota_exhausted，未写入真实向量。更多边界见[Day 9说明](docs/ingestion.md)、[报告](docs/devlog/2026-11-06-day-09.md)、[切块审阅材料](reports/day-09-chunk-review.md)。

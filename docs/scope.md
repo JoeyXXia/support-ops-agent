@@ -66,3 +66,7 @@
 ## Day 8 范围（2026-11-05）
 
 PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/document_versions/chunks三张表，可信本机操作员Markdown导入与查询，内容及修订哈希、公共/租户范围、事务/并发去重和持久化验证。chunks仅建表；不接页面、Agent检索、切块、embedding、向量索引、HTTP认证、运行持久化或写工具。既有mock无需数据库；提交推送依用户本轮明确指令执行。
+
+## Day 9 范围（2026-11-06）
+
+标题/段落切块与原文偏移、固定1536维embedding适配、按范围/模型/维度/输入版本/输入哈希缓存、有界批次与重试、原子完成状态及恢复、CLI预览与审阅材料。真实小请求因quota_exhausted未成功。没有向量检索、向量索引、RAG回答、BM25、SSE、UI变化、新服务或编排框架；提交推送按用户本轮明确指令执行。

@@ -3,6 +3,8 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 
+from .vector import Vector1536
+
 metadata = sa.MetaData()
 documents = sa.Table(
     "documents",
@@ -50,4 +52,59 @@ chunks = sa.Table(
     sa.Column("body", sa.Text, nullable=False),
     sa.UniqueConstraint("version_id", "ordinal", name="uq_chunk_ordinal"),
     sa.CheckConstraint("ordinal >= 0", name="ck_chunk_ordinal"),
+)
+
+
+embedding_cache = sa.Table(
+    "embedding_cache",
+    metadata,
+    sa.Column("id", UUID(as_uuid=True), primary_key=True),
+    sa.Column("scope_key", sa.Text, nullable=False),
+    sa.Column("provider", sa.Text, nullable=False),
+    sa.Column("model", sa.Text, nullable=False),
+    sa.Column("dimensions", sa.Integer, nullable=False),
+    sa.Column("input_version", sa.Text, nullable=False),
+    sa.Column("input_hash", sa.String(64), nullable=False),
+    sa.Column("embedding", Vector1536(), nullable=False),
+    sa.CheckConstraint("dimensions = 1536", name="ck_embedding_dimensions"),
+    sa.UniqueConstraint(
+        "scope_key",
+        "provider",
+        "model",
+        "dimensions",
+        "input_version",
+        "input_hash",
+        name="uq_embedding_identity",
+    ),
+)
+for column in (
+    sa.Column("start_char", sa.Integer, nullable=False),
+    sa.Column("end_char", sa.Integer, nullable=False),
+    sa.Column("start_line", sa.Integer, nullable=False),
+    sa.Column("end_line", sa.Integer, nullable=False),
+    sa.Column("heading_path", JSONB, nullable=False),
+    sa.Column("content_hash", sa.String(64), nullable=False),
+    sa.Column("input_hash", sa.String(64), nullable=False),
+    sa.Column("policy", sa.Text, nullable=False),
+    sa.Column(
+        "embedding_id", UUID(as_uuid=True), sa.ForeignKey("embedding_cache.id"), nullable=False
+    ),
+):
+    chunks.append_column(column)
+chunks.append_constraint(
+    sa.CheckConstraint(
+        "start_char >= 0 AND end_char > start_char AND start_line >= 1 AND end_line >= start_line",
+        name="ck_chunk_position",
+    )
+)
+for column in (
+    sa.Column("embedding_status", sa.Text, nullable=False, server_default="pending"),
+    sa.Column("embedding_profile", sa.Text),
+    sa.Column("embedding_error", sa.Text),
+):
+    document_versions.append_column(column)
+document_versions.append_constraint(
+    sa.CheckConstraint(
+        "embedding_status IN ('pending','processing','ready','failed')", name="ck_embedding_status"
+    )
 )
