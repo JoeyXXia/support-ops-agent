@@ -1,0 +1,1305 @@
+{
+  "dataset_sha256": "3243105e526d216ea53f1bb11c36c794e3defa0f9c68fc4393ede02b1be16d2f",
+  "provider": "mock",
+  "model": "fixture-embedding-v1",
+  "dimensions": 1536,
+  "chunk_policy": "heading-paragraph-v1:800:100",
+  "embedding_input_version": "heading-prefix-v1",
+  "k": 5,
+  "hits": 4,
+  "scored": 10,
+  "hit_at_5": 0.4,
+  "missed_ids": [
+    "dev-001",
+    "dev-003",
+    "dev-004",
+    "dev-005",
+    "dev-010",
+    "dev-011"
+  ],
+  "corpus_revisions": [
+    {
+      "scope_key": "public",
+      "document_key": "auth",
+      "version_number": 1,
+      "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+      "data_version": "clouddesk-demo-v1",
+      "product_versions": [
+        "1.0",
+        "2.0"
+      ],
+      "embedding_status": "ready",
+      "embedding_profile": "heading-paragraph-v1:800:100|mock|fixture-embedding-v1|1536|heading-prefix-v1"
+    },
+    {
+      "scope_key": "public",
+      "document_key": "monthly-quota",
+      "version_number": 1,
+      "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+      "data_version": "clouddesk-demo-v1",
+      "product_versions": [
+        "1.0",
+        "2.0"
+      ],
+      "embedding_status": "ready",
+      "embedding_profile": "heading-paragraph-v1:800:100|mock|fixture-embedding-v1|1536|heading-prefix-v1"
+    },
+    {
+      "scope_key": "public",
+      "document_key": "quotas",
+      "version_number": 1,
+      "revision_hash": "24198ca6ab4ca7ba1fe15b5b4ef98711ebb473882badae473dcf3afc76926007",
+      "data_version": "clouddesk-demo-v1",
+      "product_versions": [
+        "1.0",
+        "2.0"
+      ],
+      "embedding_status": "ready",
+      "embedding_profile": "heading-paragraph-v1:800:100|mock|fixture-embedding-v1|1536|heading-prefix-v1"
+    },
+    {
+      "scope_key": "public",
+      "document_key": "rate-limit",
+      "version_number": 1,
+      "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+      "data_version": "clouddesk-demo-v1",
+      "product_versions": [
+        "1.0",
+        "2.0"
+      ],
+      "embedding_status": "ready",
+      "embedding_profile": "heading-paragraph-v1:800:100|mock|fixture-embedding-v1|1536|heading-prefix-v1"
+    },
+    {
+      "scope_key": "public",
+      "document_key": "retry",
+      "version_number": 1,
+      "revision_hash": "2c1efd7aa09e068dd9d2ad4eb3d13d27191ea31623027c01b1a2015be862724c",
+      "data_version": "clouddesk-demo-v1",
+      "product_versions": [
+        "1.0",
+        "2.0"
+      ],
+      "embedding_status": "ready",
+      "embedding_profile": "heading-paragraph-v1:800:100|mock|fixture-embedding-v1|1536|heading-prefix-v1"
+    },
+    {
+      "scope_key": "public",
+      "document_key": "roles",
+      "version_number": 1,
+      "revision_hash": "0bc647ba85771a53d1e6af192c91a361b0294b380fb05eadd1dd2b8e58306e46",
+      "data_version": "clouddesk-demo-v1",
+      "product_versions": [
+        "1.0",
+        "2.0"
+      ],
+      "embedding_status": "ready",
+      "embedding_profile": "heading-paragraph-v1:800:100|mock|fixture-embedding-v1|1536|heading-prefix-v1"
+    },
+    {
+      "scope_key": "public",
+      "document_key": "tickets",
+      "version_number": 1,
+      "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+      "data_version": "clouddesk-demo-v1",
+      "product_versions": [
+        "1.0",
+        "2.0"
+      ],
+      "embedding_status": "ready",
+      "embedding_profile": "heading-paragraph-v1:800:100|mock|fixture-embedding-v1|1536|heading-prefix-v1"
+    },
+    {
+      "scope_key": "public",
+      "document_key": "versions",
+      "version_number": 1,
+      "revision_hash": "ccb035fdbc06850f62f22270ba2cd0ae084f18192d258879ecb1b7cede45f710",
+      "data_version": "clouddesk-demo-v1",
+      "product_versions": [
+        "1.0",
+        "2.0"
+      ],
+      "embedding_status": "ready",
+      "embedding_profile": "heading-paragraph-v1:800:100|mock|fixture-embedding-v1|1536|heading-prefix-v1"
+    }
+  ],
+  "cases": [
+    {
+      "id": "dev-001",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "answer",
+      "expected_sources": [
+        "quotas#limits"
+      ],
+      "hit": false,
+      "top5": [
+        {
+          "chunk_id": "59d95142-6c89-48a0-abcd-127f235a3ebc",
+          "ordinal": 0,
+          "heading_path": [
+            "版本与升级"
+          ],
+          "start_char": 0,
+          "end_char": 88,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "versions",
+          "source_path": "data/demo/docs/versions.md",
+          "version_id": "0ced6e71-43af-4c7d-a4a5-d94f834589d6",
+          "version_number": 1,
+          "revision_hash": "ccb035fdbc06850f62f22270ba2cd0ae084f18192d258879ecb1b7cede45f710",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.24120643525277063,
+          "source": "versions"
+        },
+        {
+          "chunk_id": "8afb9606-935a-4d03-a19d-59c0d35e4d75",
+          "ordinal": 1,
+          "heading_path": [
+            "工单与知识不足",
+            "approval"
+          ],
+          "start_char": 89,
+          "end_char": 207,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "tickets",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_id": "21e5a8d5-7615-46f3-ad51-194c9467e8f9",
+          "version_number": 1,
+          "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.16930860257371128,
+          "source": "tickets#approval"
+        },
+        {
+          "chunk_id": "39b6f11c-b690-4c87-85f6-933720c79d9e",
+          "ordinal": 1,
+          "heading_path": [
+            "租户与角色边界",
+            "access"
+          ],
+          "start_char": 87,
+          "end_char": 209,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "roles",
+          "source_path": "data/demo/docs/roles.md",
+          "version_id": "f28197b0-5a2e-4a05-bb9a-4b4a4725b877",
+          "version_number": 1,
+          "revision_hash": "0bc647ba85771a53d1e6af192c91a361b0294b380fb05eadd1dd2b8e58306e46",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.16040862394854027,
+          "source": "roles#access"
+        },
+        {
+          "chunk_id": "4d814884-be01-4ed6-8db8-91cf13c72431",
+          "ordinal": 1,
+          "heading_path": [
+            "鉴权与权限错误",
+            "errors"
+          ],
+          "start_char": 86,
+          "end_char": 187,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.15422512702122348,
+          "source": "auth#errors"
+        },
+        {
+          "chunk_id": "173dc88a-f23f-40f0-b49e-31c067dd0688",
+          "ordinal": 0,
+          "heading_path": [
+            "月额度耗尽"
+          ],
+          "start_char": 0,
+          "end_char": 93,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "monthly-quota",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_id": "73867d90-ddc8-4e80-a61d-9bd576ef81fa",
+          "version_number": 1,
+          "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.10608789190027201,
+          "source": "monthly-quota"
+        }
+      ]
+    },
+    {
+      "id": "dev-002",
+      "tenant_id": "tenant-beta",
+      "product_version": "1.0",
+      "answerability": "answer",
+      "expected_sources": [
+        "quotas#limits"
+      ],
+      "hit": true,
+      "top5": [
+        {
+          "chunk_id": "30f2b9aa-5d36-4c96-a1a3-110ce10859f2",
+          "ordinal": 1,
+          "heading_path": [
+            "版本与升级",
+            "versions"
+          ],
+          "start_char": 88,
+          "end_char": 204,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "versions",
+          "source_path": "data/demo/docs/versions.md",
+          "version_id": "0ced6e71-43af-4c7d-a4a5-d94f834589d6",
+          "version_number": 1,
+          "revision_hash": "ccb035fdbc06850f62f22270ba2cd0ae084f18192d258879ecb1b7cede45f710",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.4965193271637104,
+          "source": "versions#versions"
+        },
+        {
+          "chunk_id": "4d814884-be01-4ed6-8db8-91cf13c72431",
+          "ordinal": 1,
+          "heading_path": [
+            "鉴权与权限错误",
+            "errors"
+          ],
+          "start_char": 86,
+          "end_char": 187,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.3096847916776708,
+          "source": "auth#errors"
+        },
+        {
+          "chunk_id": "173dc88a-f23f-40f0-b49e-31c067dd0688",
+          "ordinal": 0,
+          "heading_path": [
+            "月额度耗尽"
+          ],
+          "start_char": 0,
+          "end_char": 93,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "monthly-quota",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_id": "73867d90-ddc8-4e80-a61d-9bd576ef81fa",
+          "version_number": 1,
+          "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.19220837950707026,
+          "source": "monthly-quota"
+        },
+        {
+          "chunk_id": "d82f77e1-abd2-4a44-a1aa-ad7ae34b3093",
+          "ordinal": 1,
+          "heading_path": [
+            "月额度耗尽",
+            "diagnosis"
+          ],
+          "start_char": 93,
+          "end_char": 234,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "monthly-quota",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_id": "73867d90-ddc8-4e80-a61d-9bd576ef81fa",
+          "version_number": 1,
+          "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.17801524924868362,
+          "source": "monthly-quota#diagnosis"
+        },
+        {
+          "chunk_id": "c2626ad4-2f70-46cf-ba6c-52d1874578fb",
+          "ordinal": 1,
+          "heading_path": [
+            "套餐与额度",
+            "limits"
+          ],
+          "start_char": 86,
+          "end_char": 215,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "quotas",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_id": "09605dbb-b05c-4c4e-83fc-8d0d7131629d",
+          "version_number": 1,
+          "revision_hash": "24198ca6ab4ca7ba1fe15b5b4ef98711ebb473882badae473dcf3afc76926007",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.14867788714070307,
+          "source": "quotas#limits"
+        }
+      ]
+    },
+    {
+      "id": "dev-003",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "answer",
+      "expected_sources": [
+        "versions#versions"
+      ],
+      "hit": false,
+      "top5": [
+        {
+          "chunk_id": "66f95f6b-ea46-4109-8c9e-29ca859e2dfe",
+          "ordinal": 0,
+          "heading_path": [
+            "分钟限流排障"
+          ],
+          "start_char": 0,
+          "end_char": 91,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.4513180582929823,
+          "source": "rate-limit"
+        },
+        {
+          "chunk_id": "173dc88a-f23f-40f0-b49e-31c067dd0688",
+          "ordinal": 0,
+          "heading_path": [
+            "月额度耗尽"
+          ],
+          "start_char": 0,
+          "end_char": 93,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "monthly-quota",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_id": "73867d90-ddc8-4e80-a61d-9bd576ef81fa",
+          "version_number": 1,
+          "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.44230293883699523,
+          "source": "monthly-quota"
+        },
+        {
+          "chunk_id": "0c93888b-924a-40b5-93bc-37e58ed58359",
+          "ordinal": 1,
+          "heading_path": [
+            "分钟限流排障",
+            "diagnosis"
+          ],
+          "start_char": 91,
+          "end_char": 241,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.2108703129964884,
+          "source": "rate-limit#diagnosis"
+        },
+        {
+          "chunk_id": "4c2c40da-d810-4375-a719-ae1c916f10ab",
+          "ordinal": 0,
+          "heading_path": [
+            "鉴权与权限错误"
+          ],
+          "start_char": 0,
+          "end_char": 86,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.10190195452582729,
+          "source": "auth"
+        },
+        {
+          "chunk_id": "59d95142-6c89-48a0-abcd-127f235a3ebc",
+          "ordinal": 0,
+          "heading_path": [
+            "版本与升级"
+          ],
+          "start_char": 0,
+          "end_char": 88,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "versions",
+          "source_path": "data/demo/docs/versions.md",
+          "version_id": "0ced6e71-43af-4c7d-a4a5-d94f834589d6",
+          "version_number": 1,
+          "revision_hash": "ccb035fdbc06850f62f22270ba2cd0ae084f18192d258879ecb1b7cede45f710",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.06915915218470037,
+          "source": "versions"
+        }
+      ]
+    },
+    {
+      "id": "dev-004",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "answer",
+      "expected_sources": [
+        "rate-limit#diagnosis"
+      ],
+      "hit": false,
+      "top5": [
+        {
+          "chunk_id": "39b6f11c-b690-4c87-85f6-933720c79d9e",
+          "ordinal": 1,
+          "heading_path": [
+            "租户与角色边界",
+            "access"
+          ],
+          "start_char": 87,
+          "end_char": 209,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "roles",
+          "source_path": "data/demo/docs/roles.md",
+          "version_id": "f28197b0-5a2e-4a05-bb9a-4b4a4725b877",
+          "version_number": 1,
+          "revision_hash": "0bc647ba85771a53d1e6af192c91a361b0294b380fb05eadd1dd2b8e58306e46",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.453633061701018,
+          "source": "roles#access"
+        },
+        {
+          "chunk_id": "3b8d6956-16e4-4323-b174-aaf0c6bca359",
+          "ordinal": 0,
+          "heading_path": [
+            "工单与知识不足"
+          ],
+          "start_char": 0,
+          "end_char": 89,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "tickets",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_id": "21e5a8d5-7615-46f3-ad51-194c9467e8f9",
+          "version_number": 1,
+          "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.23505006908773718,
+          "source": "tickets"
+        },
+        {
+          "chunk_id": "4d814884-be01-4ed6-8db8-91cf13c72431",
+          "ordinal": 1,
+          "heading_path": [
+            "鉴权与权限错误",
+            "errors"
+          ],
+          "start_char": 86,
+          "end_char": 187,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.174937504544858,
+          "source": "auth#errors"
+        },
+        {
+          "chunk_id": "59d95142-6c89-48a0-abcd-127f235a3ebc",
+          "ordinal": 0,
+          "heading_path": [
+            "版本与升级"
+          ],
+          "start_char": 0,
+          "end_char": 88,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "versions",
+          "source_path": "data/demo/docs/versions.md",
+          "version_id": "0ced6e71-43af-4c7d-a4a5-d94f834589d6",
+          "version_number": 1,
+          "revision_hash": "ccb035fdbc06850f62f22270ba2cd0ae084f18192d258879ecb1b7cede45f710",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.1441292295571479,
+          "source": "versions"
+        },
+        {
+          "chunk_id": "8dddda2f-a5b0-4931-bc99-e9aa40e6349d",
+          "ordinal": 1,
+          "heading_path": [
+            "重试规则",
+            "policy"
+          ],
+          "start_char": 84,
+          "end_char": 194,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "retry",
+          "source_path": "data/demo/docs/retry.md",
+          "version_id": "c03c8360-defb-4864-b360-6f0723a65ebb",
+          "version_number": 1,
+          "revision_hash": "2c1efd7aa09e068dd9d2ad4eb3d13d27191ea31623027c01b1a2015be862724c",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.1393844485282898,
+          "source": "retry#policy"
+        }
+      ]
+    },
+    {
+      "id": "dev-005",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "answer",
+      "expected_sources": [
+        "monthly-quota#diagnosis"
+      ],
+      "hit": false,
+      "top5": [
+        {
+          "chunk_id": "4d814884-be01-4ed6-8db8-91cf13c72431",
+          "ordinal": 1,
+          "heading_path": [
+            "鉴权与权限错误",
+            "errors"
+          ],
+          "start_char": 86,
+          "end_char": 187,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.30297848222109647,
+          "source": "auth#errors"
+        },
+        {
+          "chunk_id": "3b8d6956-16e4-4323-b174-aaf0c6bca359",
+          "ordinal": 0,
+          "heading_path": [
+            "工单与知识不足"
+          ],
+          "start_char": 0,
+          "end_char": 89,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "tickets",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_id": "21e5a8d5-7615-46f3-ad51-194c9467e8f9",
+          "version_number": 1,
+          "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.27058402264857384,
+          "source": "tickets"
+        },
+        {
+          "chunk_id": "66f95f6b-ea46-4109-8c9e-29ca859e2dfe",
+          "ordinal": 0,
+          "heading_path": [
+            "分钟限流排障"
+          ],
+          "start_char": 0,
+          "end_char": 91,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.2444316668639085,
+          "source": "rate-limit"
+        },
+        {
+          "chunk_id": "173dc88a-f23f-40f0-b49e-31c067dd0688",
+          "ordinal": 0,
+          "heading_path": [
+            "月额度耗尽"
+          ],
+          "start_char": 0,
+          "end_char": 93,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "monthly-quota",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_id": "73867d90-ddc8-4e80-a61d-9bd576ef81fa",
+          "version_number": 1,
+          "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.19988372920211173,
+          "source": "monthly-quota"
+        },
+        {
+          "chunk_id": "8afb9606-935a-4d03-a19d-59c0d35e4d75",
+          "ordinal": 1,
+          "heading_path": [
+            "工单与知识不足",
+            "approval"
+          ],
+          "start_char": 89,
+          "end_char": 207,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "tickets",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_id": "21e5a8d5-7615-46f3-ad51-194c9467e8f9",
+          "version_number": 1,
+          "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.0880608374945594,
+          "source": "tickets#approval"
+        }
+      ]
+    },
+    {
+      "id": "dev-006",
+      "tenant_id": "tenant-beta",
+      "product_version": "1.0",
+      "answerability": "clarify",
+      "expected_sources": [
+        "rate-limit#diagnosis"
+      ],
+      "hit": true,
+      "top5": [
+        {
+          "chunk_id": "4c2c40da-d810-4375-a719-ae1c916f10ab",
+          "ordinal": 0,
+          "heading_path": [
+            "鉴权与权限错误"
+          ],
+          "start_char": 0,
+          "end_char": 86,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.1718085016976013,
+          "source": "auth"
+        },
+        {
+          "chunk_id": "8afb9606-935a-4d03-a19d-59c0d35e4d75",
+          "ordinal": 1,
+          "heading_path": [
+            "工单与知识不足",
+            "approval"
+          ],
+          "start_char": 89,
+          "end_char": 207,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "tickets",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_id": "21e5a8d5-7615-46f3-ad51-194c9467e8f9",
+          "version_number": 1,
+          "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.15981919233341857,
+          "source": "tickets#approval"
+        },
+        {
+          "chunk_id": "66f95f6b-ea46-4109-8c9e-29ca859e2dfe",
+          "ordinal": 0,
+          "heading_path": [
+            "分钟限流排障"
+          ],
+          "start_char": 0,
+          "end_char": 91,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.1384126991033554,
+          "source": "rate-limit"
+        },
+        {
+          "chunk_id": "0c93888b-924a-40b5-93bc-37e58ed58359",
+          "ordinal": 1,
+          "heading_path": [
+            "分钟限流排障",
+            "diagnosis"
+          ],
+          "start_char": 91,
+          "end_char": 241,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.09695862233638763,
+          "source": "rate-limit#diagnosis"
+        },
+        {
+          "chunk_id": "c2626ad4-2f70-46cf-ba6c-52d1874578fb",
+          "ordinal": 1,
+          "heading_path": [
+            "套餐与额度",
+            "limits"
+          ],
+          "start_char": 86,
+          "end_char": 215,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "quotas",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_id": "09605dbb-b05c-4c4e-83fc-8d0d7131629d",
+          "version_number": 1,
+          "revision_hash": "24198ca6ab4ca7ba1fe15b5b4ef98711ebb473882badae473dcf3afc76926007",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.0660140608553309,
+          "source": "quotas#limits"
+        }
+      ]
+    },
+    {
+      "id": "dev-007",
+      "tenant_id": "tenant-alpha",
+      "product_version": null,
+      "answerability": "clarify",
+      "expected_sources": [
+        "rate-limit#diagnosis"
+      ],
+      "excluded": "missing_product_version"
+    },
+    {
+      "id": "dev-008",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "abstain",
+      "expected_sources": [],
+      "excluded": "no_relevant_sources"
+    },
+    {
+      "id": "dev-009",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "answer",
+      "expected_sources": [
+        "auth#errors"
+      ],
+      "hit": true,
+      "top5": [
+        {
+          "chunk_id": "0c93888b-924a-40b5-93bc-37e58ed58359",
+          "ordinal": 1,
+          "heading_path": [
+            "分钟限流排障",
+            "diagnosis"
+          ],
+          "start_char": 91,
+          "end_char": 241,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.2260394571972557,
+          "source": "rate-limit#diagnosis"
+        },
+        {
+          "chunk_id": "39b6f11c-b690-4c87-85f6-933720c79d9e",
+          "ordinal": 1,
+          "heading_path": [
+            "租户与角色边界",
+            "access"
+          ],
+          "start_char": 87,
+          "end_char": 209,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "roles",
+          "source_path": "data/demo/docs/roles.md",
+          "version_id": "f28197b0-5a2e-4a05-bb9a-4b4a4725b877",
+          "version_number": 1,
+          "revision_hash": "0bc647ba85771a53d1e6af192c91a361b0294b380fb05eadd1dd2b8e58306e46",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.21665395597542036,
+          "source": "roles#access"
+        },
+        {
+          "chunk_id": "4c2c40da-d810-4375-a719-ae1c916f10ab",
+          "ordinal": 0,
+          "heading_path": [
+            "鉴权与权限错误"
+          ],
+          "start_char": 0,
+          "end_char": 86,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.21651139855385448,
+          "source": "auth"
+        },
+        {
+          "chunk_id": "3b8d6956-16e4-4323-b174-aaf0c6bca359",
+          "ordinal": 0,
+          "heading_path": [
+            "工单与知识不足"
+          ],
+          "start_char": 0,
+          "end_char": 89,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "tickets",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_id": "21e5a8d5-7615-46f3-ad51-194c9467e8f9",
+          "version_number": 1,
+          "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.16650531196467588,
+          "source": "tickets"
+        },
+        {
+          "chunk_id": "4d814884-be01-4ed6-8db8-91cf13c72431",
+          "ordinal": 1,
+          "heading_path": [
+            "鉴权与权限错误",
+            "errors"
+          ],
+          "start_char": 86,
+          "end_char": 187,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.14610359808077988,
+          "source": "auth#errors"
+        }
+      ]
+    },
+    {
+      "id": "dev-010",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "refuse",
+      "expected_sources": [
+        "roles#access"
+      ],
+      "hit": false,
+      "top5": [
+        {
+          "chunk_id": "3b8d6956-16e4-4323-b174-aaf0c6bca359",
+          "ordinal": 0,
+          "heading_path": [
+            "工单与知识不足"
+          ],
+          "start_char": 0,
+          "end_char": 89,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "tickets",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_id": "21e5a8d5-7615-46f3-ad51-194c9467e8f9",
+          "version_number": 1,
+          "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.3777992804883953,
+          "source": "tickets"
+        },
+        {
+          "chunk_id": "66f95f6b-ea46-4109-8c9e-29ca859e2dfe",
+          "ordinal": 0,
+          "heading_path": [
+            "分钟限流排障"
+          ],
+          "start_char": 0,
+          "end_char": 91,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.2380638235997734,
+          "source": "rate-limit"
+        },
+        {
+          "chunk_id": "c2626ad4-2f70-46cf-ba6c-52d1874578fb",
+          "ordinal": 1,
+          "heading_path": [
+            "套餐与额度",
+            "limits"
+          ],
+          "start_char": 86,
+          "end_char": 215,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "quotas",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_id": "09605dbb-b05c-4c4e-83fc-8d0d7131629d",
+          "version_number": 1,
+          "revision_hash": "24198ca6ab4ca7ba1fe15b5b4ef98711ebb473882badae473dcf3afc76926007",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.22843991258261542,
+          "source": "quotas#limits"
+        },
+        {
+          "chunk_id": "0c93888b-924a-40b5-93bc-37e58ed58359",
+          "ordinal": 1,
+          "heading_path": [
+            "分钟限流排障",
+            "diagnosis"
+          ],
+          "start_char": 91,
+          "end_char": 241,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.21655402080835495,
+          "source": "rate-limit#diagnosis"
+        },
+        {
+          "chunk_id": "4c2c40da-d810-4375-a719-ae1c916f10ab",
+          "ordinal": 0,
+          "heading_path": [
+            "鉴权与权限错误"
+          ],
+          "start_char": 0,
+          "end_char": 86,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.1669805001535145,
+          "source": "auth"
+        }
+      ]
+    },
+    {
+      "id": "dev-011",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "refuse",
+      "expected_sources": [
+        "tickets#approval"
+      ],
+      "hit": false,
+      "top5": [
+        {
+          "chunk_id": "d82f77e1-abd2-4a44-a1aa-ad7ae34b3093",
+          "ordinal": 1,
+          "heading_path": [
+            "月额度耗尽",
+            "diagnosis"
+          ],
+          "start_char": 93,
+          "end_char": 234,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "monthly-quota",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_id": "73867d90-ddc8-4e80-a61d-9bd576ef81fa",
+          "version_number": 1,
+          "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.2731982684618486,
+          "source": "monthly-quota#diagnosis"
+        },
+        {
+          "chunk_id": "4b3758ba-6769-4bd1-a5b2-17590a110326",
+          "ordinal": 0,
+          "heading_path": [
+            "套餐与额度"
+          ],
+          "start_char": 0,
+          "end_char": 86,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "quotas",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_id": "09605dbb-b05c-4c4e-83fc-8d0d7131629d",
+          "version_number": 1,
+          "revision_hash": "24198ca6ab4ca7ba1fe15b5b4ef98711ebb473882badae473dcf3afc76926007",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.2258683173813586,
+          "source": "quotas"
+        },
+        {
+          "chunk_id": "2755c01a-c668-4c81-91ec-5866b69887a8",
+          "ordinal": 0,
+          "heading_path": [
+            "重试规则"
+          ],
+          "start_char": 0,
+          "end_char": 84,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "retry",
+          "source_path": "data/demo/docs/retry.md",
+          "version_id": "c03c8360-defb-4864-b360-6f0723a65ebb",
+          "version_number": 1,
+          "revision_hash": "2c1efd7aa09e068dd9d2ad4eb3d13d27191ea31623027c01b1a2015be862724c",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.11558188610293574,
+          "source": "retry"
+        },
+        {
+          "chunk_id": "c2626ad4-2f70-46cf-ba6c-52d1874578fb",
+          "ordinal": 1,
+          "heading_path": [
+            "套餐与额度",
+            "limits"
+          ],
+          "start_char": 86,
+          "end_char": 215,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "quotas",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_id": "09605dbb-b05c-4c4e-83fc-8d0d7131629d",
+          "version_number": 1,
+          "revision_hash": "24198ca6ab4ca7ba1fe15b5b4ef98711ebb473882badae473dcf3afc76926007",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.09274006935416534,
+          "source": "quotas#limits"
+        },
+        {
+          "chunk_id": "0c93888b-924a-40b5-93bc-37e58ed58359",
+          "ordinal": 1,
+          "heading_path": [
+            "分钟限流排障",
+            "diagnosis"
+          ],
+          "start_char": 91,
+          "end_char": 241,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.06577826958220911,
+          "source": "rate-limit#diagnosis"
+        }
+      ]
+    },
+    {
+      "id": "dev-012",
+      "tenant_id": "tenant-alpha",
+      "product_version": "2.0",
+      "answerability": "refuse",
+      "expected_sources": [
+        "tickets#approval"
+      ],
+      "hit": true,
+      "top5": [
+        {
+          "chunk_id": "4c2c40da-d810-4375-a719-ae1c916f10ab",
+          "ordinal": 0,
+          "heading_path": [
+            "鉴权与权限错误"
+          ],
+          "start_char": 0,
+          "end_char": 86,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "auth",
+          "source_path": "data/demo/docs/auth.md",
+          "version_id": "f355c50d-06cc-47cc-952e-c602bb70e1e7",
+          "version_number": 1,
+          "revision_hash": "5ca243a08406a7689bcfddc0df1dc2b35ed9503f6eb4796cb7aef217585bd0a7",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.3342502616868295,
+          "source": "auth"
+        },
+        {
+          "chunk_id": "2755c01a-c668-4c81-91ec-5866b69887a8",
+          "ordinal": 0,
+          "heading_path": [
+            "重试规则"
+          ],
+          "start_char": 0,
+          "end_char": 84,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "retry",
+          "source_path": "data/demo/docs/retry.md",
+          "version_id": "c03c8360-defb-4864-b360-6f0723a65ebb",
+          "version_number": 1,
+          "revision_hash": "2c1efd7aa09e068dd9d2ad4eb3d13d27191ea31623027c01b1a2015be862724c",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.3264301595309913,
+          "source": "retry"
+        },
+        {
+          "chunk_id": "173dc88a-f23f-40f0-b49e-31c067dd0688",
+          "ordinal": 0,
+          "heading_path": [
+            "月额度耗尽"
+          ],
+          "start_char": 0,
+          "end_char": 93,
+          "start_line": 1,
+          "end_line": 7,
+          "scope_key": "public",
+          "document_key": "monthly-quota",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_id": "73867d90-ddc8-4e80-a61d-9bd576ef81fa",
+          "version_number": 1,
+          "revision_hash": "ebbdd46ebb820c67c770ac75a099f87e9a070023d17ba897f25070a89cfbe297",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.2657755590537544,
+          "source": "monthly-quota"
+        },
+        {
+          "chunk_id": "8afb9606-935a-4d03-a19d-59c0d35e4d75",
+          "ordinal": 1,
+          "heading_path": [
+            "工单与知识不足",
+            "approval"
+          ],
+          "start_char": 89,
+          "end_char": 207,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "tickets",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_id": "21e5a8d5-7615-46f3-ad51-194c9467e8f9",
+          "version_number": 1,
+          "revision_hash": "dcc97a85c3690d5e871fd2609b7b1849c739c72494b160969497a8e941a34c9e",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.18289881399577257,
+          "source": "tickets#approval"
+        },
+        {
+          "chunk_id": "0c93888b-924a-40b5-93bc-37e58ed58359",
+          "ordinal": 1,
+          "heading_path": [
+            "分钟限流排障",
+            "diagnosis"
+          ],
+          "start_char": 91,
+          "end_char": 241,
+          "start_line": 8,
+          "end_line": 10,
+          "scope_key": "public",
+          "document_key": "rate-limit",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_id": "4b0c8369-fa9a-4d08-8d30-80f3e28de6bd",
+          "version_number": 1,
+          "revision_hash": "0926fddba1dc49089dd057c219f9156f1201f49f7562dd41d427be6da09a14fc",
+          "data_version": "clouddesk-demo-v1",
+          "score": 0.16243893316604652,
+          "source": "rate-limit#diagnosis"
+        }
+      ]
+    }
+  ],
+  "mode": "mock_engineering_only",
+  "evaluation_repeat_equal": true,
+  "cached_vectors_by_provider": {
+    "mock": 16
+  },
+  "real_semantic_baseline": null,
+  "date": "2026-11-08",
+  "timezone": "Asia/Shanghai",
+  "baseline": "01cf3741727ecfa792e9546ab3b28feaeca8ccd4",
+  "postgres_version": "17.11",
+  "pgvector_version": "0.8.7",
+  "document_count": 8,
+  "chunk_count": 16
+}

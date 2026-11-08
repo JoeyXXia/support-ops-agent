@@ -70,3 +70,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 9 范围（2026-11-06）
 
 标题/段落切块与原文偏移、固定1536维embedding适配、按范围/模型/维度/输入版本/输入哈希缓存、有界批次与重试、原子完成状态及恢复、CLI预览与审阅材料。真实小请求因quota_exhausted未成功。没有向量检索、向量索引、RAG回答、BM25、SSE、UI变化、新服务或编排框架；提交推送按用户本轮明确指令执行。
+
+
+## Day 10 范围（2026-11-08）
+
+沿用 PostgreSQL、pgvector 和 Day 9 mock provider。新增可信操作员 CLI 的精确余弦 top-k，按租户、产品版本、最新适用修订和向量配置过滤，并保存开发集逐例证据命中记录。真实语义基线等待真实向量语料。
