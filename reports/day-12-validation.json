@@ -1,0 +1,101 @@
+[
+  {
+    "command": [
+      "python",
+      "scripts/check_offline.py"
+    ],
+    "exit_code": 0,
+    "stdout": "All checks passed!\n52 files already formatted\n{\"data_version\": \"clouddesk-demo-v1\", \"tenants\": 2, \"tickets\": 10, \"documents\": 8, \"dev_cases\": 12, \"clarify_or_abstain\": 3}\n{\n  \"status\": \"completed\",\n  \"reason\": \"answer\",\n  \"answer\": \"[mock] ws-alpha分钟用量60/60，月用量8000/10000；日志表明分钟限流，按Retry-After等待20秒并降低请求频率。\",\n  \"model_calls\": 2,\n  \"tool_calls\": 2,\n  \"events\": [\n    {\n      \"step\": 1,\n      \"kind\": \"model.finished\",\n      \"mode\": \"mock\",\n      \"request_id\": null\n    },\n    {\n      \"step\": 1,\n      \"kind\": \"tool.finished\",\n      \"call_id\": \"usage-1\",\n      \"tool\": \"get_workspace_usage\",\n      \"result\": {\n        \"tool\": \"get_workspace_usage\",\n        \"ok\": true,\n        \"data\": {\n          \"workspace_id\": \"ws-alpha\",\n          \"plan\": \"starter\",\n          \"version\": \"2.0\",\n          \"minute_requests\": 60,\n          \"minute_limit\": 60,\n          \"monthly_requests\": 8000,\n          \"monthly_limit\": 10000,\n          \"synthetic\": true\n        },\n        \"error\": null\n      }\n    },\n    {\n      \"step\": 1,\n      \"kind\": \"tool.finished\",\n      \"call_id\": \"errors-1\",\n      \"tool\": \"get_recent_errors\",\n      \"result\": {\n        \"tool\": \"get_recent_errors\",\n        \"ok\": true,\n        \"data\": {\n          \"workspace_id\": \"ws-alpha\",\n          \"events\": [\n            {\n              \"id\": \"ws-alpha-error-3\",\n              \"occurred_at\": \"2026-11-01T00:00:02Z\",\n              \"status_code\": 429,\n              \"reason\": \"minute_rate_limit\",\n              \"retry_after_seconds\": 20\n            },\n            {\n              \"id\": \"ws-alpha-error-2\",\n              \"occurred_at\": \"2026-11-01T00:00:01Z\",\n              \"status_code\": 429,\n              \"reason\": \"minute_rate_limit\",\n              \"retry_after_seconds\": 20\n            }\n          ],\n          \"synthetic\": true\n        },\n        \"error\": null\n      }\n    },\n    {\n      \"step\": 2,\n      \"kind\": \"model.finished\",\n      \"mode\": \"mock\",\n      \"request_id\": null\n    }\n  ]\n}\n",
+    "stderr": "test_empty_and_normalization_boundary (test_chunking.ChunkingTests.test_empty_and_normalization_boundary) ... ok\ntest_fenced_code_is_not_heading_or_split (test_chunking.ChunkingTests.test_fenced_code_is_not_heading_or_split) ... ok\ntest_heading_hash_is_not_removed_from_language_name (test_chunking.ChunkingTests.test_heading_hash_is_not_removed_from_language_name) ... ok\ntest_headings_positions_and_duplicate_titles (test_chunking.ChunkingTests.test_headings_positions_and_duplicate_titles) ... ok\ntest_input_hash_includes_heading_path (test_chunking.ChunkingTests.test_input_hash_includes_heading_path) ... ok\ntest_long_paragraph_overlap_within_section (test_chunking.ChunkingTests.test_long_paragraph_overlap_within_section) ... ok\ntest_protected_oversize_and_unclosed_fence (test_chunking.ChunkingTests.test_protected_oversize_and_unclosed_fence) ... ok\ntest_short_table_and_tilde_fence (test_chunking.ChunkingTests.test_short_table_and_tilde_fence) ... ok\ntest_budget_counts_citations_separators_and_multibyte_text (test_context.ContextTests.test_budget_counts_citations_separators_and_multibyte_text) ... ok\ntest_duplicates_and_limits (test_context.ContextTests.test_duplicates_and_limits) ... ok\ntest_opt_in_ranking_and_failure_fallback (test_context.ContextTests.test_opt_in_ranking_and_failure_fallback) ... ok\ntest_input_limits (test_embeddings.EmbeddingTests.test_input_limits) ... ok\ntest_invalid_vectors_and_response (test_embeddings.EmbeddingTests.test_invalid_vectors_and_response) ... ok\ntest_mock_is_deterministic_and_separate (test_embeddings.EmbeddingTests.test_mock_is_deterministic_and_separate) ... ok\ntest_out_of_order_indexes (test_embeddings.EmbeddingTests.test_out_of_order_indexes) ... ok\ntest_quota_never_retried (test_embeddings.EmbeddingTests.test_quota_never_retried) ... ok\ntest_retry_then_success_and_exhaustion (test_embeddings.EmbeddingTests.test_retry_then_success_and_exhaustion) ... ok\ntest_bm25_score_and_no_partial_match (test_keyword.KeywordTests.test_bm25_score_and_no_partial_match) ... ok\ntest_chinese_and_exact_identifiers (test_keyword.KeywordTests.test_chinese_and_exact_identifiers) ... ok\ntest_rrf_uses_rank_deduplicates_and_breaks_ties (test_keyword.KeywordTests.test_rrf_uses_rank_deduplicates_and_breaks_ties) ... ok\ntest_duplicate_call_ids_rejected_before_execution (test_loop.LoopTests.test_duplicate_call_ids_rejected_before_execution) ... ok\ntest_empty_output_and_provider_failure (test_loop.LoopTests.test_empty_output_and_provider_failure) ... ok\ntest_invalid_and_unauthorized_arguments (test_loop.LoopTests.test_invalid_and_unauthorized_arguments) ... ok\ntest_invalid_json_before_execution (test_loop.LoopTests.test_invalid_json_before_execution) ... ok\ntest_message_pairing_and_sequential_execution (test_loop.LoopTests.test_message_pairing_and_sequential_execution) ... ok\ntest_model_timeout_and_cancellation (test_loop.LoopTests.test_model_timeout_and_cancellation) ... ok\ntest_no_progress (test_loop.LoopTests.test_no_progress) ... ok\ntest_openai_stateless_output_roundtrip (test_loop.LoopTests.test_openai_stateless_output_roundtrip) ... ok\ntest_scenario_determinism (test_loop.LoopTests.test_scenario_determinism) ... ok\ntest_step_budget (test_loop.LoopTests.test_step_budget) ... ok\ntest_tool_budget_rejects_whole_batch (test_loop.LoopTests.test_tool_budget_rejects_whole_batch) ... ok\ntest_tool_timeout (test_loop.LoopTests.test_tool_timeout) ... ok\ntest_unknown_tool_stops (test_loop.LoopTests.test_unknown_tool_stops) ... ok\ntest_bad_metadata_and_encoding (test_markdown.MarkdownTests.test_bad_metadata_and_encoding) ... ok\ntest_bom_line_endings_and_version_order (test_markdown.MarkdownTests.test_bom_line_endings_and_version_order) ... ok\ntest_demo_batch (test_markdown.MarkdownTests.test_demo_batch) ... ok\ntest_metadata_participates_in_revision (test_markdown.MarkdownTests.test_metadata_participates_in_revision) ... ok\ntest_path_and_version_boundaries (test_markdown.MarkdownTests.test_path_and_version_boundaries) ... ok\ntest_scope_validation (test_markdown.MarkdownTests.test_scope_validation) ... ok\ntest_configuration (test_providers.ProvidersTest.test_configuration) ... ok\ntest_http_failures (test_providers.ProvidersTest.test_http_failures) ... ok\ntest_incomplete_and_unknown_output (test_providers.ProvidersTest.test_incomplete_and_unknown_output) ... ok\ntest_mock_deterministic (test_providers.ProvidersTest.test_mock_deterministic) ... ok\ntest_success_and_request_options (test_providers.ProvidersTest.test_success_and_request_options) ... ok\ntest_timeout (test_providers.ProvidersTest.test_timeout) ... ok\ntest_tool_calls (test_providers.ProvidersTest.test_tool_calls) ... ok\ntest_exact_public_source_and_explicit_denominator (test_retrieval_eval.RetrievalEvalTests.test_exact_public_source_and_explicit_denominator) ... ok\ntest_accept_poll_and_answer (test_runs.RunApiTests.test_accept_poll_and_answer) ... Executing <Task pending name='Task-100' coro=<RunApiTests.test_accept_poll_and_answer() running at H:\\codex\\项目\\supportops-agent\\tests\\test_runs.py:36> wait_for=<Future pending cb=[Task.task_wakeup()] created at C:\\Users\\27019\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\asyncio\\base_events.py:448> cb=[_run_until_complete_cb() at C:\\Users\\27019\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\asyncio\\base_events.py:181] created at C:\\Users\\27019\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\Lib\\asyncio\\runners.py:100> took 0.141 seconds\nok\ntest_admission_limit (test_runs.RunApiTests.test_admission_limit) ... ok\ntest_clarify_other_question (test_runs.RunApiTests.test_clarify_other_question) ... ok\ntest_eviction_and_shutdown (test_runs.RunApiTests.test_eviction_and_shutdown) ... ok\ntest_failure_is_terminal_and_redacted (test_runs.RunApiTests.test_failure_is_terminal_and_redacted) ... ok\ntest_missing_and_invalid_id (test_runs.RunApiTests.test_missing_and_invalid_id) ... ok\ntest_partial_events_visible (test_runs.RunApiTests.test_partial_events_visible) ... ok\ntest_validation_and_identity_rejection (test_runs.RunApiTests.test_validation_and_identity_rejection) ... ok\ntest_bad_arguments_never_reach_business (test_tools.ToolTests.test_bad_arguments_never_reach_business) ... ok\ntest_empty_and_corrupt_event_data (test_tools.ToolTests.test_empty_and_corrupt_event_data) ... tool.failed tool=get_recent_errors code=internal_error\nok\ntest_errors_order_limit_and_version (test_tools.ToolTests.test_errors_order_limit_and_version) ... ok\ntest_identity_not_accepted_from_dictionary (test_tools.ToolTests.test_identity_not_accepted_from_dictionary) ... ok\ntest_limit_strictness (test_tools.ToolTests.test_limit_strictness) ... ok\ntest_registry_schema_excludes_identity (test_tools.ToolTests.test_registry_schema_excludes_identity) ... ok\ntest_role_mismatch_and_unknown_user (test_tools.ToolTests.test_role_mismatch_and_unknown_user) ... ok\ntest_support_requires_explicit_assignment (test_tools.ToolTests.test_support_requires_explicit_assignment) ... ok\ntest_tenant_denial_matches_unknown (test_tools.ToolTests.test_tenant_denial_matches_unknown) ... ok\ntest_unauthorized_never_reads_events (test_tools.ToolTests.test_unauthorized_never_reads_events) ... ok\ntest_unknown_tool (test_tools.ToolTests.test_unknown_tool) ... ok\ntest_usage_matches_facts (test_tools.ToolTests.test_usage_matches_facts) ... ok\n\n----------------------------------------------------------------------\nRan 67 tests in 2.581s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests/integration",
+      "-v"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "test_batch_failure_rolls_back (test_documents.DocumentDatabaseTests.test_batch_failure_rolls_back) ... ok\ntest_concurrent_first_import_no_duplicates (test_documents.DocumentDatabaseTests.test_concurrent_first_import_no_duplicates) ... ok\ntest_concurrent_revisions_numbered (test_documents.DocumentDatabaseTests.test_concurrent_revisions_numbered) ... ok\ntest_constraints (test_documents.DocumentDatabaseTests.test_constraints) ... ok\ntest_idempotent_batch_and_new_connection (test_documents.DocumentDatabaseTests.test_idempotent_batch_and_new_connection) ... ok\ntest_migrations_repeat_and_downgrade (test_documents.DocumentDatabaseTests.test_migrations_repeat_and_downgrade) ... ok\ntest_new_content_and_metadata_keep_old_versions (test_documents.DocumentDatabaseTests.test_new_content_and_metadata_keep_old_versions) ... ok\ntest_public_and_private_scopes (test_documents.DocumentDatabaseTests.test_public_and_private_scopes) ... ok\ntest_invalid_vector_never_cached (test_ingestion.IngestionDatabaseTests.test_invalid_vector_never_cached) ... ok\ntest_one_writer_per_version (test_ingestion.IngestionDatabaseTests.test_one_writer_per_version) ... ok\ntest_partial_failure_then_resume (test_ingestion.IngestionDatabaseTests.test_partial_failure_then_resume) ... ok\ntest_publish_rollback_and_cached_retry (test_ingestion.IngestionDatabaseTests.test_publish_rollback_and_cached_retry) ... ok\ntest_reuse_cache_and_keep_chunk_ids (test_ingestion.IngestionDatabaseTests.test_reuse_cache_and_keep_chunk_ids) ... ok\ntest_scope_and_provider_cache_separation (test_ingestion.IngestionDatabaseTests.test_scope_and_provider_cache_separation) ... ok\ntest_unauthorized_version_never_calls_provider (test_ingestion.IngestionDatabaseTests.test_unauthorized_version_never_calls_provider) ... ok\ntest_all_modes_share_scope_version_and_latest_ready (test_retrieval.RetrievalTests.test_all_modes_share_scope_version_and_latest_ready) ... ok\ntest_cache_scope_mismatch_and_invalid_query (test_retrieval.RetrievalTests.test_cache_scope_mismatch_and_invalid_query) ... ok\ntest_distance_ties_and_citations (test_retrieval.RetrievalTests.test_distance_ties_and_citations) ... ok\ntest_latest_applicable_revision_and_profile (test_retrieval.RetrievalTests.test_latest_applicable_revision_and_profile) ... ok\ntest_scope_and_product_version_filter_before_limit (test_retrieval.RetrievalTests.test_scope_and_product_version_filter_before_limit) ... ok\n\n----------------------------------------------------------------------\nRan 20 tests in 13.478s\n\nOK\n"
+  },
+  {
+    "command": [
+      "python",
+      "scripts/search_documents.py",
+      "search",
+      "401 token",
+      "--product-version",
+      "2.0",
+      "--mode",
+      "hybrid",
+      "--context"
+    ],
+    "exit_code": 0,
+    "rerank_status": "disabled",
+    "utf8_bytes": 1293,
+    "sources": [
+      "auth#errors",
+      "retry#policy",
+      "monthly-quota",
+      "tickets",
+      "quotas#limits"
+    ]
+  },
+  {
+    "command": [
+      "python",
+      "scripts/search_documents.py",
+      "search",
+      "401 token",
+      "--product-version",
+      "2.0",
+      "--mode",
+      "hybrid",
+      "--context",
+      "--rerank"
+    ],
+    "exit_code": 0,
+    "rerank_status": "applied",
+    "utf8_bytes": 1293,
+    "sources": [
+      "auth#errors",
+      "retry#policy",
+      "monthly-quota",
+      "tickets",
+      "quotas#limits"
+    ]
+  },
+  {
+    "command": [
+      "python",
+      "scripts/search_documents.py",
+      "search",
+      "401 token",
+      "--product-version",
+      "2.0",
+      "--mode",
+      "hybrid",
+      "--context",
+      "--context-budget",
+      "1"
+    ],
+    "exit_code": 0,
+    "rerank_status": "disabled",
+    "utf8_bytes": 0,
+    "sources": []
+  },
+  {
+    "command": [
+      "python",
+      "scripts/search_documents.py",
+      "eval",
+      "--compare"
+    ],
+    "exit_code": 0,
+    "day11_suites_equal": true
+  }
+]

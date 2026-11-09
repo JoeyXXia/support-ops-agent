@@ -1,18 +1,21 @@
 """Development-set evidence hit rate over a repeatable database snapshot."""
 
 from hashlib import sha256
+from statistics import median
+from time import perf_counter_ns
 
 import sqlalchemy as sa
 
 from evals.schema import EvalCase
 from packages.knowledge.chunking import INPUT_VERSION, POLICY
+from packages.knowledge.context import CANDIDATE_DEPTH, TOKEN_BUDGET, build_context
 from packages.knowledge.embeddings import DIMENSIONS
 from packages.knowledge.repository import scope_key
 from packages.knowledge.retrieval import search_query
 from packages.storage.schema import document_versions, documents
 
 
-def evaluate(connection, cases_path, provider, *, mode="vector"):
+def evaluate(connection, cases_path, provider, *, mode="vector", context_rerank=None):
     raw = cases_path.read_bytes()
     cases = [EvalCase.model_validate_json(line) for line in raw.splitlines() if line.strip()]
     if len({case.id for case in cases}) != len(cases):
@@ -31,6 +34,7 @@ def evaluate(connection, cases_path, provider, *, mode="vector"):
                 "missing_product_version" if not case.product_version else "no_relevant_sources"
             )
         else:
+            candidate_options = {} if context_rerank is None else {"k": CANDIDATE_DEPTH}
             results = search_query(
                 connection,
                 case.question,
@@ -38,7 +42,16 @@ def evaluate(connection, cases_path, provider, *, mode="vector"):
                 tenant_id=case.tenant_id,
                 product_version=case.product_version,
                 mode=mode,
+                **candidate_options,
             )
+            if context_rerank is not None:
+                row["candidate_ids"] = [str(item["chunk_id"]) for item in results]
+                started = perf_counter_ns()
+                context = build_context(case.question, results, rerank=context_rerank)
+                row["context_ms"] = (perf_counter_ns() - started) / 1_000_000
+                row["context_utf8_bytes"] = context["utf8_bytes"]
+                row["rerank_status"] = context["rerank_status"]
+                results = context["sources"]
             # Day 2 labels refer to public fixtures, not same-named tenant documents.
             row["hit"] = any(
                 hit["scope_key"] == "public" and hit["source"] in case.relevant_sources
@@ -82,4 +95,21 @@ def evaluate(connection, cases_path, provider, *, mode="vector"):
         missed_ids=[row["id"] for row in scored if not row["hit"]],
         corpus_revisions=[dict(row) for row in revisions],
         cases=rows,
+    )
+
+
+def compare_context(connection, cases_path, provider):
+    runs = {
+        name: evaluate(connection, cases_path, provider, mode="hybrid", context_rerank=enabled)
+        for name, enabled in (("off", False), ("on", True))
+    }
+    for report in runs.values():
+        durations = [row["context_ms"] for row in report["cases"] if "context_ms" in row]
+        report["median_context_ms"] = median(durations) if durations else None
+    return dict(
+        evaluation="mock_engineering_only",
+        candidate_depth=CANDIDATE_DEPTH,
+        token_budget=TOKEN_BUDGET,
+        token_estimator="utf8_byte_upper_bound",
+        runs=runs,
     )

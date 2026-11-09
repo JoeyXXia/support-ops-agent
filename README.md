@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 11。已实现精确向量检索、BM25 和 RRF 融合，并完成本地三路对照。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 12。已实现可选本地重排和预算受限的引用上下文。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -219,3 +219,14 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 ```
 
 原开发集三路 Hit@5 分别为向量 4/10、BM25 10/10、融合 9/10。补充集分别为 1/3、3/3、2/3。向量使用 mock。逐例排名、融合漏召回和运行边界见 [Day 11 报告](docs/devlog/2026-11-09-day-11.md)。
+
+
+## Day 12 重排与上下文
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 scripts/search_documents.py search "401 token" --product-version 2.0 --mode hybrid --context
+.\.venv\Scripts\python.exe -X utf8 scripts/search_documents.py search "401 token" --product-version 2.0 --mode hybrid --context --rerank
+.\.venv\Scripts\python.exe -X utf8 scripts/search_documents.py eval --compare-context
+```
+
+上下文模式从至多 20 个候选中选片段，默认至多 5 段及 2048 字节。CLI 可通过 `--context-budget` 调整以 UTF-8 字节计的保守预算。片段前的 ID 可在 `sources` 中查到出处和修订位置。重排默认关闭，显式启用时使用本地 BM25，故障时按原检索顺序组装。 [Day 12 报告](docs/devlog/2026-11-09-day-12.md)

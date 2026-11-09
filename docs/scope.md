@@ -80,3 +80,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 11 范围（2026-11-09）
 
 复用可信操作员 CLI 和 Day 10 SQL 候选过滤。新增轻量内存 BM25、RRF 融合、精确词项补充案例及三路 mock 工程对照。
+
+
+## Day 12 范围（2026-11-09）
+
+在已有检索结果上做可选词项重排、失败降级、去重和预算受限的上下文组装。复用可信操作员 CLI、现有 PostgreSQL 和 mock 评测语料。
