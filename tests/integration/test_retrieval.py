@@ -5,7 +5,7 @@ from support import PostgreSQLCase
 from packages.knowledge.embeddings import DIMENSIONS, EmbeddingBatch, EmbeddingError, MockEmbedding
 from packages.knowledge.ingestion import ingest_version
 from packages.knowledge.repository import import_batch
-from packages.knowledge.retrieval import search_chunks
+from packages.knowledge.retrieval import search_chunks, search_query
 from packages.storage.schema import document_versions, embedding_cache
 
 QUERY = [1.0] + [0.0] * (DIMENSIONS - 1)
@@ -94,3 +94,29 @@ class RetrievalTests(PostgreSQLCase):
             self.search(vector=[1.0])
         with self.assertRaisesRegex(ValueError, "product_version_required"):
             self.search(version=" ")
+
+    def test_all_modes_share_scope_version_and_latest_ready(self):
+        public, alpha, beta, old, pending = self.items[:5]
+        self.ingest(public)
+        self.ingest(alpha, tenant="tenant-alpha")
+        self.ingest(beta, tenant="tenant-beta")
+        self.ingest(replace(old, product_versions=("1.0",)))
+        self.ingest(pending)
+        import_batch(self.engine, [replace(pending, revision_hash="b" * 64)], tenant_id=None)
+        with self.engine.connect() as conn:
+            for mode in ("vector", "bm25", "hybrid"):
+                with self.subTest(mode=mode):
+                    rows = search_query(
+                        conn,
+                        "clouddesk-demo-v1 适用版本",
+                        MockEmbedding(),
+                        mode=mode,
+                        tenant_id="tenant-alpha",
+                        product_version="2.0",
+                        k=50,
+                    )
+                    self.assertEqual(
+                        {row["document_key"] for row in rows},
+                        {public.document_key, alpha.document_key},
+                    )
+                    self.assertEqual(len({row["chunk_id"] for row in rows}), len(rows))

@@ -8,11 +8,11 @@ from evals.schema import EvalCase
 from packages.knowledge.chunking import INPUT_VERSION, POLICY
 from packages.knowledge.embeddings import DIMENSIONS
 from packages.knowledge.repository import scope_key
-from packages.knowledge.retrieval import search_chunks
+from packages.knowledge.retrieval import search_query
 from packages.storage.schema import document_versions, documents
 
 
-def evaluate(connection, cases_path, provider):
+def evaluate(connection, cases_path, provider, *, mode="vector"):
     raw = cases_path.read_bytes()
     cases = [EvalCase.model_validate_json(line) for line in raw.splitlines() if line.strip()]
     if len({case.id for case in cases}) != len(cases):
@@ -31,14 +31,13 @@ def evaluate(connection, cases_path, provider):
                 "missing_product_version" if not case.product_version else "no_relevant_sources"
             )
         else:
-            vector = provider.embed([case.question]).vectors[0]
-            results = search_chunks(
+            results = search_query(
                 connection,
-                vector,
+                case.question,
+                provider,
                 tenant_id=case.tenant_id,
                 product_version=case.product_version,
-                provider=provider.provider,
-                model=provider.model,
+                mode=mode,
             )
             # Day 2 labels refer to public fixtures, not same-named tenant documents.
             row["hit"] = any(

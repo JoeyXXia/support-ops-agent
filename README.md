@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 10。已实现 PostgreSQL 向量检索和 mock 开发集评测。真实 embedding 基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 11。已实现精确向量检索、BM25 和 RRF 融合，并完成本地三路对照。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -206,3 +206,16 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 查询要求显式产品版本。省略租户时只查公共资料，指定演示租户时可见公共资料和该租户资料。结果包含 chunk ID、正文、来源、修订与位置，以及余弦相似度。CLI 使用 Day 9 mock provider。
 
 开发集 12 例，计分 10 例，mock Hit@5 实测 4/10。逐例结果与语料修订见 [mock 评测记录](reports/day-10-retrieval-mock.json)。真实语义基线状态和复现细节见 [Day 10 报告](docs/devlog/2026-11-08-day-10.md)。
+
+
+## Day 11 关键词检索与融合
+
+完成 Day 9 mock 入库后，可用同一个 CLI 运行 BM25、融合与对照评测。省略 `--mode` 时沿用向量检索。
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 scripts/search_documents.py search "401 token" --tenant-id tenant-alpha --product-version 2.0 --mode bm25
+.\.venv\Scripts\python.exe -X utf8 scripts/search_documents.py search "401 token" --tenant-id tenant-alpha --product-version 2.0 --mode hybrid
+.\.venv\Scripts\python.exe -X utf8 scripts/search_documents.py eval --compare
+```
+
+原开发集三路 Hit@5 分别为向量 4/10、BM25 10/10、融合 9/10。补充集分别为 1/3、3/3、2/3。向量使用 mock。逐例排名、融合漏召回和运行边界见 [Day 11 报告](docs/devlog/2026-11-09-day-11.md)。

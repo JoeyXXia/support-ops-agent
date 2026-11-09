@@ -7,15 +7,15 @@ from packages.storage.vector import Vector1536
 
 from .chunking import INPUT_VERSION, POLICY
 from .embeddings import DIMENSIONS, validate_vectors
+from .keyword import bm25, fuse_ranks
 from .repository import scope_key
 
+HYBRID_DEPTH = 20
 
-def search_chunks(connection, vector, *, tenant_id, product_version, provider, model, k=5):
+
+def _candidate_query(*, tenant_id, product_version, provider, model):
     if not isinstance(product_version, str) or not product_version.strip():
         raise ValueError("product_version_required")
-    if type(k) is not int or not 1 <= k <= 50:
-        raise ValueError("k_must_be_1_to_50")
-    validate_vectors([vector], 1)
     scopes = ["public", scope_key(tenant_id)] if tenant_id is not None else ["public"]
     profile = f"{POLICY}|{provider}|{model}|{DIMENSIONS}|{INPUT_VERSION}"
     # Choose the latest applicable revision even if it is unready. Never fall back silently.
@@ -36,9 +36,7 @@ def search_chunks(connection, vector, *, tenant_id, product_version, provider, m
         )
         .subquery()
     )
-    query_vector = sa.cast(sa.literal(vector, type_=Vector1536()), Vector1536())
-    distance = embedding_cache.c.embedding.op("<=>", return_type=sa.Float())(query_vector)
-    stmt = (
+    return (
         sa.select(
             chunks.c.id.label("chunk_id"),
             chunks.c.body,
@@ -55,7 +53,6 @@ def search_chunks(connection, vector, *, tenant_id, product_version, provider, m
             document_versions.c.version_number,
             document_versions.c.revision_hash,
             document_versions.c.data_version,
-            (1.0 - distance).label("score"),
         )
         .select_from(ranked)
         .join(document_versions, document_versions.c.id == ranked.c.id)
@@ -74,9 +71,10 @@ def search_chunks(connection, vector, *, tenant_id, product_version, provider, m
             embedding_cache.c.input_version == INPUT_VERSION,
             embedding_cache.c.input_hash == chunks.c.input_hash,
         )
-        .order_by(distance, documents.c.scope_key, documents.c.document_key, chunks.c.ordinal)
-        .limit(k)
     )
+
+
+def _rows(connection, stmt):
     results = []
     for row in connection.execute(stmt).mappings():
         item = dict(row)
@@ -86,3 +84,43 @@ def search_chunks(connection, vector, *, tenant_id, product_version, provider, m
         )
         results.append(item)
     return results
+
+
+def search_chunks(connection, vector, *, tenant_id, product_version, provider, model, k=5):
+    if type(k) is not int or not 1 <= k <= 50:
+        raise ValueError("k_must_be_1_to_50")
+    validate_vectors([vector], 1)
+    candidates = _candidate_query(
+        tenant_id=tenant_id, product_version=product_version, provider=provider, model=model
+    )
+    query_vector = sa.cast(sa.literal(vector, type_=Vector1536()), Vector1536())
+    distance = embedding_cache.c.embedding.op("<=>", return_type=sa.Float())(query_vector)
+    stmt = (
+        candidates.add_columns((1.0 - distance).label("score"))
+        .order_by(distance, documents.c.scope_key, documents.c.document_key, chunks.c.ordinal)
+        .limit(k)
+    )
+    return _rows(connection, stmt)
+
+
+def search_query(connection, question, provider, *, tenant_id, product_version, mode="vector", k=5):
+    if type(k) is not int or not 1 <= k <= 50:
+        raise ValueError("k_must_be_1_to_50")
+    if mode not in {"vector", "bm25", "hybrid"}:
+        raise ValueError("unknown_retrieval_mode")
+    scope = dict(
+        tenant_id=tenant_id,
+        product_version=product_version,
+        provider=provider.provider,
+        model=provider.model,
+    )
+    depth = max(HYBRID_DEPTH, k) if mode == "hybrid" else k
+    if mode != "bm25":
+        vector = provider.embed([question]).vectors[0]
+        vector_rows = search_chunks(connection, vector, k=depth, **scope)
+        if mode == "vector":
+            return vector_rows
+    keyword_rows = bm25(question, _rows(connection, _candidate_query(**scope)), k=depth)
+    if mode == "bm25":
+        return keyword_rows
+    return fuse_ranks(vector_rows, keyword_rows, k=k)

@@ -11,7 +11,7 @@ class RetrievalEvalTests(TestCase):
         path = Path(__file__).resolve().parents[1] / "evals/dev.jsonl"
         connection = Mock()
         connection.execute.return_value.mappings.return_value = []
-        with patch("evals.retrieval.search_chunks") as search:
+        with patch("evals.retrieval.search_query") as search:
             search.side_effect = [
                 [{"scope_key": "public", "source": "quotas"}],
                 [{"scope_key": "tenant:tenant-beta", "source": "quotas#limits"}],

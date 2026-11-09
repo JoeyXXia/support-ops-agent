@@ -75,3 +75,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 10 范围（2026-11-08）
 
 沿用 PostgreSQL、pgvector 和 Day 9 mock provider。新增可信操作员 CLI 的精确余弦 top-k，按租户、产品版本、最新适用修订和向量配置过滤，并保存开发集逐例证据命中记录。真实语义基线等待真实向量语料。
+
+
+## Day 11 范围（2026-11-09）
+
+复用可信操作员 CLI 和 Day 10 SQL 候选过滤。新增轻量内存 BM25、RRF 融合、精确词项补充案例及三路 mock 工程对照。
