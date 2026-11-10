@@ -90,3 +90,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 13 范围（2026-11-10）
 
 注册受租户和版本约束的 search_docs，复用现有 PostgreSQL、BM25 和有界上下文。知识演示检查本次检索上下文的引用 ID，在页面展示已核验的原文、产品版本和修订位置。固定问题走本地 mock。
+
+
+## Day 14 范围（2026-11-10）
+
+扩充独立开发集到 25 条，保存同一数据库快照下的三路检索结果，复现回答边界，整理第二周技术复盘并发布 v0.2-rag 标签。里程碑覆盖本地合成数据和确定性 mock 演示。

@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 13。文档问答演示支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 14，v0.2-rag 本地合成演示里程碑。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，建单仍在计划中；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -243,3 +243,14 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 - reason=monthly_quota_exhausted，持续重试有用吗？
 
 产品版本为空时会追问。证据不足时会提示无法给出确定结论。当前采用本地固定问题与摘录式回答。 [Day 13 报告](docs/devlog/2026-11-10-day-13.md)
+
+
+## Day 14 RAG 复盘
+
+25 条开发集包括原 12 条、Day 11 精确词项 3 条和新增 10 条。完成 Day 9 mock 入库后运行：
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 scripts/search_documents.py eval --cases evals/day-14-rag.jsonl --compare
+```
+
+21 条参与证据 Hit@5 计分，mock 向量 7/21、BM25 21/21、融合 18/21。失败原因、切块依据和可复现的未解决案例见 [Day 14 技术复盘](docs/devlog/2026-11-10-day-14.md)。

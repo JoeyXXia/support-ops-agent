@@ -28,7 +28,9 @@ def main():
     search.add_argument("--context", action="store_true")
     search.add_argument("--rerank", action="store_true")
     search.add_argument("--context-budget", type=int, default=TOKEN_BUDGET)
-    eval_modes = commands.add_parser("eval").add_mutually_exclusive_group()
+    evaluation = commands.add_parser("eval")
+    evaluation.add_argument("--cases", type=Path)
+    eval_modes = evaluation.add_mutually_exclusive_group()
     eval_modes.add_argument("--compare", action="store_true")
     eval_modes.add_argument("--compare-context", action="store_true")
     args = parser.parse_args()
@@ -50,10 +52,15 @@ def main():
     try:
         with engine.connect().execution_options(isolation_level="REPEATABLE READ") as conn:
             if args.action == "eval":
-                path = Path(__file__).resolve().parents[1] / "evals/dev.jsonl"
+                path = args.cases or Path(__file__).resolve().parents[1] / "evals/dev.jsonl"
                 if args.compare_context:
                     output = compare_context(conn, path, provider)
                 elif args.compare:
+                    datasets = (
+                        {"custom": path}
+                        if args.cases is not None
+                        else {"dev": path, "exact_terms": path.with_name("day-11-exact.jsonl")}
+                    )
                     output = dict(
                         evaluation="mock_engineering_only",
                         parameters=dict(
@@ -68,10 +75,7 @@ def main():
                             name: {
                                 mode: evaluate(conn, dataset, provider, mode=mode) for mode in modes
                             }
-                            for name, dataset in (
-                                ("dev", path),
-                                ("exact_terms", path.with_name("day-11-exact.jsonl")),
-                            )
+                            for name, dataset in datasets.items()
                         },
                     )
                 else:
