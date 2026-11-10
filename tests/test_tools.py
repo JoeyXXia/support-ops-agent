@@ -104,7 +104,10 @@ class ToolTests(unittest.TestCase):
 
     def test_registry_schema_excludes_identity(self):
         definitions = self.executor.definitions()
-        self.assertEqual(len(definitions), 2)
+        self.assertEqual(
+            {item.name for item in definitions},
+            {"get_workspace_usage", "get_recent_errors", "search_docs"},
+        )
         for item in definitions:
             self.assertFalse(item.parameters["additionalProperties"])
             self.assertNotIn("tenant_id", item.parameters["properties"])

@@ -2,10 +2,12 @@
 
 import asyncio
 from collections import OrderedDict
+from typing import Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from packages.agent.knowledge_mock import KnowledgeScenarioMock
 from packages.agent.loop import AgentLoop
 from packages.agent.scenario_mock import SupportScenarioMock
 from packages.tools.executor import ToolExecutor
@@ -15,6 +17,8 @@ from packages.tools.schemas import AuthContext
 class RunInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, str_strip_whitespace=True)
     question: str = Field(min_length=1, max_length=2000)
+    knowledge: bool = False
+    product_version: Literal["1.0", "2.0"] | None = None
 
 
 class RunStore:
@@ -25,7 +29,7 @@ class RunStore:
         self.provider_factory = provider_factory or DemoProvider
         self.executor = ToolExecutor()
 
-    def create(self, question):
+    def create(self, question, *, knowledge=False, product_version=None):
         if len(self.tasks) >= self.max_active:
             raise OverflowError("busy")
         while len(self.records) >= self.max_records:
@@ -48,23 +52,32 @@ class RunStore:
             "status": "queued",
             "reason": "",
             "answer": "",
+            "citations": [],
             "events": [],
             "model_calls": 0,
             "tool_calls": 0,
         }
         self.records[run_id] = record
-        task = asyncio.create_task(self._execute(record))
+        task = asyncio.create_task(
+            self._execute(record, knowledge=knowledge, product_version=product_version)
+        )
         self.tasks.add(task)
         task.add_done_callback(self.tasks.discard)
         return record.copy()
 
-    async def _execute(self, record):
+    async def _execute(self, record, *, knowledge, product_version):
         record["status"] = "running"
         try:
-            loop = AgentLoop(self.provider_factory(), self.executor)
+            provider = (
+                KnowledgeScenarioMock(record["question"], product_version)
+                if knowledge
+                else self.provider_factory()
+            )
+            loop = AgentLoop(provider, self.executor)
             result = await loop.run(
                 record["question"],
                 context=AuthContext(user_id="user-alpha", tenant_id="tenant-alpha", role="member"),
+                grounded=knowledge,
                 on_event=lambda event: record["events"].append(event),
             )
             record.update(result.model_dump())

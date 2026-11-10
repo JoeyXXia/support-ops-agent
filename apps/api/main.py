@@ -33,7 +33,9 @@ async def health() -> HealthResponse:
 @app.post("/runs", status_code=202)
 async def create_run(body: RunInput, request: Request):
     try:
-        return request.app.state.runs.create(body.question)
+        return request.app.state.runs.create(
+            body.question, knowledge=body.knowledge, product_version=body.product_version
+        )
     except OverflowError:
         raise HTTPException(status_code=503, detail="演示运行已满，请稍后重试。") from None
 

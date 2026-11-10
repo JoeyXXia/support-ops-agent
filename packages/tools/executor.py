@@ -13,6 +13,8 @@ from .schemas import (
     ErrorEvent,
     RecentErrorsArgs,
     RecentErrorsResult,
+    SearchDocsArgs,
+    StrictModel,
     ToolFailure,
     ToolResult,
     UsageResult,
@@ -25,11 +27,12 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class ToolSpec:
     description: str
-    arguments: type[WorkspaceArgs]
+    arguments: type[StrictModel]
     handler: str
 
 
 REGISTRY = {
+    "search_docs": ToolSpec("按产品版本检索授权文档，返回出处和原文", SearchDocsArgs, "_search"),
     "get_workspace_usage": ToolSpec(
         "读取获授权工作区的合成用量与套餐限额", WorkspaceArgs, "_usage"
     ),
@@ -78,6 +81,15 @@ class ToolExecutor:
         allowed = (
             {context.tenant_id} if context.role == "member" else set(context.assigned_tenant_ids)
         )
+        if name == "search_docs":
+            from .knowledge import search_docs
+
+            try:
+                scope = context.tenant_id if context.tenant_id in allowed else None
+                return ToolResult(tool=name, ok=True, data=search_docs(args, scope))
+            except ValueError:
+                logger.error("tool.failed tool=%s code=internal_error", name)
+                return fail("internal_error", "文档检索暂不可用。")
         # Search only authorized tenants, avoiding a global existence oracle.
         workspace = next(
             (

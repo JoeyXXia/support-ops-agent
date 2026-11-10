@@ -1,0 +1,37 @@
+{
+  "browser": "Microsoft Edge via Playwright CLI",
+  "results": [
+    {
+      "question": "starter配额是多少？",
+      "source": "quotas#limits",
+      "version": "2.0",
+      "opened": true
+    },
+    {
+      "question": "升级到2.0会重置额度吗？",
+      "source": "versions#versions",
+      "version": "2.0",
+      "opened": true
+    },
+    {
+      "question": "401能用429的办法处理吗？",
+      "source": "auth#errors",
+      "version": "2.0",
+      "opened": true
+    },
+    {
+      "question": "reason=minute_rate_limit且Retry-After=20，怎么办？",
+      "source": "rate-limit#diagnosis",
+      "version": "2.0",
+      "opened": true
+    },
+    {
+      "question": "reason=monthly_quota_exhausted，持续重试有用吗？",
+      "source": "monthly-quota#diagnosis",
+      "version": "2.0",
+      "opened": true
+    }
+  ],
+  "insufficient_evidence": true,
+  "missing_version": true
+}

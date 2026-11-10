@@ -51,6 +51,26 @@ class RecentErrorsResult(StrictModel):
     synthetic: Literal[True] = True
 
 
+class SearchDocsArgs(StrictModel):
+    question: str = Field(min_length=1, max_length=2000)
+    product_version: Literal["1.0", "2.0"]
+
+
+class DocEvidence(StrictModel):
+    chunk_id: str
+    source: str
+    body: str
+    source_path: str
+    version_number: int
+    product_version: str
+    start_line: int
+    end_line: int
+
+
+class SearchDocsResult(StrictModel):
+    sources: list[DocEvidence] = Field(max_length=5)
+
+
 class ToolFailure(StrictModel):
     code: Literal["unknown_tool", "invalid_arguments", "forbidden", "not_found", "internal_error"]
     message: str
@@ -60,5 +80,5 @@ class ToolFailure(StrictModel):
 class ToolResult(StrictModel):
     tool: str
     ok: bool
-    data: UsageResult | RecentErrorsResult | None = None
+    data: UsageResult | RecentErrorsResult | SearchDocsResult | None = None
     error: ToolFailure | None = None

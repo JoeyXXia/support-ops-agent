@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 12。已实现可选本地重排和预算受限的引用上下文。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 13。文档问答演示支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，尚无RAG或建单能力；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -230,3 +230,16 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 ```
 
 上下文模式从至多 20 个候选中选片段，默认至多 5 段及 2048 字节。CLI 可通过 `--context-budget` 调整以 UTF-8 字节计的保守预算。片段前的 ID 可在 `sources` 中查到出处和修订位置。重排默认关闭，显式启用时使用本地 BM25，故障时按原检索顺序组装。 [Day 12 报告](docs/devlog/2026-11-09-day-12.md)
+
+
+## Day 13 文档引用演示
+
+启动本地 PostgreSQL，完成 Day 8 公共文档导入及 Day 9 mock 入库，再按快速启动运行 API 和网页。勾选「使用文档引用演示」，选择产品版本 2.0，输入以下任一固定问题。展开答案下的来源，可查看原文、版本和行号。
+
+- starter配额是多少？
+- 升级到2.0会重置额度吗？
+- 401能用429的办法处理吗？
+- reason=minute_rate_limit且Retry-After=20，怎么办？
+- reason=monthly_quota_exhausted，持续重试有用吗？
+
+产品版本为空时会追问。证据不足时会提示无法给出确定结论。当前采用本地固定问题与摘录式回答。 [Day 13 报告](docs/devlog/2026-11-10-day-13.md)

@@ -85,3 +85,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 12 范围（2026-11-09）
 
 在已有检索结果上做可选词项重排、失败降级、去重和预算受限的上下文组装。复用可信操作员 CLI、现有 PostgreSQL 和 mock 评测语料。
+
+
+## Day 13 范围（2026-11-10）
+
+注册受租户和版本约束的 search_docs，复用现有 PostgreSQL、BM25 和有界上下文。知识演示检查本次检索上下文的引用 ID，在页面展示已核验的原文、产品版本和修订位置。固定问题走本地 mock。
