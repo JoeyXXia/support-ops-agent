@@ -7,8 +7,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from packages.agent.graph import GraphAgent
 from packages.agent.knowledge_mock import KnowledgeScenarioMock
-from packages.agent.loop import AgentLoop
 from packages.agent.scenario_mock import SupportScenarioMock
 from packages.tools.executor import ToolExecutor
 from packages.tools.schemas import AuthContext
@@ -54,6 +54,7 @@ class RunStore:
             "answer": "",
             "citations": [],
             "events": [],
+            "state_path": [],
             "model_calls": 0,
             "tool_calls": 0,
         }
@@ -73,8 +74,8 @@ class RunStore:
                 if knowledge
                 else self.provider_factory()
             )
-            loop = AgentLoop(provider, self.executor)
-            result = await loop.run(
+            graph = GraphAgent(provider, self.executor)
+            result = await graph.run(
                 record["question"],
                 context=AuthContext(user_id="user-alpha", tenant_id="tenant-alpha", role="member"),
                 grounded=knowledge,

@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 14，v0.2-rag 本地合成演示里程碑。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，建单仍在计划中；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 15，网页运行入口使用 LangGraph 显式状态机。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，建单仍在计划中；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -254,3 +254,7 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 ```
 
 21 条参与证据 Hit@5 计分，mock 向量 7/21、BM25 21/21、融合 18/21。失败原因、切块依据和可复现的未解决案例见 [Day 14 技术复盘](docs/devlog/2026-11-10-day-14.md)。
+
+## Day 15 显式状态机
+
+排障和文档问答共用 LangGraph 编排。运行结束后可在 `GET /runs/{id}` 查看 `state_path`。原生循环入口 `python scripts/agent_smoke.py` 保留供对照。流程、验收与复现方法见 [Day 15 报告](docs/devlog/2026-11-11-day-15.md)。

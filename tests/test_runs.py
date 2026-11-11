@@ -39,6 +39,9 @@ class RunApiTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertIn("60/60", record["answer"])
         self.assertEqual(len(record["events"]), 4)
+        self.assertEqual(
+            record["state_path"], ["classify", "call_tool", "classify", "answer", "done"]
+        )
 
     async def test_partial_events_visible(self):
         created = (await self.client.post("/runs", json={"question": "ws-alpha 429"})).json()
@@ -78,12 +81,24 @@ class RunApiTests(unittest.IsolatedAsyncioTestCase):
         record = await self.wait(created["id"])
         self.assertEqual((record["status"], record["reason"]), ("failed", "timeout"))
         self.assertEqual(record["answer"], "")
+        self.assertEqual(record["state_path"], ["classify", "done"])
 
     async def test_clarify_other_question(self):
         created = (await self.client.post("/runs", json={"question": "ws-beta 429"})).json()
         record = await self.wait(created["id"])
         self.assertEqual(record["tool_calls"], 0)
         self.assertIn("仅支持", record["answer"])
+
+    async def test_grounded_clarification_route(self):
+        created = (
+            await self.client.post(
+                "/runs", json={"question": "starter配额是多少？", "knowledge": True}
+            )
+        ).json()
+        record = await self.wait(created["id"])
+        self.assertEqual((record["status"], record["reason"]), ("completed", "clarification"))
+        self.assertEqual(record["state_path"], ["classify", "answer", "clarify", "done"])
+        self.assertEqual(record["tool_calls"], 0)
 
     async def test_eviction_and_shutdown(self):
         store = RunStore(max_records=1)

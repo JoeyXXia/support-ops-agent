@@ -1,0 +1,47 @@
+{
+  "day": 15,
+  "baseline": "4adfbbdb42af48af268c574042eddc046ea23102",
+  "offline": {
+    "command": "python scripts/check_offline.py",
+    "passed": 71
+  },
+  "postgresql": {
+    "command": "python -m unittest discover -s tests/integration -v",
+    "passed": 20
+  },
+  "dependencies": {
+    "command": "python -m pip check",
+    "result": "No broken requirements found."
+  },
+  "api": {
+    "transport": "httpx2 ASGITransport",
+    "provider": "deterministic mock",
+    "database": "local PostgreSQL with synthetic CloudDesk documents",
+    "product_version": "2.0",
+    "cases": [
+      {
+        "question": "starter配额是多少？",
+        "status": "completed",
+        "reason": "answer",
+        "tool_calls": 1,
+        "citation_sources": [
+          "quotas#limits"
+        ]
+      },
+      {
+        "question": "如何申请退款？",
+        "status": "completed",
+        "reason": "insufficient_evidence",
+        "tool_calls": 1,
+        "citation_sources": []
+      }
+    ],
+    "state_path": [
+      "classify",
+      "retrieve",
+      "classify",
+      "answer",
+      "done"
+    ]
+  }
+}

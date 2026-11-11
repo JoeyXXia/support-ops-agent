@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from dataclasses import dataclass, field
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -10,7 +11,7 @@ from packages.tools.executor import ToolExecutor
 from packages.tools.schemas import AuthContext
 
 from .grounding import grounded_answer
-from .models import Message, ModelProvider, ModelRequest, ProviderError
+from .models import Message, ModelProvider, ModelRequest, ModelResponse, ProviderError
 
 
 class RunResult(BaseModel):
@@ -21,6 +22,27 @@ class RunResult(BaseModel):
     model_calls: int = 0
     tool_calls: int = 0
     events: list[dict] = Field(default_factory=list)
+    state_path: list[str] = Field(default_factory=list)
+
+
+@dataclass
+class AgentTurn:
+    request: ModelRequest
+    context: AuthContext
+    grounded: bool
+    on_event: object
+    result: RunResult = field(
+        default_factory=lambda: RunResult(status="stopped", reason="step_budget")
+    )
+    seen: set[tuple[str, str]] = field(default_factory=set)
+    call_ids: set[str] = field(default_factory=set)
+    evidence: dict[str, dict] = field(default_factory=dict)
+    response: ModelResponse | None = None
+
+    def emit(self, event):
+        self.result.events.append(event)
+        if self.on_event is not None:
+            self.on_event(event)
 
 
 class AgentLoop:
@@ -43,9 +65,7 @@ class AgentLoop:
         self.max_steps, self.max_tool_calls = max_steps, max_tool_calls
         self.step_timeout = step_timeout
 
-    async def run(
-        self, question: str, *, context: AuthContext, on_event=None, grounded=False
-    ) -> RunResult:
+    def start(self, question, *, context, on_event, grounded):
         request = ModelRequest(
             messages=[
                 Message(
@@ -66,129 +86,143 @@ class AgentLoop:
             ],
             tools=self.executor.definitions(),
         )
-        result = RunResult(status="stopped", reason="step_budget")
+        return AgentTurn(request, context, grounded, on_event)
 
-        def emit(event):
-            result.events.append(event)
-            if on_event is not None:
-                on_event(event)
-
-        seen, call_ids = set(), set()
-        evidence = {}
-        for step in range(1, self.max_steps + 1):
-            result.model_calls += 1
-            try:
-                async with asyncio.timeout(self.step_timeout):
-                    response = await self.provider.generate(request.model_copy(deep=True))
-            except (TimeoutError, ProviderError) as exc:
-                result.status = "failed"
-                result.reason = exc.code if isinstance(exc, ProviderError) else "model_timeout"
-                emit(
-                    {
-                        "step": step,
-                        "kind": "model.error",
-                        "code": result.reason,
-                        "request_id": getattr(exc, "request_id", None),
-                    }
-                )
-                return result
-            except Exception:
-                result.status, result.reason = "failed", "internal_error"
-                return result
-            emit(
+    async def classify(self, turn):
+        result, request = turn.result, turn.request
+        result.model_calls += 1
+        step = result.model_calls
+        try:
+            async with asyncio.timeout(self.step_timeout):
+                response = await self.provider.generate(request.model_copy(deep=True))
+        except (TimeoutError, ProviderError) as exc:
+            result.status = "failed"
+            result.reason = exc.code if isinstance(exc, ProviderError) else "model_timeout"
+            turn.emit(
                 {
                     "step": step,
-                    "kind": "model.finished",
-                    "mode": response.mode,
-                    "request_id": response.request_id,
+                    "kind": "model.error",
+                    "code": result.reason,
+                    "request_id": getattr(exc, "request_id", None),
                 }
             )
-            if not response.tool_calls:
-                if not response.text.strip():
-                    result.status, result.reason = "failed", "empty_output"
-                elif grounded:
-                    try:
-                        result.reason, result.answer, result.citations = grounded_answer(
-                            response.text, evidence
-                        )
-                        result.status = "completed"
-                    except ValueError:
-                        result.status, result.reason = "failed", "invalid_citations"
-                        result.answer = "引用校验失败，暂无法确认结论。"
-                else:
-                    result.status, result.reason, result.answer = (
-                        "completed",
-                        "answer",
-                        response.text,
-                    )
-                return result
-            calls = response.tool_calls
-            if result.tool_calls + len(calls) > self.max_tool_calls:
-                result.reason = "tool_budget"
-                return result
-            fingerprints = [
-                (call.name, json.dumps(call.arguments, sort_keys=True, ensure_ascii=False))
-                for call in calls
+            return "done"
+        except Exception:
+            result.status, result.reason = "failed", "internal_error"
+            return "done"
+        turn.emit(
+            {
+                "step": step,
+                "kind": "model.finished",
+                "mode": response.mode,
+                "request_id": response.request_id,
+            }
+        )
+        turn.response = response
+        if not response.tool_calls:
+            return "answer"
+        calls = response.tool_calls
+        if result.tool_calls + len(calls) > self.max_tool_calls:
+            result.reason = "tool_budget"
+            return "done"
+        fingerprints = [
+            (call.name, json.dumps(call.arguments, sort_keys=True, ensure_ascii=False))
+            for call in calls
+        ]
+        ids = [call.call_id for call in calls]
+        if len(set(ids)) != len(ids) or any(value in turn.call_ids for value in ids):
+            result.reason = "duplicate_call_id"
+            return "done"
+        if len(set(fingerprints)) != len(fingerprints) or any(
+            key in turn.seen for key in fingerprints
+        ):
+            result.reason = "no_progress"
+            return "done"
+        turn.seen.update(fingerprints)
+        turn.call_ids.update(ids)
+        # Preserve raw SDK output, including encrypted reasoning for stateless Responses.
+        request.messages.extend(
+            response.output_items
+            or [
+                {
+                    "type": "function_call",
+                    "call_id": c.call_id,
+                    "name": c.name,
+                    "arguments": json.dumps(c.arguments, ensure_ascii=False),
+                }
+                for c in calls
             ]
-            ids = [call.call_id for call in calls]
-            if len(set(ids)) != len(ids) or any(value in call_ids for value in ids):
-                result.reason = "duplicate_call_id"
-                return result
-            if len(set(fingerprints)) != len(fingerprints) or any(
-                key in seen for key in fingerprints
-            ):
-                result.reason = "no_progress"
-                return result
-            seen.update(fingerprints)
-            call_ids.update(ids)
-            # Preserve raw SDK output, including encrypted reasoning for stateless Responses.
-            request.messages.extend(
-                response.output_items
-                or [
-                    {
-                        "type": "function_call",
-                        "call_id": c.call_id,
-                        "name": c.name,
-                        "arguments": json.dumps(c.arguments, ensure_ascii=False),
-                    }
-                    for c in calls
-                ]
+        )
+        return "retrieve" if all(call.name == "search_docs" for call in calls) else "call_tool"
+
+    def answer(self, turn):
+        result, response = turn.result, turn.response
+        if not response.text.strip():
+            result.status, result.reason = "failed", "empty_output"
+        elif turn.grounded:
+            try:
+                result.reason, result.answer, result.citations = grounded_answer(
+                    response.text, turn.evidence
+                )
+                result.status = "completed"
+            except ValueError:
+                result.status, result.reason = "failed", "invalid_citations"
+                result.answer = "引用校验失败，暂无法确认结论。"
+        else:
+            result.status, result.reason, result.answer = (
+                "completed",
+                "answer",
+                response.text,
             )
-            for call in calls:
-                result.tool_calls += 1
-                try:
-                    async with asyncio.timeout(self.step_timeout):
-                        output = await asyncio.to_thread(
-                            self.executor.execute, call.name, call.arguments, context=context
-                        )
-                except TimeoutError:
-                    result.status, result.reason = "failed", "tool_timeout"
-                    return result
-                except Exception:
-                    result.status, result.reason = "failed", "internal_error"
-                    return result
-                emit(
-                    {
-                        "step": step,
-                        "kind": "tool.finished",
-                        "call_id": call.call_id,
-                        "tool": call.name,
-                        "result": output.model_dump(mode="json"),
-                    }
-                )
-                request.messages.append(
-                    {
-                        "type": "function_call_output",
-                        "call_id": call.call_id,
-                        "output": output.model_dump_json(),
-                    }
-                )
-                if not output.ok:
-                    result.status, result.reason = "failed", "tool_" + output.error.code
-                    return result
-                if grounded and call.name == "search_docs":
-                    evidence = {
-                        row["chunk_id"]: row
-                        for row in output.data.model_dump(mode="json")["sources"]
-                    }
-        return result
+
+    async def call_tools(self, turn):
+        result, request = turn.result, turn.request
+        calls, step = turn.response.tool_calls, result.model_calls
+        for call in calls:
+            result.tool_calls += 1
+            try:
+                async with asyncio.timeout(self.step_timeout):
+                    output = await asyncio.to_thread(
+                        self.executor.execute, call.name, call.arguments, context=turn.context
+                    )
+            except TimeoutError:
+                result.status, result.reason = "failed", "tool_timeout"
+                return False
+            except Exception:
+                result.status, result.reason = "failed", "internal_error"
+                return False
+            turn.emit(
+                {
+                    "step": step,
+                    "kind": "tool.finished",
+                    "call_id": call.call_id,
+                    "tool": call.name,
+                    "result": output.model_dump(mode="json"),
+                }
+            )
+            request.messages.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": call.call_id,
+                    "output": output.model_dump_json(),
+                }
+            )
+            if not output.ok:
+                result.status, result.reason = "failed", "tool_" + output.error.code
+                return False
+            if turn.grounded and call.name == "search_docs":
+                turn.evidence = {
+                    row["chunk_id"]: row for row in output.data.model_dump(mode="json")["sources"]
+                }
+        return True
+
+    async def run(self, question, *, context, on_event=None, grounded=False):
+        turn = self.start(question, context=context, on_event=on_event, grounded=grounded)
+        for _ in range(self.max_steps):
+            next_node = await self.classify(turn)
+            if next_node == "answer":
+                self.answer(turn)
+                break
+            if next_node == "done" or not await self.call_tools(turn):
+                break
+        return turn.result
