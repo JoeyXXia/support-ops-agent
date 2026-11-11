@@ -108,3 +108,16 @@ document_versions.append_constraint(
         "embedding_status IN ('pending','processing','ready','failed')", name="ck_embedding_status"
     )
 )
+
+
+agent_runs = sa.Table(
+    "agent_runs",
+    metadata,
+    sa.Column("id", UUID(as_uuid=True), primary_key=True),
+    sa.Column("tenant_id", sa.Text, nullable=False),
+    sa.Column("user_id", sa.Text, nullable=False),
+    sa.Column("owner_context", JSONB, nullable=False),
+    sa.Column("input", JSONB, nullable=False),
+    sa.Column("record", JSONB, nullable=False),
+    sa.Index("ix_agent_runs_owner", "tenant_id", "user_id"),
+)

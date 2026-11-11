@@ -19,6 +19,7 @@ jsonpatch==1.46
 jsonpointer==3.11
 langchain-core==1.7.7
 langchain-protocol==0.0.21
+langgraph-checkpoint-postgres==3.2.0
 langgraph-checkpoint==4.3.1
 langgraph-prebuilt==1.1.1
 langgraph-sdk==0.4.14
@@ -32,6 +33,7 @@ orjson==3.13.0
 ormsgpack==1.13.1
 packaging==26.3
 psycopg-binary==3.3.8
+psycopg-pool==3.3.3
 psycopg==3.3.8
 pydantic==2.14.1
 pydantic_core==2.50.1

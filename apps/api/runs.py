@@ -22,7 +22,10 @@ class RunInput(BaseModel):
 
 
 class RunStore:
-    def __init__(self, *, max_active=4, max_records=100, provider_factory=None):
+    def __init__(self, *, max_active=4, max_records=100, provider_factory=None, context=None):
+        self.context = context or AuthContext(
+            user_id="user-alpha", tenant_id="tenant-alpha", role="member"
+        )
         self.records = OrderedDict()
         self.tasks = set()
         self.max_active, self.max_records = max_active, max_records
@@ -58,6 +61,7 @@ class RunStore:
             "model_calls": 0,
             "tool_calls": 0,
         }
+        self._save_new(record, knowledge=knowledge, product_version=product_version)
         self.records[run_id] = record
         task = asyncio.create_task(
             self._execute(record, knowledge=knowledge, product_version=product_version)
@@ -65,6 +69,9 @@ class RunStore:
         self.tasks.add(task)
         task.add_done_callback(self.tasks.discard)
         return record.copy()
+
+    def _save_new(self, record, *, knowledge, product_version):
+        pass
 
     async def _execute(self, record, *, knowledge, product_version):
         record["status"] = "running"
@@ -77,7 +84,7 @@ class RunStore:
             graph = GraphAgent(provider, self.executor)
             result = await graph.run(
                 record["question"],
-                context=AuthContext(user_id="user-alpha", tenant_id="tenant-alpha", role="member"),
+                context=self.context,
                 grounded=knowledge,
                 on_event=lambda event: record["events"].append(event),
             )

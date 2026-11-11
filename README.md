@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 15，网页运行入口使用 LangGraph 显式状态机。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，建单仍在计划中；mock运行记录仍在内存。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 16，支持 PostgreSQL 检查点和显式恢复运行。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，建单仍在计划中；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -258,3 +258,19 @@ Responses适配器回填原始输出项，包含无状态请求需要保留的�
 ## Day 15 显式状态机
 
 排障和文档问答共用 LangGraph 编排。运行结束后可在 `GET /runs/{id}` 查看 `state_path`。原生循环入口 `python scripts/agent_smoke.py` 保留供对照。流程、验收与复现方法见 [Day 15 报告](docs/devlog/2026-11-11-day-15.md)。
+
+
+## Day 16 检查点与重启恢复
+
+在项目根目录安装锁定依赖、配置本地数据库后，启用持久模式：
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.lock
+.\.venv\Scripts\python.exe -m alembic upgrade head
+$env:SUPPORTOPS_PERSIST_RUNS = '1'
+.\.venv\Scripts\python.exe -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
+```
+
+持久模式用已有 PostgreSQL 保存运行归属和图检查点。重启后用原 ID 请求 `GET /runs/{id}` 加载记录，向 `POST /runs/{id}/resume` 发送空请求恢复待完成运行。终态再次恢复返回已有结果。当前 API 使用固定本机演示身份，租户和用户来自服务端上下文。
+
+可信操作员 CLI 为 `python scripts/checkpoint_run.py create`、`resume <run-id>` 和 `show <run-id>`。CLI 固定使用合成只读 429 场景。进程退出后数据库记录可能仍显示 running，需要显式请求恢复。默认内存模式沿用此前的行为。故障注入、权限验证、状态保存内容与重跑边界见 [Day 16 报告](docs/devlog/2026-11-11-day-16.md)。

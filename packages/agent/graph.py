@@ -1,21 +1,25 @@
 """Explicit in-process routing for the support agent."""
 
+import json
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
 from langsmith import tracing_context
 
-from .loop import AgentLoop, AgentTurn
+from packages.tools.schemas import AuthContext
+
+from .loop import AgentLoop, AgentTurn, RunResult
+from .models import ModelRequest, ModelResponse
 
 
 class SupportState(TypedDict):
-    turn: AgentTurn
+    turn: dict
     path: list[str]
     next_node: str
 
 
 class GraphAgent(AgentLoop):
-    def __init__(self, provider, executor, **limits):
+    def __init__(self, provider, executor, *, checkpointer=None, **limits):
         super().__init__(provider, executor, **limits)
         graph = StateGraph(SupportState)
         graph.add_node("classify", self._classify)
@@ -34,21 +38,32 @@ class GraphAgent(AgentLoop):
             graph.add_conditional_edges(node, self._route, {name: name for name in destinations})
         graph.add_edge("clarify", "done")
         graph.add_edge("done", END)
-        self.graph = graph.compile()
+        self.graph = graph.compile(checkpointer=checkpointer)
+        self.on_event = None
+        self.durability = "sync" if checkpointer else None
 
     @staticmethod
     def _route(state: SupportState):
         return state["next_node"]
 
     async def _classify(self, state: SupportState):
-        next_node = await self.classify(state["turn"])
-        return {"path": [*state["path"], "classify"], "next_node": next_node}
+        turn = self._restore(state["turn"])
+        next_node = await self.classify(turn)
+        return {
+            "turn": self._snapshot(turn),
+            "path": [*state["path"], "classify"],
+            "next_node": next_node,
+        }
 
     async def _tools(self, state: SupportState, node: str):
-        turn = state["turn"]
+        turn = self._restore(state["turn"])
         succeeded = await self.call_tools(turn)
         next_node = "classify" if succeeded and turn.result.model_calls < self.max_steps else "done"
-        return {"path": [*state["path"], node], "next_node": next_node}
+        return {
+            "turn": self._snapshot(turn),
+            "path": [*state["path"], node],
+            "next_node": next_node,
+        }
 
     async def _retrieve(self, state: SupportState):
         return await self._tools(state, "retrieve")
@@ -57,10 +72,14 @@ class GraphAgent(AgentLoop):
         return await self._tools(state, "call_tool")
 
     def _answer(self, state: SupportState):
-        turn = state["turn"]
+        turn = self._restore(state["turn"])
         self.answer(turn)
         next_node = "clarify" if turn.result.reason == "clarification" else "done"
-        return {"path": [*state["path"], "answer"], "next_node": next_node}
+        return {
+            "turn": self._snapshot(turn),
+            "path": [*state["path"], "answer"],
+            "next_node": next_node,
+        }
 
     @staticmethod
     def _clarify(state: SupportState):
@@ -70,12 +89,45 @@ class GraphAgent(AgentLoop):
     def _done(state: SupportState):
         return {"path": [*state["path"], "done"]}
 
-    async def run(self, question, *, context, on_event=None, grounded=False):
-        turn = self.start(question, context=context, on_event=on_event, grounded=grounded)
+    @staticmethod
+    def _snapshot(turn):
+        return {
+            "request": turn.request.model_dump(mode="json"),
+            "context": turn.context.model_dump(mode="json"),
+            "grounded": turn.grounded,
+            "result": turn.result.model_dump(mode="json"),
+            "seen": [list(item) for item in sorted(turn.seen)],
+            "call_ids": sorted(turn.call_ids),
+            "evidence": turn.evidence,
+            "response": turn.response.model_dump(mode="json") if turn.response else None,
+        }
+
+    def _restore(self, value):
+        return AgentTurn(
+            request=ModelRequest.model_validate(value["request"]),
+            context=AuthContext.model_validate_json(json.dumps(value["context"])),
+            grounded=value["grounded"],
+            on_event=self.on_event,
+            result=RunResult.model_validate(value["result"]),
+            seen={tuple(item) for item in value["seen"]},
+            call_ids=set(value["call_ids"]),
+            evidence=value["evidence"],
+            response=ModelResponse.model_validate(value["response"]) if value["response"] else None,
+        )
+
+    async def run(
+        self, question, *, context, on_event=None, grounded=False, thread_id=None, resume=False
+    ):
+        self.on_event = on_event
+        config = {"recursion_limit": 2 * self.max_steps + 5}
+        if thread_id:
+            config["configurable"] = {"thread_id": thread_id}
+        initial = None
+        if not resume:
+            turn = self.start(question, context=context, on_event=on_event, grounded=grounded)
+            initial = {"turn": self._snapshot(turn), "path": [], "next_node": "classify"}
         with tracing_context(enabled=False):
-            final = await self.graph.ainvoke(
-                {"turn": turn, "path": [], "next_node": "classify"},
-                config={"recursion_limit": 2 * self.max_steps + 5},
-            )
-        turn.result.state_path = final["path"]
-        return turn.result
+            final = await self.graph.ainvoke(initial, config=config, durability=self.durability)
+        result = self._restore(final["turn"]).result
+        result.state_path = final["path"]
+        return result

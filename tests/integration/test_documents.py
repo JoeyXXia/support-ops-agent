@@ -23,7 +23,14 @@ class DocumentDatabaseTests(PostgreSQLCase):
         tables = set(sa.inspect(self.engine).get_table_names(schema=self.schema))
         self.assertEqual(
             tables,
-            {"alembic_version", "documents", "document_versions", "chunks", "embedding_cache"},
+            {
+                "alembic_version",
+                "documents",
+                "document_versions",
+                "chunks",
+                "embedding_cache",
+                "agent_runs",
+            },
         )
         with self.engine.connect() as conn:
             self.assertTrue(

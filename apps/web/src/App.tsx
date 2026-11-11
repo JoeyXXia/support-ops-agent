@@ -219,7 +219,7 @@ export function App() {
         </section>
       )}
       <footer>
-        CloudDesk为合成演示。固定本地演示身份；运行保存在内存，重启丢失。当前服务仅用于本机开发。
+        CloudDesk为合成演示。使用固定本地演示身份。当前服务仅用于本机开发。
       </footer>
     </main>
   );

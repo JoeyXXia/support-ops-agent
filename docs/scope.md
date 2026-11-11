@@ -99,3 +99,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 15 范围（2026-11-11）
 
 网页 API 切换到本地 LangGraph，继续使用现有只读工具、引用验证与 mock，终态记录执行路径。原生循环保留为教学对照。持久化、审批及写操作由后续计划推进。
+
+
+## Day 16 范围（2026-11-11）
+
+为现有只读图增加 PostgreSQL 检查点与 run/thread 的租户、用户映射，提供 API 加载与显式恢复及可信操作员故障注入 CLI。持久模式通过服务端环境变量启用。验证实际子进程终止恢复和跨租户拒绝。运行与 thread 当前一一对应。API 沿用固定本机演示身份。
