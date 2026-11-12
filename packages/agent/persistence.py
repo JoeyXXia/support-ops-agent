@@ -134,6 +134,18 @@ async def execute_run(repository, saver, run_id, context, provider_factory, *, o
         )
         config = {"configurable": {"thread_id": str(run_id)}}
         snapshot = await agent.graph.aget_state(config)
+        approval_ready = False
+        if snapshot.values and any(task.interrupts for task in snapshot.tasks):
+            from packages.storage.tickets import TicketRepository
+
+            proposal = snapshot.values["turn"]["result"].get("proposed_action")
+            if proposal:
+                status = (
+                    TicketRepository(repository.engine)
+                    .get_approval(proposal["approval_id"], context)
+                    .status
+                )
+                approval_ready = status in {"approved", "rejected", "executed"}
         record.update(status="running", reason="")
         repository.save(record, context)
         result = await agent.run(
@@ -143,6 +155,7 @@ async def execute_run(repository, saver, run_id, context, provider_factory, *, o
             on_event=on_event,
             thread_id=str(run_id),
             resume=bool(snapshot.values),
+            approval_ready=approval_ready,
         )
         record.update(result.model_dump())
         repository.save(record, context)

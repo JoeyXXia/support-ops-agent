@@ -62,10 +62,19 @@ class PersistentRunStore(RunStore):
         record = owned["record"]
         if record["status"] in {"completed", "stopped", "failed"}:
             return record
+        if record["status"] == "awaiting_approval":
+            from packages.storage.tickets import TicketRepository
+
+            proposal = TicketRepository(self.repository.engine).get_approval(
+                record["proposed_action"]["approval_id"], self.context
+            )
+            if proposal.status == "pending":
+                return record
         if str(run_id) in self.active_ids or len(self.tasks) >= self.max_active:
             raise OverflowError("busy")
         # Reserve synchronously so two requests in one loop cannot schedule the same run.
         self.active_ids.add(str(run_id))
+        record.update(status="queued", reason="")
         self.records[str(run_id)] = record
         task = asyncio.create_task(self._execute(record, **owned["input"]))
         self.tasks.add(task)

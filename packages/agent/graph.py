@@ -4,6 +4,7 @@ import json
 from typing import TypedDict
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.types import Command, interrupt
 from langsmith import tracing_context
 
 from packages.tools.schemas import AuthContext
@@ -28,15 +29,19 @@ class GraphAgent(AgentLoop):
         graph.add_node("answer", self._answer)
         graph.add_node("clarify", self._clarify)
         graph.add_node("done", self._done)
+        graph.add_node("await_approval", self._await_approval)
+        graph.add_node("execute", self._execute)
         graph.add_edge(START, "classify")
         for node, destinations in (
             ("classify", ("retrieve", "call_tool", "answer", "done")),
             ("retrieve", ("classify", "done")),
             ("call_tool", ("classify", "done")),
-            ("answer", ("clarify", "done")),
+            ("answer", ("clarify", "await_approval", "done")),
         ):
             graph.add_conditional_edges(node, self._route, {name: name for name in destinations})
         graph.add_edge("clarify", "done")
+        graph.add_edge("await_approval", "execute")
+        graph.add_edge("execute", "done")
         graph.add_edge("done", END)
         self.graph = graph.compile(checkpointer=checkpointer)
         self.on_event = None
@@ -75,11 +80,52 @@ class GraphAgent(AgentLoop):
         turn = self._restore(state["turn"])
         self.answer(turn)
         next_node = "clarify" if turn.result.reason == "clarification" else "done"
+        if turn.result.proposed_action and self.graph.checkpointer:
+            turn.result.status, turn.result.reason = "awaiting_approval", "pending_approval"
+            next_node = "await_approval"
         return {
             "turn": self._snapshot(turn),
             "path": [*state["path"], "answer"],
             "next_node": next_node,
         }
+
+    def _approval_repository(self):
+        from packages.storage.tickets import TicketRepository
+
+        return TicketRepository(self.executor.engine)
+
+    def _await_approval(self, state):
+        turn = self._restore(state["turn"])
+        proposal = self._approval_repository().get_approval(
+            turn.result.proposed_action["approval_id"], turn.context
+        )
+        if proposal.status == "pending":
+            interrupt(proposal.model_dump(mode="json"))
+        return {"path": [*state["path"], "await_approval"]}
+
+    def _execute(self, state):
+        from packages.storage.tickets import ApprovalConflict
+
+        turn = self._restore(state["turn"])
+        repository = self._approval_repository()
+        approval_id = turn.result.proposed_action["approval_id"]
+        proposal = repository.get_approval(approval_id, turn.context)
+        if proposal.status == "rejected":
+            turn.result.status, turn.result.reason = "completed", "approval_rejected"
+            turn.result.answer = "已拒绝工单草稿。"
+        else:
+            try:
+                ticket = repository.create_ticket(approval_id, turn.context)
+                turn.result.ticket = ticket.model_dump(mode="json")
+                turn.result.status, turn.result.reason = "completed", "ticket_created"
+                turn.result.answer = "工单已创建。"
+            except (ApprovalConflict, PermissionError):
+                turn.result.status, turn.result.reason = "failed", "approval_invalid"
+                turn.result.answer = "审批已失效，请生成新的草稿。"
+        turn.result.proposed_action = repository.get_approval(approval_id, turn.context).model_dump(
+            mode="json"
+        )
+        return {"turn": self._snapshot(turn), "path": [*state["path"], "execute"]}
 
     @staticmethod
     def _clarify(state: SupportState):
@@ -116,7 +162,15 @@ class GraphAgent(AgentLoop):
         )
 
     async def run(
-        self, question, *, context, on_event=None, grounded=False, thread_id=None, resume=False
+        self,
+        question,
+        *,
+        context,
+        on_event=None,
+        grounded=False,
+        thread_id=None,
+        resume=False,
+        approval_ready=False,
     ):
         self.on_event = on_event
         config = {"recursion_limit": 2 * self.max_steps + 5}
@@ -126,8 +180,12 @@ class GraphAgent(AgentLoop):
         if not resume:
             turn = self.start(question, context=context, on_event=on_event, grounded=grounded)
             initial = {"turn": self._snapshot(turn), "path": [], "next_node": "classify"}
+        if approval_ready:
+            initial = Command(resume=True)
         with tracing_context(enabled=False):
             final = await self.graph.ainvoke(initial, config=config, durability=self.durability)
         result = self._restore(final["turn"]).result
         result.state_path = final["path"]
+        if final.get("__interrupt__"):
+            result.state_path = [*result.state_path, "await_approval"]
         return result

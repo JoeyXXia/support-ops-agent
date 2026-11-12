@@ -79,7 +79,7 @@ class TicketTests(PostgreSQLCase):
             connection.execute(
                 approvals.update()
                 .where(approvals.c.id == proposal.approval_id)
-                .values(status="approved")
+                .values(status="approved", decided_by=self.alpha.user_id, decided_at=sa.func.now())
             )
         created = self.repository.create_ticket(proposal.approval_id, self.alpha)
         self.assertEqual(created.title, self.args.title)
@@ -136,7 +136,7 @@ class TicketTests(PostgreSQLCase):
                     if record["status"] not in {"queued", "running"}:
                         break
                     await asyncio.sleep(0.02)
-                self.assertEqual(record["status"], "completed")
+                self.assertEqual(record["status"], "awaiting_approval")
                 proposal = record["proposed_action"]
                 self.assertEqual(proposal["params"]["description"], "ws-alpha 429，请转人工。")
                 self.assertEqual(self.counts(), (0, 1))

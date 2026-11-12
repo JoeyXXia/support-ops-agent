@@ -109,3 +109,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 17 范围（2026-11-12）
 
 新增工单与审批表、按租户隔离的 get_ticket 和绑定持久化 run 的 propose_ticket。网页展示精确动作参数与目标租户。建单接口读取已保存审批并检查状态，Agent 生成待审核草稿。批准、拒绝和有效期绑定属于 Day 18。沿用 PostgreSQL、现有工具框架及确定性 mock。
+
+
+## Day 18 范围（2026-11-12）
+
+新增用户、run、目标租户、动作参数摘要和 30 分钟期限绑定的审批。提供 approve/reject 接口和网页操作，批准或拒绝后恢复 LangGraph。实际建单节点重新校验数据库授权。模型输出与恢复值均不能代替授权。参数变更通过新 run 申请新审批，缺少绑定的历史草稿失效且保留可读。

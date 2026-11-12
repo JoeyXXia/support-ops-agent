@@ -15,13 +15,14 @@ from .models import Message, ModelProvider, ModelRequest, ModelResponse, Provide
 
 
 class RunResult(BaseModel):
-    status: Literal["completed", "stopped", "failed"]
+    status: Literal["completed", "stopped", "failed", "awaiting_approval"]
     reason: str
     answer: str = ""
     citations: list[dict] = Field(default_factory=list)
     model_calls: int = 0
     tool_calls: int = 0
     events: list[dict] = Field(default_factory=list)
+    ticket: dict | None = None
     proposed_action: dict | None = None
     state_path: list[str] = Field(default_factory=list)
 

@@ -166,3 +166,11 @@ approvals = sa.Table(
     ),
     sa.UniqueConstraint("run_id", "action", name="uq_run_action"),
 )
+
+for column in (
+    sa.Column("payload_digest", sa.Text),
+    sa.Column("expires_at", sa.DateTime(timezone=True)),
+    sa.Column("decided_by", sa.Text),
+    sa.Column("decided_at", sa.DateTime(timezone=True)),
+):
+    approvals.append_column(column)

@@ -97,6 +97,8 @@ class ProposedAction(StrictModel):
     action: Literal["create_ticket"]
     params: TicketDraftArgs
     status: Literal["pending", "approved", "rejected", "executed"]
+    payload_digest: str | None = None
+    expires_at: str | None = None
 
 
 class ToolFailure(StrictModel):

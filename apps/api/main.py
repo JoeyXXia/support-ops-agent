@@ -4,7 +4,7 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .runs import RunInput, RunStore
 
@@ -90,7 +90,7 @@ class ExecuteTicketInput(BaseModel):
 
 @app.post("/tickets", status_code=201)
 async def create_ticket(body: ExecuteTicketInput, request: Request):
-    from packages.storage.tickets import TicketRepository
+    from packages.storage.tickets import ApprovalConflict, TicketRepository
 
     from .persistent_runs import PersistentRunStore
 
@@ -103,5 +103,46 @@ async def create_ticket(body: ExecuteTicketInput, request: Request):
         )
     except LookupError:
         raise HTTPException(status_code=404, detail="审批不存在或不可访问。") from None
-    except PermissionError:
-        raise HTTPException(status_code=409, detail="工单草稿尚未获批准。") from None
+    except (PermissionError, ApprovalConflict):
+        raise HTTPException(status_code=409, detail="草稿尚未批准或审批已失效。") from None
+
+
+class ApprovalInput(BaseModel):
+    model_config = {"extra": "forbid"}
+    run_id: UUID
+    payload_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+async def decide_approval(approval_id, body, request, *, approve):
+    from packages.storage.tickets import ApprovalConflict, TicketRepository
+
+    from .persistent_runs import PersistentRunStore
+
+    store = request.app.state.runs
+    if not isinstance(store, PersistentRunStore):
+        raise HTTPException(status_code=409, detail="请启用持久化运行模式。")
+    try:
+        TicketRepository(store.repository.engine).decide(
+            approval_id,
+            store.context,
+            run_id=body.run_id,
+            digest=body.payload_digest,
+            approve=approve,
+        )
+        return store.resume(body.run_id)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="审批不存在或不可访问。") from None
+    except (ApprovalConflict, OverflowError):
+        raise HTTPException(
+            status_code=409, detail="审批已失效、已决定或运行正忙，请重新查询。"
+        ) from None
+
+
+@app.post("/approvals/{approval_id}/approve", status_code=202)
+async def approve(approval_id: UUID, body: ApprovalInput, request: Request):
+    return await decide_approval(approval_id, body, request, approve=True)
+
+
+@app.post("/approvals/{approval_id}/reject", status_code=202)
+async def reject(approval_id: UUID, body: ApprovalInput, request: Request):
+    return await decide_approval(approval_id, body, request, approve=False)

@@ -7,8 +7,11 @@ type Run = {
   mode: string;
   status: string;
   reason: string;
+  ticket?: { ticket_id: string; title: string } | null;
   proposed_action?: {
     approval_id: string;
+    payload_digest?: string | null;
+    expires_at?: string | null;
     tenant_id: string;
     action: string;
     status: string;
@@ -39,8 +42,14 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
     signal: AbortSignal.timeout(8000),
   });
-  if (!response.ok)
-    throw new Error(`请求失败（HTTP ${response.status}），请检查服务或输入。`);
+  if (!response.ok) {
+    const detail = await response.json().catch(() => null);
+    throw new Error(
+      typeof detail?.detail === "string"
+        ? detail.detail
+        : `请求失败（HTTP ${response.status}），请检查服务或输入。`,
+    );
+  }
   return response.json() as Promise<T>;
 }
 
@@ -107,11 +116,37 @@ export function App() {
       setBusy(false);
     }
   }
+  async function decide(approve: boolean) {
+    if (!run?.proposed_action?.payload_digest || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const current = await api<Run>(
+        `/approvals/${run.proposed_action.approval_id}/${approve ? "approve" : "reject"}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            run_id: run.id,
+            payload_digest: run.proposed_action.payload_digest,
+          }),
+        },
+      );
+      setRun(current);
+      setRetry((value) => value + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "审批请求失败。");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const running = !!run && ["queued", "running"].includes(run.status);
   const labels: Record<string, string> = {
     queued: "等待执行",
     running: "运行中",
     completed: "完成",
+    awaiting_approval: "等待审批",
     failed: "失败",
     stopped: "已停止",
   };
@@ -239,8 +274,35 @@ export function App() {
                 </dd>
                 <dt>状态</dt>
                 <dd>{run.proposed_action.status}</dd>
+                {run.proposed_action.expires_at && (
+                  <>
+                    <dt>审批有效期至（北京时间）</dt>
+                    <dd>
+                      {new Date(run.proposed_action.expires_at).toLocaleString(
+                        "zh-CN",
+                        { timeZone: "Asia/Shanghai" },
+                      )}
+                    </dd>
+                  </>
+                )}
               </dl>
+              {run.status === "awaiting_approval" &&
+                run.proposed_action.payload_digest && (
+                  <>
+                    <button disabled={busy} onClick={() => decide(true)}>
+                      批准并创建工单
+                    </button>{" "}
+                    <button disabled={busy} onClick={() => decide(false)}>
+                      拒绝草稿
+                    </button>
+                  </>
+                )}
             </section>
+          )}
+          {run.ticket && (
+            <p>
+              工单 ID：{run.ticket.ticket_id} · {run.ticket.title}
+            </p>
           )}
           {run.citations?.map((citation) => (
             <details key={citation.chunk_id}>
