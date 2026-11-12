@@ -30,6 +30,8 @@ class DocumentDatabaseTests(PostgreSQLCase):
                 "chunks",
                 "embedding_cache",
                 "agent_runs",
+                "tickets",
+                "approvals",
             },
         )
         with self.engine.connect() as conn:

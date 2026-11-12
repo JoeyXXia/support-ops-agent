@@ -106,7 +106,13 @@ class ToolTests(unittest.TestCase):
         definitions = self.executor.definitions()
         self.assertEqual(
             {item.name for item in definitions},
-            {"get_workspace_usage", "get_recent_errors", "search_docs"},
+            {
+                "get_workspace_usage",
+                "get_recent_errors",
+                "search_docs",
+                "get_ticket",
+                "propose_ticket",
+            },
         )
         for item in definitions:
             self.assertFalse(item.parameters["additionalProperties"])

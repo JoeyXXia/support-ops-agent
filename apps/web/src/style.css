@@ -152,3 +152,17 @@ textarea {
 li {
   margin: 8px 0;
 }
+
+form > label {
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.action-draft dt {
+  font-weight: 600;
+}
+
+.action-draft dd {
+  margin: 0.25rem 0 0.75rem;
+  overflow-wrap: anywhere;
+}

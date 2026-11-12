@@ -8,6 +8,8 @@ from .runs import RunStore
 
 
 class PersistentRunStore(RunStore):
+    supports_drafts = True
+
     def __init__(self, engine, saver, **kwargs):
         super().__init__(**kwargs)
         self.repository = RunRepository(engine)

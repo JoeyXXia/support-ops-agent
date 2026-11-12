@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 16，支持 PostgreSQL 检查点和显式恢复运行。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，建单仍在计划中；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 17，支持工单读取和可核对的待审核动作草稿。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单接口，批准流程按后续计划推进；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -274,3 +274,10 @@ $env:SUPPORTOPS_PERSIST_RUNS = '1'
 持久模式用已有 PostgreSQL 保存运行归属和图检查点。重启后用原 ID 请求 `GET /runs/{id}` 加载记录，向 `POST /runs/{id}/resume` 发送空请求恢复待完成运行。终态再次恢复返回已有结果。当前 API 使用固定本机演示身份，租户和用户来自服务端上下文。
 
 可信操作员 CLI 为 `python scripts/checkpoint_run.py create`、`resume <run-id>` 和 `show <run-id>`。CLI 固定使用合成只读 429 场景。进程退出后数据库记录可能仍显示 running，需要显式请求恢复。默认内存模式沿用此前的行为。故障注入、权限验证、状态保存内容与重跑边界见 [Day 16 报告](docs/devlog/2026-11-11-day-16.md)。
+
+
+## Day 17 工单与待审核草稿
+
+先执行数据库迁移并按 Day 16 说明启用持久模式。页面勾选待审核工单草稿，可查看固定 ws-alpha 演示的目标租户、工作区、动作、标题、描述和 pending 状态。API 请求为 `POST /runs`，传入 `question` 和 `ticket_draft: true`，再 GET 原运行 ID 获取 `proposed_action`。每个运行的重复相同提议复用原草稿。
+
+`get_ticket` 是按获授权租户读取的模型工具。`POST /tickets` 是服务端受控执行接口，只接受 `approval_id`，pending 草稿返回 409。批准、拒绝及有效期与参数摘要绑定由 Day 18 实现。本日 Agent 调用 `propose_ticket` 只保存草稿，模型工具列表包含 get_ticket 与 propose_ticket。测试证据和边界见 [Day 17 报告](docs/devlog/2026-11-12-day-17.md)。

@@ -45,10 +45,17 @@ async def health() -> HealthResponse:
 
 @app.post("/runs", status_code=202)
 async def create_run(body: RunInput, request: Request):
+    if body.ticket_draft and body.knowledge:
+        raise HTTPException(status_code=422, detail="请选择一种演示模式。")
     try:
         return request.app.state.runs.create(
-            body.question, knowledge=body.knowledge, product_version=body.product_version
+            body.question,
+            knowledge=body.knowledge,
+            product_version=body.product_version,
+            ticket_draft=body.ticket_draft,
         )
+    except ValueError:
+        raise HTTPException(status_code=409, detail="工单草稿需要启用持久化运行模式。") from None
     except OverflowError:
         raise HTTPException(status_code=503, detail="演示运行已满，请稍后重试。") from None
 
@@ -74,3 +81,27 @@ async def resume_run(run_id: UUID, request: Request):
         raise HTTPException(status_code=404, detail="运行不存在或当前身份无权访问。") from None
     except OverflowError:
         raise HTTPException(status_code=409, detail="运行正在执行或已达到并发上限。") from None
+
+
+class ExecuteTicketInput(BaseModel):
+    model_config = {"extra": "forbid"}
+    approval_id: UUID
+
+
+@app.post("/tickets", status_code=201)
+async def create_ticket(body: ExecuteTicketInput, request: Request):
+    from packages.storage.tickets import TicketRepository
+
+    from .persistent_runs import PersistentRunStore
+
+    store = request.app.state.runs
+    if not isinstance(store, PersistentRunStore):
+        raise HTTPException(status_code=409, detail="请启用持久化运行模式。")
+    try:
+        return TicketRepository(store.repository.engine).create_ticket(
+            body.approval_id, store.context
+        )
+    except LookupError:
+        raise HTTPException(status_code=404, detail="审批不存在或不可访问。") from None
+    except PermissionError:
+        raise HTTPException(status_code=409, detail="工单草稿尚未获批准。") from None

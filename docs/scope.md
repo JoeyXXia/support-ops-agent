@@ -104,3 +104,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 16 范围（2026-11-11）
 
 为现有只读图增加 PostgreSQL 检查点与 run/thread 的租户、用户映射，提供 API 加载与显式恢复及可信操作员故障注入 CLI。持久模式通过服务端环境变量启用。验证实际子进程终止恢复和跨租户拒绝。运行与 thread 当前一一对应。API 沿用固定本机演示身份。
+
+
+## Day 17 范围（2026-11-12）
+
+新增工单与审批表、按租户隔离的 get_ticket 和绑定持久化 run 的 propose_ticket。网页展示精确动作参数与目标租户。建单接口读取已保存审批并检查状态，Agent 生成待审核草稿。批准、拒绝和有效期绑定属于 Day 18。沿用 PostgreSQL、现有工具框架及确定性 mock。

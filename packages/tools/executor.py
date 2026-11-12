@@ -11,10 +11,12 @@ from packages.agent.models import ToolDefinition
 from .schemas import (
     AuthContext,
     ErrorEvent,
+    GetTicketArgs,
     RecentErrorsArgs,
     RecentErrorsResult,
     SearchDocsArgs,
     StrictModel,
+    TicketDraftArgs,
     ToolFailure,
     ToolResult,
     UsageResult,
@@ -32,6 +34,10 @@ class ToolSpec:
 
 
 REGISTRY = {
+    "get_ticket": ToolSpec("读取获授权租户的工单", GetTicketArgs, "_ticket"),
+    "propose_ticket": ToolSpec(
+        "保存待审核工单草稿，返回精确参数与目标租户", TicketDraftArgs, "_propose"
+    ),
     "search_docs": ToolSpec("按产品版本检索授权文档，返回出处和原文", SearchDocsArgs, "_search"),
     "get_workspace_usage": ToolSpec(
         "读取获授权工作区的合成用量与套餐限额", WorkspaceArgs, "_usage"
@@ -43,7 +49,8 @@ REGISTRY = {
 
 
 class ToolExecutor:
-    def __init__(self, data_dir: Path | None = None):
+    def __init__(self, data_dir: Path | None = None, *, engine=None, run_id=None):
+        self.engine, self.run_id = engine, run_id
         self.data_dir = data_dir or Path(__file__).resolve().parents[2] / "data/demo"
         self.tenants = json.loads((self.data_dir / "tenants.json").read_text(encoding="utf-8"))
         self.facts = json.loads((self.data_dir / "product_facts.json").read_text(encoding="utf-8"))
@@ -90,6 +97,14 @@ class ToolExecutor:
             except ValueError:
                 logger.error("tool.failed tool=%s code=internal_error", name)
                 return fail("internal_error", "文档检索暂不可用。")
+        if name == "get_ticket":
+            try:
+                return ToolResult(tool=name, ok=True, data=self._ticket(args, allowed))
+            except LookupError:
+                return fail("not_found", "工单不存在或不可访问。")
+            except Exception:
+                logger.error("tool.failed tool=%s code=internal_error", name)
+                return fail("internal_error", "工单读取暂不可用。")
         # Search only authorized tenants, avoiding a global existence oracle.
         workspace = next(
             (
@@ -103,6 +118,20 @@ class ToolExecutor:
         )
         if workspace is None:
             return fail("not_found", "工作区不存在或不可访问。")
+        if name == "propose_ticket":
+            if not self.run_id or self.engine is None:
+                return fail("forbidden", "草稿需要绑定持久化运行。")
+            from packages.storage.tickets import TicketRepository
+
+            target = next(t["id"] for t in self.tenants if workspace in t["workspaces"])
+            try:
+                proposal = TicketRepository(self.engine).propose(
+                    self.run_id, args, context, target_tenant=target
+                )
+                return ToolResult(tool=name, ok=True, data=proposal)
+            except Exception:
+                logger.error("tool.failed tool=%s code=internal_error", name)
+                return fail("internal_error", "草稿保存暂不可用。")
         try:
             result = getattr(self, spec.handler)(args, workspace)
             return ToolResult(tool=name, ok=True, data=result)
@@ -135,3 +164,14 @@ class ToolExecutor:
                 raise ValueError("timezone required")
         events.sort(key=lambda event: (event.occurred_at, event.id), reverse=True)
         return RecentErrorsResult(workspace_id=args.workspace_id, events=events[: args.limit])
+
+    def _ticket(self, args, allowed):
+        from packages.storage.database import engine_from_environment
+        from packages.storage.tickets import TicketRepository
+
+        engine = self.engine or engine_from_environment()
+        try:
+            return TicketRepository(engine).get_ticket(args.ticket_id, allowed)
+        finally:
+            if self.engine is None:
+                engine.dispose()

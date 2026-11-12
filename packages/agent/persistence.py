@@ -13,6 +13,7 @@ from packages.tools.executor import ToolExecutor
 
 from .graph import GraphAgent
 from .knowledge_mock import KnowledgeScenarioMock
+from .ticket_mock import TicketDraftMock
 
 
 class RunBusy(Exception):
@@ -126,7 +127,11 @@ async def execute_run(repository, saver, run_id, context, provider_factory, *, o
             if settings["knowledge"]
             else provider_factory()
         )
-        agent = GraphAgent(provider, ToolExecutor(), checkpointer=saver)
+        if record.get("ticket_draft", False):
+            provider = TicketDraftMock(record["question"])
+        agent = GraphAgent(
+            provider, ToolExecutor(engine=repository.engine, run_id=str(run_id)), checkpointer=saver
+        )
         config = {"configurable": {"thread_id": str(run_id)}}
         snapshot = await agent.graph.aget_state(config)
         record.update(status="running", reason="")

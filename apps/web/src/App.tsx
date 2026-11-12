@@ -7,6 +7,13 @@ type Run = {
   mode: string;
   status: string;
   reason: string;
+  proposed_action?: {
+    approval_id: string;
+    tenant_id: string;
+    action: string;
+    status: string;
+    params: { workspace_id: string; title: string; description: string };
+  } | null;
   answer: string;
   citations?: Array<{
     chunk_id: string;
@@ -41,6 +48,7 @@ export function App() {
   const [question, setQuestion] = useState(
     "CloudDesk ws-alpha升级后一直返回429，帮我排查原因。",
   );
+  const [ticketDraft, setTicketDraft] = useState(false);
   const [knowledge, setKnowledge] = useState(false);
   const [version, setVersion] = useState("");
   const [run, setRun] = useState<Run | null>(null);
@@ -88,6 +96,7 @@ export function App() {
         body: JSON.stringify({
           question,
           knowledge,
+          ticket_draft: ticketDraft,
           product_version: knowledge ? version || null : null,
         }),
       });
@@ -110,7 +119,7 @@ export function App() {
     <main>
       <header>
         <span className="brand">SupportOps Agent</span>
-        <span className="badge">Day 13 · 本地 mock</span>
+        <span className="badge">本地 mock</span>
       </header>
       <section className="intro">
         <p className="eyebrow">CLOUDDESK / 技术支持</p>
@@ -133,9 +142,23 @@ export function App() {
             <input
               type="checkbox"
               checked={knowledge}
-              onChange={(event) => setKnowledge(event.target.checked)}
+              onChange={(event) => {
+                setKnowledge(event.target.checked);
+                setTicketDraft(false);
+              }}
             />
             使用文档引用演示
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={ticketDraft}
+              onChange={(event) => {
+                setTicketDraft(event.target.checked);
+                setKnowledge(false);
+              }}
+            />
+            生成待审核工单草稿（需启用持久化模式）
           </label>
           {knowledge && (
             <label>
@@ -198,6 +221,27 @@ export function App() {
             ))}
           </ol>
           {run.answer && <p className="answer">{run.answer}</p>}
+          {run.proposed_action && (
+            <section className="action-draft" aria-label="待审核工单草稿">
+              <h3>待审核工单草稿</h3>
+              <dl>
+                <dt>目标租户</dt>
+                <dd>{run.proposed_action.tenant_id}</dd>
+                <dt>工作区</dt>
+                <dd>{run.proposed_action.params.workspace_id}</dd>
+                <dt>动作</dt>
+                <dd>{run.proposed_action.action}</dd>
+                <dt>标题</dt>
+                <dd>{run.proposed_action.params.title}</dd>
+                <dt>内容</dt>
+                <dd style={{ whiteSpace: "pre-wrap" }}>
+                  {run.proposed_action.params.description}
+                </dd>
+                <dt>状态</dt>
+                <dd>{run.proposed_action.status}</dd>
+              </dl>
+            </section>
+          )}
           {run.citations?.map((citation) => (
             <details key={citation.chunk_id}>
               <summary>

@@ -71,6 +71,34 @@ class SearchDocsResult(StrictModel):
     sources: list[DocEvidence] = Field(max_length=5)
 
 
+class GetTicketArgs(StrictModel):
+    ticket_id: str = Field(pattern=r"^[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}$")
+
+
+class TicketDraftArgs(WorkspaceArgs):
+    model_config = ConfigDict(extra="forbid", strict=True, str_strip_whitespace=True)
+    title: str = Field(min_length=1, max_length=120)
+    description: str = Field(min_length=1, max_length=2000)
+
+
+class TicketResult(StrictModel):
+    ticket_id: str
+    tenant_id: str
+    workspace_id: str
+    title: str
+    description: str
+    status: Literal["open", "closed"]
+
+
+class ProposedAction(StrictModel):
+    approval_id: str
+    run_id: str
+    tenant_id: str
+    action: Literal["create_ticket"]
+    params: TicketDraftArgs
+    status: Literal["pending", "approved", "rejected", "executed"]
+
+
 class ToolFailure(StrictModel):
     code: Literal["unknown_tool", "invalid_arguments", "forbidden", "not_found", "internal_error"]
     message: str
@@ -80,5 +108,7 @@ class ToolFailure(StrictModel):
 class ToolResult(StrictModel):
     tool: str
     ok: bool
-    data: UsageResult | RecentErrorsResult | SearchDocsResult | None = None
+    data: (
+        UsageResult | RecentErrorsResult | SearchDocsResult | TicketResult | ProposedAction | None
+    ) = None
     error: ToolFailure | None = None

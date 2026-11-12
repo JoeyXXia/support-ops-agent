@@ -17,11 +17,14 @@ from packages.tools.schemas import AuthContext
 class RunInput(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True, str_strip_whitespace=True)
     question: str = Field(min_length=1, max_length=2000)
+    ticket_draft: bool = False
     knowledge: bool = False
     product_version: Literal["1.0", "2.0"] | None = None
 
 
 class RunStore:
+    supports_drafts = False
+
     def __init__(self, *, max_active=4, max_records=100, provider_factory=None, context=None):
         self.context = context or AuthContext(
             user_id="user-alpha", tenant_id="tenant-alpha", role="member"
@@ -32,7 +35,9 @@ class RunStore:
         self.provider_factory = provider_factory or DemoProvider
         self.executor = ToolExecutor()
 
-    def create(self, question, *, knowledge=False, product_version=None):
+    def create(self, question, *, knowledge=False, product_version=None, ticket_draft=False):
+        if ticket_draft and not self.supports_drafts:
+            raise ValueError("durable_mode_required")
         if len(self.tasks) >= self.max_active:
             raise OverflowError("busy")
         while len(self.records) >= self.max_records:
@@ -51,6 +56,7 @@ class RunStore:
         record = {
             "id": run_id,
             "question": question,
+            "ticket_draft": ticket_draft,
             "mode": "mock",
             "status": "queued",
             "reason": "",
