@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 18，支持绑定用户与参数的批准、拒绝和图恢复。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 19，建单动作支持持久化幂等回执和重复请求恢复。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -290,3 +290,12 @@ $env:SUPPORTOPS_PERSIST_RUNS = '1'
 API 向 `POST /approvals/{approval_id}/approve` 或 `/reject` 提交原 `run_id` 与 `payload_digest`，服务端保存决定并恢复原运行。GET 原 run 可查看最终工单或拒绝结果。决定已保存但恢复中断时，可重复发送相同决定或调用原 run 的恢复接口。
 
 审批与用户、目标租户、run 和精确动作参数绑定，批准和建单时都校验摘要与期限。改动参数需要提交新 run 生成新审批。历史缺少绑定信息的草稿保留可读，通过新运行重新申请。完整实测与边界见 [Day 18 报告](docs/devlog/2026-11-12-day-18.md)。
+
+
+## Day 19 建单幂等与执行回执
+
+先执行 `python -m alembic upgrade head`。新草稿的 proposed_action 包含 `idempotency_key`，格式为 `create_ticket:<approval UUID>`。同一审批对应一个逻辑动作。
+
+`POST /tickets` 接收 `approval_id`，可附带 `idempotency_key` 和 `payload_digest`。服务器校验归属、动作 key 与参数。工单、审批状态和执行回执在同一事务提交，重复调用返回保存的结果。客户端响应丢失时使用原审批与 key 重试。工单当前状态可通过 get_ticket 读取，建单回执保存执行时快照。
+
+首次执行后 10 次顺序重试、8 路并发、响应丢失后的新进程重试、事务中途失败及历史数据回填均已在 PostgreSQL 验证，详见 [Day 19 报告](docs/devlog/2026-11-13-day-19.md)。

@@ -11,11 +11,15 @@ from sqlalchemy.dialects.postgresql import insert
 from packages.agent.persistence import RunRepository
 from packages.tools.schemas import ProposedAction, TicketDraftArgs, TicketResult
 
-from .schema import approvals, tickets
+from .schema import action_executions, approvals, tickets
 
 
 class ApprovalConflict(ValueError):
     pass
+
+
+def ticket_action_key(approval_id):
+    return "create_ticket:" + str(UUID(str(approval_id)))
 
 
 def payload_digest(*, run_id, tenant_id, requested_by, action, params):
@@ -73,6 +77,7 @@ class TicketRepository:
             action=row["action"],
             params=TicketDraftArgs.model_validate(row["params"]),
             status=row["status"],
+            idempotency_key=ticket_action_key(row["id"]),
             payload_digest=row["payload_digest"],
             expires_at=row["expires_at"].isoformat() if row["expires_at"] else None,
         )
@@ -179,7 +184,7 @@ class TicketRepository:
                 raise ApprovalConflict("approval_already_decided")
             return self._proposal(row)
 
-    def create_ticket(self, approval_id, context):
+    def create_ticket(self, approval_id, context, *, idempotency_key=None, digest=None):
         """Server execution boundary. The model never receives this capability."""
         with self.engine.begin() as connection:
             row = (
@@ -196,34 +201,81 @@ class TicketRepository:
             RunRepository(self.engine).load(row["run_id"], context)
             if row["requested_by"] != context.user_id:
                 raise LookupError("approval_not_found")
-            if row["status"] == "executed":
-                return self.get_ticket(row["ticket_id"], {row["tenant_id"]})
-            if row["status"] != "approved":
-                raise PermissionError("approval_required")
-            self._valid(row, connection.scalar(sa.select(sa.func.clock_timestamp())))
-            if row["decided_by"] != context.user_id or row["decided_at"] is None:
-                raise ApprovalConflict("approval_actor_missing")
-            args = TicketDraftArgs.model_validate(row["params"])
-            created = (
+            key = ticket_action_key(row["id"])
+            current_digest = payload_digest(
+                **{
+                    name: row[name]
+                    for name in ("run_id", "tenant_id", "requested_by", "action", "params")
+                }
+            )
+            if idempotency_key is not None and idempotency_key != key:
+                raise ApprovalConflict("idempotency_key_mismatch")
+            if digest is not None and not hmac.compare_digest(current_digest, digest):
+                raise ApprovalConflict("idempotency_payload_mismatch")
+            completed = (
                 connection.execute(
-                    tickets.insert()
-                    .values(
-                        id=uuid4(),
-                        tenant_id=row["tenant_id"],
-                        workspace_id=args.workspace_id,
-                        title=args.title,
-                        description=args.description,
-                        status="open",
-                        created_by=context.user_id,
-                    )
-                    .returning(tickets)
+                    sa.select(action_executions).where(action_executions.c.approval_id == row["id"])
                 )
                 .mappings()
-                .one()
+                .first()
             )
+            if completed is not None:
+                if (
+                    completed["idempotency_key"] != key
+                    or completed["payload_digest"] != current_digest
+                ):
+                    raise ApprovalConflict("idempotency_payload_mismatch")
+                return TicketResult.model_validate(completed["result"])
+            if row["status"] == "executed":
+                # Compatibility with an older worker finishing during a rolling upgrade.
+                created = (
+                    connection.execute(
+                        sa.select(tickets).where(
+                            tickets.c.id == row["ticket_id"],
+                            tickets.c.tenant_id == row["tenant_id"],
+                        )
+                    )
+                    .mappings()
+                    .one()
+                )
+            else:
+                if row["status"] != "approved":
+                    raise PermissionError("approval_required")
+                self._valid(row, connection.scalar(sa.select(sa.func.clock_timestamp())))
+                if row["decided_by"] != context.user_id or row["decided_at"] is None:
+                    raise ApprovalConflict("approval_actor_missing")
+                args = TicketDraftArgs.model_validate(row["params"])
+                created = (
+                    connection.execute(
+                        tickets.insert()
+                        .values(
+                            id=uuid4(),
+                            tenant_id=row["tenant_id"],
+                            workspace_id=args.workspace_id,
+                            title=args.title,
+                            description=args.description,
+                            status="open",
+                            created_by=context.user_id,
+                        )
+                        .returning(tickets)
+                    )
+                    .mappings()
+                    .one()
+                )
+                connection.execute(
+                    approvals.update()
+                    .where(approvals.c.id == row["id"])
+                    .values(status="executed", ticket_id=created["id"])
+                )
+            result = self._ticket(created)
             connection.execute(
-                approvals.update()
-                .where(approvals.c.id == row["id"])
-                .values(status="executed", ticket_id=created["id"])
+                action_executions.insert().values(
+                    approval_id=row["id"],
+                    tenant_id=row["tenant_id"],
+                    idempotency_key=key,
+                    payload_digest=current_digest,
+                    ticket_id=created["id"],
+                    result=result.model_dump(mode="json"),
+                )
             )
-            return self._ticket(created)
+            return result

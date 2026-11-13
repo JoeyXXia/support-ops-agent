@@ -86,6 +86,8 @@ async def resume_run(run_id: UUID, request: Request):
 class ExecuteTicketInput(BaseModel):
     model_config = {"extra": "forbid"}
     approval_id: UUID
+    idempotency_key: str | None = Field(default=None, min_length=1, max_length=100)
+    payload_digest: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
 
 @app.post("/tickets", status_code=201)
@@ -99,12 +101,15 @@ async def create_ticket(body: ExecuteTicketInput, request: Request):
         raise HTTPException(status_code=409, detail="请启用持久化运行模式。")
     try:
         return TicketRepository(store.repository.engine).create_ticket(
-            body.approval_id, store.context
+            body.approval_id,
+            store.context,
+            idempotency_key=body.idempotency_key,
+            digest=body.payload_digest,
         )
     except LookupError:
         raise HTTPException(status_code=404, detail="审批不存在或不可访问。") from None
     except (PermissionError, ApprovalConflict):
-        raise HTTPException(status_code=409, detail="草稿尚未批准或审批已失效。") from None
+        raise HTTPException(status_code=409, detail="审批或动作 key、参数校验未通过。") from None
 
 
 class ApprovalInput(BaseModel):

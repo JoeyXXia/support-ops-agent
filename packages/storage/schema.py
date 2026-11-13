@@ -174,3 +174,21 @@ for column in (
     sa.Column("decided_at", sa.DateTime(timezone=True)),
 ):
     approvals.append_column(column)
+
+
+action_executions = sa.Table(
+    "action_executions",
+    metadata,
+    sa.Column("approval_id", UUID(as_uuid=True), sa.ForeignKey("approvals.id"), primary_key=True),
+    sa.Column("tenant_id", sa.Text, nullable=False),
+    sa.Column("idempotency_key", sa.Text, nullable=False),
+    sa.Column("payload_digest", sa.Text, nullable=False),
+    sa.Column(
+        "ticket_id", UUID(as_uuid=True), sa.ForeignKey("tickets.id"), nullable=False, unique=True
+    ),
+    sa.Column("result", JSONB, nullable=False),
+    sa.Column(
+        "recorded_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
+    ),
+    sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_execution_action_key"),
+)
