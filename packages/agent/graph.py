@@ -1,5 +1,6 @@
 """Explicit in-process routing for the support agent."""
 
+import asyncio
 import json
 from typing import TypedDict
 
@@ -11,6 +12,7 @@ from packages.tools.schemas import AuthContext
 
 from .loop import AgentLoop, AgentTurn, RunResult
 from .models import ModelRequest, ModelResponse
+from .retry import OperationFailure
 
 
 class SupportState(TypedDict):
@@ -63,7 +65,9 @@ class GraphAgent(AgentLoop):
     async def _tools(self, state: SupportState, node: str):
         turn = self._restore(state["turn"])
         succeeded = await self.call_tools(turn)
-        next_node = "classify" if succeeded and turn.result.model_calls < self.max_steps else "done"
+        next_node = "classify" if succeeded and turn.result.steps < self.max_steps else "done"
+        if succeeded and next_node == "done":
+            self._stop(turn, "step_budget")
         return {
             "turn": self._snapshot(turn),
             "path": [*state["path"], node],
@@ -103,7 +107,7 @@ class GraphAgent(AgentLoop):
             interrupt(proposal.model_dump(mode="json"))
         return {"path": [*state["path"], "await_approval"]}
 
-    def _execute(self, state):
+    async def _execute(self, state):
         from packages.storage.tickets import ApprovalConflict
 
         turn = self._restore(state["turn"])
@@ -114,14 +118,34 @@ class GraphAgent(AgentLoop):
             turn.result.status, turn.result.reason = "completed", "approval_rejected"
             turn.result.answer = "已拒绝工单草稿。"
         else:
-            try:
-                ticket = repository.create_ticket(approval_id, turn.context)
+
+            async def write():
+                try:
+                    return await asyncio.to_thread(
+                        repository.create_ticket,
+                        approval_id,
+                        turn.context,
+                        idempotency_key=proposal.idempotency_key,
+                        digest=proposal.payload_digest,
+                    )
+                except (ApprovalConflict, PermissionError):
+                    raise OperationFailure("approval_invalid") from None
+
+            ticket = await self.invoke(
+                turn,
+                write,
+                kind="write",
+                counter="write_calls",
+                limit=self.retry_policy.max_attempts,
+                allow_retry=True,
+                name="create_ticket",
+            )
+            if ticket is not None:
                 turn.result.ticket = ticket.model_dump(mode="json")
                 turn.result.status, turn.result.reason = "completed", "ticket_created"
                 turn.result.answer = "工单已创建。"
-            except (ApprovalConflict, PermissionError):
-                turn.result.status, turn.result.reason = "failed", "approval_invalid"
-                turn.result.answer = "审批已失效，请生成新的草稿。"
+            else:
+                turn.result.answer = "工单执行已停止，请按原审批与动作 key 查询结果。"
         turn.result.proposed_action = repository.get_approval(approval_id, turn.context).model_dump(
             mode="json"
         )
@@ -149,12 +173,15 @@ class GraphAgent(AgentLoop):
         }
 
     def _restore(self, value):
+        result = RunResult.model_validate(value["result"])
+        if "steps" not in value["result"]:
+            result.steps = result.model_calls
         return AgentTurn(
             request=ModelRequest.model_validate(value["request"]),
             context=AuthContext.model_validate_json(json.dumps(value["context"])),
             grounded=value["grounded"],
             on_event=self.on_event,
-            result=RunResult.model_validate(value["result"]),
+            result=result,
             seen={tuple(item) for item in value["seen"]},
             call_ids=set(value["call_ids"]),
             evidence=value["evidence"],

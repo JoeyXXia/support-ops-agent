@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 19，建单动作支持持久化幂等回执和重复请求恢复。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 20，运行支持错误分类、有界重试和调用预算停止。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查和mock无需密钥；live模式会使用API计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -299,3 +299,12 @@ API 向 `POST /approvals/{approval_id}/approve` 或 `/reject` 提交原 `run_id`
 `POST /tickets` 接收 `approval_id`，可附带 `idempotency_key` 和 `payload_digest`。服务器校验归属、动作 key 与参数。工单、审批状态和执行回执在同一事务提交，重复调用返回保存的结果。客户端响应丢失时使用原审批与 key 重试。工单当前状态可通过 get_ticket 读取，建单回执保存执行时快照。
 
 首次执行后 10 次顺序重试、8 路并发、响应丢失后的新进程重试、事务中途失败及历史数据回填均已在 PostgreSQL 验证，详见 [Day 19 报告](docs/devlog/2026-11-13-day-19.md)。
+
+
+## Day 20 重试、预算与停止日志
+
+运行层默认最多尝试 3 次，退避为 0.1、0.2 秒。临时错误须同时满足分类与可重试标记，权限、参数及额度耗尽直接停止。写入重试复用同一审批、动作 key 与摘要。
+
+默认预算为 6 个逻辑决策步、8 次模型尝试、8 次工具尝试及最多 3 次写入尝试。失败尝试也计入调用次数，旧检查点恢复时沿用兼容计数。GET 原 run 可查看 steps、model_calls、tool_calls、write_calls，以及 events 中的错误、retry.scheduled 和 run.stopped。网页展示退避与停止原因。
+
+80 项离线测试、39 项 PostgreSQL 集成测试及前端和浏览器检查通过。模型验证使用 mock 故障注入。线程等待超时后的写入结果通过原 key 核对，节点中途退出的重放边界见 [Day 20 报告](docs/devlog/2026-11-15-day-20.md)。

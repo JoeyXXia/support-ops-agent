@@ -8,10 +8,11 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from packages.tools.executor import ToolExecutor
-from packages.tools.schemas import AuthContext
+from packages.tools.schemas import AuthContext, ToolResult
 
 from .grounding import grounded_answer
-from .models import Message, ModelProvider, ModelRequest, ModelResponse, ProviderError
+from .models import Message, ModelProvider, ModelRequest, ModelResponse
+from .retry import RETRYABLE_TOOLS, TRANSIENT_CODES, RetryPolicy, classify_failure
 
 
 class RunResult(BaseModel):
@@ -19,6 +20,8 @@ class RunResult(BaseModel):
     reason: str
     answer: str = ""
     citations: list[dict] = Field(default_factory=list)
+    steps: int = 0
+    write_calls: int = 0
     model_calls: int = 0
     tool_calls: int = 0
     events: list[dict] = Field(default_factory=list)
@@ -56,6 +59,8 @@ class AgentLoop:
         max_steps=6,
         max_tool_calls=8,
         step_timeout=20.0,
+        max_model_calls=8,
+        retry_policy=None,
     ):
         if type(max_steps) is not int or not 1 <= max_steps <= 6:
             raise ValueError("max_steps must be between 1 and 6")
@@ -63,6 +68,12 @@ class AgentLoop:
             raise ValueError("max_tool_calls must be between 1 and 20")
         if not 0 < step_timeout <= 60:
             raise ValueError("invalid step_timeout")
+        if type(max_model_calls) is not int or not 1 <= max_model_calls <= 18:
+            raise ValueError("max_model_calls must be between 1 and 18")
+        self.max_model_calls = max_model_calls
+        if retry_policy is not None and not isinstance(retry_policy, RetryPolicy):
+            raise ValueError("retry_policy must be a RetryPolicy")
+        self.retry_policy = retry_policy or RetryPolicy()
         self.provider, self.executor = provider, executor
         self.max_steps, self.max_tool_calls = max_steps, max_tool_calls
         self.step_timeout = step_timeout
@@ -90,27 +101,88 @@ class AgentLoop:
         )
         return AgentTurn(request, context, grounded, on_event)
 
-    async def classify(self, turn):
-        result, request = turn.result, turn.request
-        result.model_calls += 1
-        step = result.model_calls
-        try:
-            async with asyncio.timeout(self.step_timeout):
-                response = await self.provider.generate(request.model_copy(deep=True))
-        except (TimeoutError, ProviderError) as exc:
-            result.status = "failed"
-            result.reason = exc.code if isinstance(exc, ProviderError) else "model_timeout"
+    def _stop(self, turn, reason, *, status="stopped"):
+        turn.result.status, turn.result.reason = status, reason
+        turn.emit(
+            {
+                "step": turn.result.steps,
+                "kind": "run.stopped",
+                "reason": reason,
+                "model_calls": turn.result.model_calls,
+                "tool_calls": turn.result.tool_calls,
+                "write_calls": turn.result.write_calls,
+            }
+        )
+
+    async def invoke(self, turn, operation, *, kind, counter, limit, allow_retry, name=None):
+        """Count every attempt, including failed requests, before invoking an operation."""
+        prefix = "tool_" if kind == "tool" else ""
+        for attempt in range(1, self.retry_policy.max_attempts + 1):
+            if getattr(turn.result, counter) >= limit:
+                self._stop(turn, kind + "_budget")
+                return None
+            setattr(turn.result, counter, getattr(turn.result, counter) + 1)
+            value = None
+            request_id = None
+            try:
+                async with asyncio.timeout(self.step_timeout):
+                    value = await operation()
+                if not isinstance(value, ToolResult) or value.ok:
+                    return value
+                code = value.error.code
+                retryable = value.error.retryable and code in TRANSIENT_CODES
+            except Exception as error:
+                code, retryable = classify_failure(error)
+                request_id = getattr(error, "request_id", None)
+                if isinstance(error, TimeoutError) and kind != "tool":
+                    code = kind + "_timeout"
             turn.emit(
                 {
-                    "step": step,
-                    "kind": "model.error",
-                    "code": result.reason,
-                    "request_id": getattr(exc, "request_id", None),
+                    "step": turn.result.steps,
+                    "kind": kind + ".error",
+                    "code": code,
+                    "attempt": attempt,
+                    "retryable": retryable,
+                    "tool": name,
+                    "request_id": request_id,
                 }
             )
+            if not (allow_retry and retryable and attempt < self.retry_policy.max_attempts):
+                self._stop(turn, prefix + code, status="failed")
+                return value
+            if getattr(turn.result, counter) >= limit:
+                self._stop(turn, kind + "_budget")
+                return None
+            delay = self.retry_policy.delay(attempt)
+            turn.emit(
+                {
+                    "step": turn.result.steps,
+                    "kind": "retry.scheduled",
+                    "operation": kind,
+                    "tool": name,
+                    "attempt": attempt,
+                    "delay_seconds": delay,
+                }
+            )
+            await asyncio.sleep(delay)
+        return None
+
+    async def classify(self, turn):
+        result, request = turn.result, turn.request
+        if result.steps >= self.max_steps:
+            self._stop(turn, "step_budget")
             return "done"
-        except Exception:
-            result.status, result.reason = "failed", "internal_error"
+        result.steps += 1
+        step = result.steps
+        response = await self.invoke(
+            turn,
+            lambda: self.provider.generate(request.model_copy(deep=True)),
+            kind="model",
+            counter="model_calls",
+            limit=self.max_model_calls,
+            allow_retry=True,
+        )
+        if response is None:
             return "done"
         turn.emit(
             {
@@ -125,7 +197,7 @@ class AgentLoop:
             return "answer"
         calls = response.tool_calls
         if result.tool_calls + len(calls) > self.max_tool_calls:
-            result.reason = "tool_budget"
+            self._stop(turn, "tool_budget")
             return "done"
         fingerprints = [
             (call.name, json.dumps(call.arguments, sort_keys=True, ensure_ascii=False))
@@ -133,12 +205,12 @@ class AgentLoop:
         ]
         ids = [call.call_id for call in calls]
         if len(set(ids)) != len(ids) or any(value in turn.call_ids for value in ids):
-            result.reason = "duplicate_call_id"
+            self._stop(turn, "duplicate_call_id")
             return "done"
         if len(set(fingerprints)) != len(fingerprints) or any(
             key in turn.seen for key in fingerprints
         ):
-            result.reason = "no_progress"
+            self._stop(turn, "no_progress")
             return "done"
         turn.seen.update(fingerprints)
         turn.call_ids.update(ids)
@@ -179,19 +251,20 @@ class AgentLoop:
 
     async def call_tools(self, turn):
         result, request = turn.result, turn.request
-        calls, step = turn.response.tool_calls, result.model_calls
+        calls, step = turn.response.tool_calls, result.steps
         for call in calls:
-            result.tool_calls += 1
-            try:
-                async with asyncio.timeout(self.step_timeout):
-                    output = await asyncio.to_thread(
-                        self.executor.execute, call.name, call.arguments, context=turn.context
-                    )
-            except TimeoutError:
-                result.status, result.reason = "failed", "tool_timeout"
-                return False
-            except Exception:
-                result.status, result.reason = "failed", "internal_error"
+            output = await self.invoke(
+                turn,
+                lambda: asyncio.to_thread(
+                    self.executor.execute, call.name, call.arguments, context=turn.context
+                ),
+                kind="tool",
+                counter="tool_calls",
+                limit=self.max_tool_calls,
+                allow_retry=call.name in RETRYABLE_TOOLS,
+                name=call.name,
+            )
+            if output is None:
                 return False
             turn.emit(
                 {
@@ -229,4 +302,6 @@ class AgentLoop:
                 break
             if next_node == "done" or not await self.call_tools(turn):
                 break
+        if turn.result.status == "stopped" and turn.result.reason == "step_budget":
+            self._stop(turn, "step_budget")
         return turn.result

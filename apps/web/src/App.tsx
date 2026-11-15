@@ -30,6 +30,14 @@ type Run = {
   }>;
   events: Array<{
     kind: string;
+    code?: string;
+    reason?: string;
+    attempt?: number;
+    delay_seconds?: number;
+    operation?: string;
+    model_calls?: number;
+    tool_calls?: number;
+    write_calls?: number;
     step: number;
     tool?: string;
     call_id?: string;
@@ -246,12 +254,7 @@ export function App() {
           <ol>
             {run.events.map((e, i) => (
               <li key={i}>
-                步骤 {e.step} ·{" "}
-                {e.kind === "tool.finished"
-                  ? `工具 ${e.tool} ${e.result?.ok === false ? "失败" : "完成"}（${e.call_id}）`
-                  : e.kind === "model.error"
-                    ? "模型步骤失败"
-                    : "模型步骤完成"}
+                步骤 {e.step} · {describeEvent(e)}
               </li>
             ))}
           </ol>
@@ -329,4 +332,16 @@ export function App() {
       </footer>
     </main>
   );
+}
+
+function describeEvent(event: Run["events"][number]): string {
+  if (event.kind === "run.stopped")
+    return `停止：${event.reason}，模型 ${event.model_calls} 次、工具 ${event.tool_calls} 次、写入 ${event.write_calls} 次`;
+  if (event.kind === "retry.scheduled")
+    return `${event.tool || event.operation} 第 ${event.attempt} 次失败，${event.delay_seconds} 秒后重试`;
+  if (event.kind.endsWith(".error"))
+    return `${event.tool || event.kind.split(".")[0]} 失败：${event.code}（尝试 ${event.attempt || 1}）`;
+  if (event.kind === "tool.finished")
+    return `工具 ${event.tool} ${event.result?.ok === false ? "失败" : "完成"}（${event.call_id}）`;
+  return event.kind === "model.finished" ? "模型步骤完成" : event.kind;
 }

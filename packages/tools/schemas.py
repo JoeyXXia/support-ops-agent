@@ -103,7 +103,16 @@ class ProposedAction(StrictModel):
 
 
 class ToolFailure(StrictModel):
-    code: Literal["unknown_tool", "invalid_arguments", "forbidden", "not_found", "internal_error"]
+    code: Literal[
+        "unknown_tool",
+        "invalid_arguments",
+        "forbidden",
+        "not_found",
+        "internal_error",
+        "timeout",
+        "rate_limit",
+        "unavailable",
+    ]
     message: str
     retryable: bool = False
 

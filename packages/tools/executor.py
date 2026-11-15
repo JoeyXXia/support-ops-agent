@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from packages.agent.models import ToolDefinition
+from packages.agent.retry import classify_failure
 
 from .schemas import (
     AuthContext,
@@ -66,8 +67,12 @@ class ToolExecutor:
         ]
 
     def execute(self, name: str, arguments: Any, *, context: AuthContext) -> ToolResult:
-        def fail(code, message):
-            return ToolResult(tool=name, ok=False, error=ToolFailure(code=code, message=message))
+        def fail(code, message, *, retryable=False):
+            return ToolResult(
+                tool=name,
+                ok=False,
+                error=ToolFailure(code=code, message=message, retryable=retryable),
+            )
 
         spec = REGISTRY.get(name)
         if spec is None:
@@ -102,9 +107,10 @@ class ToolExecutor:
                 return ToolResult(tool=name, ok=True, data=self._ticket(args, allowed))
             except LookupError:
                 return fail("not_found", "工单不存在或不可访问。")
-            except Exception:
-                logger.error("tool.failed tool=%s code=internal_error", name)
-                return fail("internal_error", "工单读取暂不可用。")
+            except Exception as error:
+                code, retryable = classify_failure(error)
+                logger.error("tool.failed tool=%s code=%s", name, code)
+                return fail(code, "工单读取暂不可用。", retryable=retryable)
         # Search only authorized tenants, avoiding a global existence oracle.
         workspace = next(
             (
@@ -129,9 +135,10 @@ class ToolExecutor:
                     self.run_id, args, context, target_tenant=target
                 )
                 return ToolResult(tool=name, ok=True, data=proposal)
-            except Exception:
-                logger.error("tool.failed tool=%s code=internal_error", name)
-                return fail("internal_error", "草稿保存暂不可用。")
+            except Exception as error:
+                code, retryable = classify_failure(error)
+                logger.error("tool.failed tool=%s code=%s", name, code)
+                return fail(code, "草稿保存暂不可用。", retryable=retryable)
         try:
             result = getattr(self, spec.handler)(args, workspace)
             return ToolResult(tool=name, ok=True, data=result)
