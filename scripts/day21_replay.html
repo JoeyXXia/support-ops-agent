@@ -1,0 +1,11 @@
+<!doctype html><html lang="zh"><meta charset="utf-8">
+<title>Day 21 审批与恢复实测回放</title><style>
+body{max-width:1000px;margin:32px auto;padding:0 18px;font:16px/1.7 system-ui;background:#f4f7fa;color:#162d40}
+button{font:inherit;padding:8px 18px;margin:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:20px;border:1px solid #ccd8df}
+</style><h1>Day 21：审批与进程恢复</h1>
+<p>实测记录回放：真实 PostgreSQL + ASGI API + mock 模型。不是浏览器录屏，也不会调用服务器。
+每一步显示原始请求结果与数据库计数。运行期间数据在专用测试库的隔离 schema 中，已清理。</p>
+<button id="prev">上一步</button><button id="next">下一步</button><button id="auto">自动播放 / 停止</button>
+<h2 id="title"></h2><pre id="summary"></pre><details><summary>原始实测 JSON</summary><pre id="body"></pre></details><p>恢复不保证节点只执行一次。写入依赖同一审批 key、事务和唯一回执约束；新审批属于新动作。</p>
+<script>const data=DATA;let i=0,timer=null;function show(){const e=data.events[i];document.getElementById('title').textContent=`${i+1}/${data.events.length} · ${e.step} · ${e.seconds}s`;document.getElementById('summary').textContent=JSON.stringify({step:e.step,run_id:e.run?.id||e.run_id,status:e.run?.status,reason:e.run?.reason,http:e.http,approval_http:e.approval_http,execution_http:e.execution_http,database:e.database,model_calls:e.run?.model_calls,tool_calls:e.run?.tool_calls,exit_code:e.exit_code,fault:e.fault,receipt:e.receipt},null,2);document.getElementById('body').textContent=JSON.stringify(e,null,2)}
+document.getElementById('prev').onclick=()=>{i=Math.max(0,i-1);show()};document.getElementById('next').onclick=()=>{i=Math.min(data.events.length-1,i+1);show()};document.getElementById('auto').onclick=()=>{if(timer){clearInterval(timer);timer=null}else{timer=setInterval(()=>{if(i<data.events.length-1){i++;show()}else{clearInterval(timer);timer=null}},3500)}};show();</script></html>

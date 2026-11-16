@@ -308,3 +308,9 @@ API 向 `POST /approvals/{approval_id}/approve` 或 `/reject` 提交原 `run_id`
 默认预算为 6 个逻辑决策步、8 次模型尝试、8 次工具尝试及最多 3 次写入尝试。失败尝试也计入调用次数，旧检查点恢复时沿用兼容计数。GET 原 run 可查看 steps、model_calls、tool_calls、write_calls，以及 events 中的错误、retry.scheduled 和 run.stopped。网页展示退避与停止原因。
 
 80 项离线测试、39 项 PostgreSQL 集成测试及前端和浏览器检查通过。模型验证使用 mock 故障注入。线程等待超时后的写入结果通过原 key 核对，节点中途退出的重放边界见 [Day 20 报告](docs/devlog/2026-11-15-day-20.md)。
+
+## Day 21 故障演示与 v0.3-actions
+
+直接打开 [九步实测回放](reports/day-21-demo.html)：提案、未批拒绝、批准、重复批准与执行，以及实际子进程终止后的显式恢复。回放包含真实 PostgreSQL 状态与 ASGI API 返回值，生成模型为 mock；这是已录观察的离线播放，不是业务页面录屏或真实模型验收。
+
+[实施与复现](docs/devlog/2026-11-16-day-21.md) · [事务与恢复 ADR](docs/adr/0001-actions-and-recovery.md) · [原始录制](reports/day-21-demo.json) · [回归结果](reports/day-21-validation.json)。不增加 Day 22 的认证功能。
