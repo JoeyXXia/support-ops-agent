@@ -1,49 +1,7 @@
-import { useEffect, useState } from "react";
+import { initialView, runReducer, decodeEvent, streamTypes } from "./runEvents";
+import type { Run } from "./runEvents";
+import { useEffect, useReducer, useState } from "react";
 import type { FormEvent } from "react";
-
-type Run = {
-  id: string;
-  question: string;
-  mode: string;
-  status: string;
-  reason: string;
-  ticket?: { ticket_id: string; title: string } | null;
-  proposed_action?: {
-    approval_id: string;
-    payload_digest?: string | null;
-    expires_at?: string | null;
-    tenant_id: string;
-    action: string;
-    status: string;
-    params: { workspace_id: string; title: string; description: string };
-  } | null;
-  answer: string;
-  citations?: Array<{
-    chunk_id: string;
-    source: string;
-    source_path: string;
-    product_version: string;
-    version_number: number;
-    start_line: number;
-    end_line: number;
-    body: string;
-  }>;
-  events: Array<{
-    kind: string;
-    code?: string;
-    reason?: string;
-    attempt?: number;
-    delay_seconds?: number;
-    operation?: string;
-    model_calls?: number;
-    tool_calls?: number;
-    write_calls?: number;
-    step: number;
-    tool?: string;
-    call_id?: string;
-    result?: { ok: boolean };
-  }>;
-};
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api${path}`, {
@@ -70,37 +28,74 @@ function Workspace() {
   const [ticketDraft, setTicketDraft] = useState(false);
   const [knowledge, setKnowledge] = useState(false);
   const [version, setVersion] = useState("");
-  const [run, setRun] = useState<Run | null>(null);
+  const [view, dispatch] = useReducer(runReducer, initialView);
+  const { run, error } = view;
+  const setRun = (value: Run | null) =>
+    dispatch({ type: "loaded", run: value });
+  const setError = (message: string) => dispatch({ type: "error", message });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+
   const [retry, setRetry] = useState(0);
 
   useEffect(() => {
-    if (!run || !["queued", "running"].includes(run.status) || error) return;
+    if (!run || !["queued", "running"].includes(run.status)) return;
     let active = true;
-    let timer: ReturnType<typeof setTimeout>;
-    const startedAt = Date.now();
+    let ended = false;
     const id = run.id;
-    async function poll() {
-      try {
-        const current = await api<Run>(`/runs/${id}`);
-        if (!active) return;
-        setRun(current);
-        if (["queued", "running"].includes(current.status)) {
-          if (Date.now() - startedAt >= 180000)
-            throw new Error("等待已达3分钟，请重新查询该运行。");
-          timer = setTimeout(poll, 500);
+    dispatch({ type: "connect" });
+    const source = new EventSource(`/api/runs/${id}/events`);
+    const watchdog = setTimeout(() => {
+      if (!active || ended) return;
+      ended = true;
+      clearTimeout(watchdog);
+      source.close();
+      setError(
+        "实时反馈等待已达3分钟；后台任务可能继续，请显式重新查询当前运行。",
+      );
+    }, 180000);
+
+    source.onopen = () => {
+      if (active) dispatch({ type: "open" });
+    };
+    for (const type of streamTypes) {
+      source.addEventListener(type, (message) => {
+        if (!active || ended) return;
+        try {
+          const event = decodeEvent((message as MessageEvent).data, type, id);
+          dispatch({ type: "event", event });
+          if (
+            ["run.finished", "approval.required", "stream.error"].includes(type)
+          ) {
+            ended = true;
+            clearTimeout(watchdog);
+            source.close();
+          }
+          if (type === "stream.error" && event.data.code === "unauthorized")
+            window.dispatchEvent(new Event("supportops-unauthorized"));
+        } catch {
+          ended = true;
+          clearTimeout(watchdog);
+          source.close();
+          setError("实时事件格式错误，请重新查询当前运行。");
         }
-      } catch (e) {
-        if (active) setError(e instanceof Error ? e.message : "读取运行失败。");
-      }
+      });
     }
-    timer = setTimeout(poll, 100);
+    source.onerror = () => {
+      if (!active || ended) return;
+      ended = true;
+      clearTimeout(watchdog);
+      source.close();
+      setError("实时连接已中断；后台任务可能继续，请显式重新查询当前运行。");
+      // One auth probe exposes a 401 to the existing login boundary; never reconnect SSE here.
+      void api("/session").catch(() => {});
+    };
     return () => {
       active = false;
-      clearTimeout(timer);
+      ended = true;
+      clearTimeout(watchdog);
+      source.close();
     };
-  }, [run?.id, retry, error]);
+  }, [run?.id, retry]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -151,12 +146,16 @@ function Workspace() {
     }
   }
 
-  const running = !!run && ["queued", "running"].includes(run.status);
+  const running =
+    !!run &&
+    ["queued", "running"].includes(run.status) &&
+    view.transport !== "error";
   const labels: Record<string, string> = {
     queued: "等待执行",
     running: "运行中",
     completed: "完成",
     awaiting_approval: "等待审批",
+    interrupted: "需要显式恢复",
     failed: "失败",
     stopped: "已停止",
   };
@@ -251,7 +250,16 @@ function Workspace() {
         <section className="card" aria-live="polite">
           <h2>运行：{labels[run.status] || run.status}</h2>
           <p className="muted">
-            ID：{run.id} · {run.mode}
+            ID：{run.id} · {run.mode} · 实时连接：
+            {
+              {
+                idle: "未连接",
+                connecting: "连接中",
+                open: "已连接",
+                closed: "已结束",
+                error: "已中断",
+              }[view.transport]
+            }
           </p>
           <ol>
             {run.events.map((e, i) => (
@@ -339,6 +347,8 @@ function Workspace() {
 function describeEvent(event: Run["events"][number]): string {
   if (event.kind === "run.stopped")
     return `停止：${event.reason}，模型 ${event.model_calls} 次、工具 ${event.tool_calls} 次、写入 ${event.write_calls} 次`;
+  if (event.kind === "step.started") return "正在处理当前步骤";
+  if (event.kind === "tool.started") return `正在调用工具 ${event.tool}`;
   if (event.kind === "retry.scheduled")
     return `${event.tool || event.operation} 第 ${event.attempt} 次失败，${event.delay_seconds} 秒后重试`;
   if (event.kind.endsWith(".error"))

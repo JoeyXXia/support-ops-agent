@@ -23,6 +23,7 @@ jobs:
       - run: python scripts/check_offline.py
       - run: npm --prefix apps/web ci
       - run: npm --prefix apps/web run format:check
+      - run: npm --prefix apps/web test
       - run: npm --prefix apps/web run typecheck
       - run: npm --prefix apps/web run build
 
