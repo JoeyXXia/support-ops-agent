@@ -1,4 +1,4 @@
-"""Single-process local demo run lifecycle. No persistence or visitor isolation."""
+"""Single-process owner-bound run lifecycle without durable storage."""
 
 import asyncio
 from collections import OrderedDict
@@ -31,6 +31,7 @@ class RunStore:
         )
         self.records = OrderedDict()
         self.tasks = set()
+        self.active_streams = 0
         self.max_active, self.max_records = max_active, max_records
         self.provider_factory = provider_factory or DemoProvider
         self.executor = ToolExecutor()

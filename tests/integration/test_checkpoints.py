@@ -76,7 +76,7 @@ class CheckpointTests(PostgreSQLCase):
                 self.assertEqual(
                     record["state_path"], ["classify", "call_tool", "classify", "answer", "done"]
                 )
-                self.assertEqual(len(record["events"]), 4)
+                self.assertEqual(len(record["events"]), 8)
                 self.assertIn("60/60", record["answer"])
 
     def test_owner_check_precedes_checkpoint_and_concurrent_lock(self):

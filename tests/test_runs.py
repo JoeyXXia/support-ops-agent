@@ -40,7 +40,7 @@ class RunApiTests(unittest.IsolatedAsyncioTestCase):
             (record["status"], record["mode"], record["tool_calls"]), ("completed", "mock", 2)
         )
         self.assertIn("60/60", record["answer"])
-        self.assertEqual(len(record["events"]), 4)
+        self.assertEqual(len(record["events"]), 8)
         self.assertEqual(
             record["state_path"], ["classify", "call_tool", "classify", "answer", "done"]
         )

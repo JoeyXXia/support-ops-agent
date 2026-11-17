@@ -277,3 +277,46 @@ async def get_approval(approval_id: UUID, request: Request):
         return TicketRepository(store.repository.engine).get_approval(approval_id, store.context)
     except LookupError:
         raise HTTPException(404, "审批不存在或不可访问。") from None
+
+
+@app.get("/runs/{run_id}/events")
+async def run_events(run_id: UUID, request: Request):
+    from fastapi.responses import StreamingResponse
+    from starlette.background import BackgroundTask
+
+    from .events import stream_run
+
+    store = request.state.runs
+    if store.get(run_id) is None:
+        raise HTTPException(404, "运行不存在或当前身份无权访问。")
+    if request.headers.get("last-event-id"):
+        raise HTTPException(409, "本日不支持游标恢复，请显式重新查询运行。")
+    if store.active_streams >= 4:
+        raise HTTPException(429, "当前账号实时连接已满。")
+    store.active_streams += 1
+    released = False
+
+    async def release():
+        nonlocal released
+        if not released:
+            store.active_streams -= 1
+            released = True
+
+    def authorize():
+        context = request.app.state.sessions.resolve(request.cookies.get(COOKIE))
+        if context != request.state.context:
+            raise HTTPException(401, "请重新登录。")
+
+    async def body():
+        try:
+            async for frame in stream_run(store, run_id, authorize):
+                yield frame
+        finally:
+            await release()
+
+    return StreamingResponse(
+        body(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+        background=BackgroundTask(release),
+    )

@@ -114,7 +114,9 @@ class AgentLoop:
             }
         )
 
-    async def invoke(self, turn, operation, *, kind, counter, limit, allow_retry, name=None):
+    async def invoke(
+        self, turn, operation, *, kind, counter, limit, allow_retry, name=None, call_id=None
+    ):
         """Count every attempt, including failed requests, before invoking an operation."""
         prefix = "tool_" if kind == "tool" else ""
         for attempt in range(1, self.retry_policy.max_attempts + 1):
@@ -122,6 +124,16 @@ class AgentLoop:
                 self._stop(turn, kind + "_budget")
                 return None
             setattr(turn.result, counter, getattr(turn.result, counter) + 1)
+            if kind == "tool":
+                turn.emit(
+                    {
+                        "step": turn.result.steps,
+                        "kind": "tool.started",
+                        "tool": name,
+                        "call_id": call_id,
+                        "attempt": attempt,
+                    }
+                )
             value = None
             request_id = None
             try:
@@ -174,6 +186,7 @@ class AgentLoop:
             return "done"
         result.steps += 1
         step = result.steps
+        turn.emit({"step": step, "kind": "step.started"})
         response = await self.invoke(
             turn,
             lambda: self.provider.generate(request.model_copy(deep=True)),
@@ -263,6 +276,7 @@ class AgentLoop:
                 limit=self.max_tool_calls,
                 allow_retry=call.name in RETRYABLE_TOOLS,
                 name=call.name,
+                call_id=call.call_id,
             )
             if output is None:
                 return False
