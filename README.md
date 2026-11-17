@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 20，运行支持错误分类、有界重试和调用预算停止。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查和mock无需密钥；live模式会使用API计费。
+**当前进度为 Day 22，HTTP 业务接口要求已登录的种子账号会话，运行、引用、审批和工单按主体与租户授权。运行支持错误分类、有界重试和调用预算停止。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查公开；mock 不需要模型密钥，但业务页面需要种子账号登录。live 模式会使用 API 计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -271,7 +271,7 @@ $env:SUPPORTOPS_PERSIST_RUNS = '1'
 .\.venv\Scripts\python.exe -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
 ```
 
-持久模式用已有 PostgreSQL 保存运行归属和图检查点。重启后用原 ID 请求 `GET /runs/{id}` 加载记录，向 `POST /runs/{id}/resume` 发送空请求恢复待完成运行。终态再次恢复返回已有结果。当前 API 使用固定本机演示身份，租户和用户来自服务端上下文。
+持久模式用已有 PostgreSQL 保存运行归属和图检查点。重启后用原 ID 请求 `GET /runs/{id}` 加载记录，向 `POST /runs/{id}/resume` 发送空请求恢复待完成运行。终态再次恢复返回已有结果。该段固定身份属于 Day 16 历史实现；Day 22 起 API 身份来自服务端认证会话。
 
 可信操作员 CLI 为 `python scripts/checkpoint_run.py create`、`resume <run-id>` 和 `show <run-id>`。CLI 固定使用合成只读 429 场景。进程退出后数据库记录可能仍显示 running，需要显式请求恢复。默认内存模式沿用此前的行为。故障注入、权限验证、状态保存内容与重跑边界见 [Day 16 报告](docs/devlog/2026-11-11-day-16.md)。
 
@@ -314,3 +314,27 @@ API 向 `POST /approvals/{approval_id}/approve` 或 `/reject` 提交原 `run_id`
 直接打开 [九步实测回放](reports/day-21-demo.html)：提案、未批拒绝、批准、重复批准与执行，以及实际子进程终止后的显式恢复。回放包含真实 PostgreSQL 状态与 ASGI API 返回值，生成模型为 mock；这是已录观察的离线播放，不是业务页面录屏或真实模型验收。
 
 [实施与复现](docs/devlog/2026-11-16-day-21.md) · [事务与恢复 ADR](docs/adr/0001-actions-and-recovery.md) · [原始录制](reports/day-21-demo.json) · [回归结果](reports/day-21-validation.json)。不增加 Day 22 的认证功能。
+
+
+## Day 22 种子账号与最小会话认证
+
+原有两个合成租户提供四个账号：user-alpha / support-alpha 属于 tenant-alpha，user-beta / support-beta 属于 tenant-beta。member 读取本租户工单；support 仅分配到自己的种子租户。两种角色都只能批准自己请求的动作，不能审批他人的运行。
+
+先在启动后端的同一 PowerShell 终端设置四个互不相同、至少 12 字符的口令。以下交互不会把口令打印到命令行；不把实际值提交到 Git：
+
+```powershell
+$seedPasswords = @{}
+foreach ($seedUser in @('user-alpha','support-alpha','user-beta','support-beta')) {
+    $seedPasswords[$seedUser] = Read-Host -Prompt "$seedUser 的本机口令（至少12字符）" -MaskInput
+}
+$env:SUPPORTOPS_DEMO_PASSWORDS = ConvertTo-Json -InputObject $seedPasswords -Compress
+.\.venv\Scripts\python.exe -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
+```
+
+也可在忽略的 .env.local 中配置同名 JSON 字典，后端启动时读取；不要使用 VITE_*。未配置时登录返回 503，业务接口仍拒绝匿名访问。缺少账号、重复口令或不合规口令会让启动失败，错误不回显口令。
+
+POST /session 使用 username/password 登录，GET /session 查看当前主体，DELETE /session 退出。会话令牌只保存在 HttpOnly、SameSite=Strict Cookie 中，服务端只存令牌 SHA256 摘要；有效一小时，成功重登轮换当前令牌，退出立即撤销。默认 Secure 关闭只适用于本机 HTTP；HTTPS 环境须设置 SUPPORTOPS_COOKIE_SECURE=1。本日不公开部署，不提供注册、密码重置、访客会话或多 worker 会话共享。
+
+运行、恢复、审批详情与决定、建单和工单详情均要求会话。GET /tickets/{id} 按租户读取；GET /approvals/{id} 只返回本人关联的提案。引用通过本人 run 返回，没有任意文件读取接口。更换账号会清空页面中的旧运行；401 会返回登录页。API 不接受请求体或 X-User-ID / X-Tenant-ID 中自报身份。
+
+会话在进程重启后失效，需要重登；PostgreSQL 运行仍可在身份完全一致时恢复。测试见 [Day 22 报告](docs/devlog/2026-11-17-day-22.md)及[实测结果](reports/day-22-validation.json)。早期各 Day 的固定身份与无登录说明仅为历史记录。Day 21 演示脚本现在显式签发可信测试身份，不改写原 Day 21 已保存证据。
