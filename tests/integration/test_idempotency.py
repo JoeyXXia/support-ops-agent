@@ -75,7 +75,9 @@ class IdempotencyTests(PostgreSQLCase):
             async with (
                 app.router.lifespan_context(app),
                 httpx2.AsyncClient(
-                    transport=httpx2.ASGITransport(app=app), base_url="http://test"
+                    cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+                    transport=httpx2.ASGITransport(app=app),
+                    base_url="http://test",
                 ) as client,
             ):
                 app.state.runs = PersistentRunStore(self.engine, None)
@@ -191,7 +193,11 @@ class IdempotencyTests(PostgreSQLCase):
         async def verify():
             async with (
                 app.router.lifespan_context(app),
-                httpx2.AsyncClient(transport=LoseResponse(), base_url="http://test") as client,
+                httpx2.AsyncClient(
+                    cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+                    transport=LoseResponse(),
+                    base_url="http://test",
+                ) as client,
             ):
                 app.state.runs = PersistentRunStore(self.engine, None)
                 with self.assertRaises(httpx2.ReadError):

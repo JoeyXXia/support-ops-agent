@@ -67,7 +67,9 @@ def main():
                 async with (
                     app.router.lifespan_context(app),
                     httpx2.AsyncClient(
-                        transport=httpx2.ASGITransport(app=app), base_url="http://test"
+                        cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+                        transport=httpx2.ASGITransport(app=app),
+                        base_url="http://test",
                     ) as client,
                 ):
                     response = await client.post(

@@ -14,7 +14,9 @@ class RunApiTests(unittest.IsolatedAsyncioTestCase):
         self.lifespan = app.router.lifespan_context(app)
         await self.lifespan.__aenter__()
         self.client = httpx2.AsyncClient(
-            transport=httpx2.ASGITransport(app=app), base_url="http://test"
+            cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+            transport=httpx2.ASGITransport(app=app),
+            base_url="http://test",
         )
 
     async def asyncTearDown(self):

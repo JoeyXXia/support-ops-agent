@@ -175,7 +175,9 @@ class ApprovalTests(PostgreSQLCase):
             async with (
                 app.router.lifespan_context(app),
                 httpx2.AsyncClient(
-                    transport=httpx2.ASGITransport(app=app), base_url="http://test"
+                    cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+                    transport=httpx2.ASGITransport(app=app),
+                    base_url="http://test",
                 ) as client,
             ):
                 for decision, expected_count in (("approve", 1), ("reject", 1)):
@@ -247,7 +249,9 @@ class ApprovalTests(PostgreSQLCase):
             async with (
                 app.router.lifespan_context(app),
                 httpx2.AsyncClient(
-                    transport=httpx2.ASGITransport(app=app), base_url="http://test"
+                    cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+                    transport=httpx2.ASGITransport(app=app),
+                    base_url="http://test",
                 ) as client,
             ):
                 created = (
@@ -269,7 +273,9 @@ class ApprovalTests(PostgreSQLCase):
             async with (
                 app.router.lifespan_context(app),
                 httpx2.AsyncClient(
-                    transport=httpx2.ASGITransport(app=app), base_url="http://test"
+                    cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+                    transport=httpx2.ASGITransport(app=app),
+                    base_url="http://test",
                 ) as client,
             ):
                 self.assertEqual(

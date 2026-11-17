@@ -1,16 +1,26 @@
 import os
 from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Literal
+from urllib.parse import urlsplit
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from .runs import RunInput, RunStore
+from .sessions import COOKIE, Sessions
 
 
 @asynccontextmanager
 async def lifespan(app):
+    from pathlib import Path
+
+    from dotenv import load_dotenv
+
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env.local", override=False)
+    app.state.sessions = Sessions()
+    app.state.subject_stores = {}
     async with AsyncExitStack() as stack:
         if os.getenv("SUPPORTOPS_PERSIST_RUNS") == "1":
             from packages.agent.persistence import checkpoint_saver
@@ -28,6 +38,8 @@ async def lifespan(app):
             yield
         finally:
             await app.state.runs.close()
+            for store in app.state.subject_stores.values():
+                await store.close()
 
 
 app = FastAPI(title="SupportOps Agent", version="0.1.0", lifespan=lifespan)
@@ -48,7 +60,7 @@ async def create_run(body: RunInput, request: Request):
     if body.ticket_draft and body.knowledge:
         raise HTTPException(status_code=422, detail="请选择一种演示模式。")
     try:
-        return request.app.state.runs.create(
+        return request.state.runs.create(
             body.question,
             knowledge=body.knowledge,
             product_version=body.product_version,
@@ -62,7 +74,7 @@ async def create_run(body: RunInput, request: Request):
 
 @app.get("/runs/{run_id}")
 async def get_run(run_id: UUID, request: Request):
-    record = request.app.state.runs.get(run_id)
+    record = request.state.runs.get(run_id)
     if record is None:
         raise HTTPException(status_code=404, detail="运行不存在或当前身份无权访问。")
     return record
@@ -72,7 +84,7 @@ async def get_run(run_id: UUID, request: Request):
 async def resume_run(run_id: UUID, request: Request):
     from .persistent_runs import PersistentRunStore
 
-    store = request.app.state.runs
+    store = request.state.runs
     if not isinstance(store, PersistentRunStore):
         raise HTTPException(status_code=409, detail="请启用持久化运行模式。")
     try:
@@ -96,7 +108,7 @@ async def create_ticket(body: ExecuteTicketInput, request: Request):
 
     from .persistent_runs import PersistentRunStore
 
-    store = request.app.state.runs
+    store = request.state.runs
     if not isinstance(store, PersistentRunStore):
         raise HTTPException(status_code=409, detail="请启用持久化运行模式。")
     try:
@@ -123,7 +135,7 @@ async def decide_approval(approval_id, body, request, *, approve):
 
     from .persistent_runs import PersistentRunStore
 
-    store = request.app.state.runs
+    store = request.state.runs
     if not isinstance(store, PersistentRunStore):
         raise HTTPException(status_code=409, detail="请启用持久化运行模式。")
     try:
@@ -151,3 +163,117 @@ async def approve(approval_id: UUID, body: ApprovalInput, request: Request):
 @app.post("/approvals/{approval_id}/reject", status_code=202)
 async def reject(approval_id: UUID, body: ApprovalInput, request: Request):
     return await decide_approval(approval_id, body, request, approve=False)
+
+
+@app.middleware("http")
+async def authenticate(request: Request, call_next):
+    public = request.url.path == "/health" or (
+        request.url.path == "/session" and request.method == "POST"
+    )
+    if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+        origin = request.headers.get("origin")
+        if origin:
+            parsed = urlsplit(origin)
+            if parsed.scheme not in {"http", "https"} or parsed.netloc != request.headers.get(
+                "host"
+            ):
+                return JSONResponse(
+                    {"detail": "请求来源未获授权。"},
+                    status_code=403,
+                    headers={"Cache-Control": "no-store"},
+                )
+    if not public:
+        try:
+            context = request.app.state.sessions.resolve(request.cookies.get(COOKIE))
+        except HTTPException as error:
+            return JSONResponse(
+                {"detail": error.detail},
+                status_code=error.status_code,
+                headers={"Cache-Control": "no-store"},
+            )
+        request.state.context = context
+        base = request.app.state.runs
+        if context == base.context:
+            request.state.runs = base
+        else:
+            key = context.user_id
+            stores = request.app.state.subject_stores
+            if key not in stores:
+                from .persistent_runs import PersistentRunStore
+
+                stores[key] = (
+                    PersistentRunStore(base.repository.engine, base.saver, context=context)
+                    if isinstance(base, PersistentRunStore)
+                    else RunStore(context=context)
+                )
+            request.state.runs = stores[key]
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+class LoginInput(BaseModel):
+    model_config = {"extra": "forbid", "strict": True}
+    username: str = Field(min_length=1, max_length=80)
+    password: str = Field(min_length=1, max_length=256)
+
+
+@app.post("/session")
+async def login(body: LoginInput, request: Request, response: Response):
+    sessions = request.app.state.sessions
+    token = sessions.login(body.username, body.password)
+    sessions.revoke(request.cookies.get(COOKIE))
+    response.set_cookie(
+        COOKIE,
+        token,
+        max_age=3600,
+        httponly=True,
+        samesite="strict",
+        secure=os.getenv("SUPPORTOPS_COOKIE_SECURE") == "1",
+        path="/",
+    )
+    return sessions.resolve(token).model_dump(mode="json")
+
+
+@app.get("/session")
+async def session(request: Request):
+    return request.state.context.model_dump(mode="json")
+
+
+@app.delete("/session")
+async def logout(request: Request, response: Response):
+    request.app.state.sessions.revoke(request.cookies.get(COOKIE))
+    response.delete_cookie(COOKIE, path="/")
+    return {"logged_out": True}
+
+
+@app.get("/tickets/{ticket_id}")
+async def get_ticket(ticket_id: UUID, request: Request):
+    from packages.storage.tickets import TicketRepository
+
+    from .persistent_runs import PersistentRunStore
+
+    store = request.state.runs
+    if not isinstance(store, PersistentRunStore):
+        raise HTTPException(409, "请启用持久化运行模式。")
+    context = request.state.context
+    allowed = (context.tenant_id,) if context.role == "member" else context.assigned_tenant_ids
+    try:
+        return TicketRepository(store.repository.engine).get_ticket(ticket_id, allowed)
+    except LookupError:
+        raise HTTPException(404, "工单不存在或不可访问。") from None
+
+
+@app.get("/approvals/{approval_id}")
+async def get_approval(approval_id: UUID, request: Request):
+    from packages.storage.tickets import TicketRepository
+
+    from .persistent_runs import PersistentRunStore
+
+    store = request.state.runs
+    if not isinstance(store, PersistentRunStore):
+        raise HTTPException(409, "请启用持久化运行模式。")
+    try:
+        return TicketRepository(store.repository.engine).get_approval(approval_id, store.context)
+    except LookupError:
+        raise HTTPException(404, "审批不存在或不可访问。") from None

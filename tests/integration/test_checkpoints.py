@@ -109,7 +109,9 @@ class CheckpointTests(PostgreSQLCase):
             async with (
                 app.router.lifespan_context(app),
                 httpx2.AsyncClient(
-                    transport=httpx2.ASGITransport(app=app), base_url="http://test"
+                    cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+                    transport=httpx2.ASGITransport(app=app),
+                    base_url="http://test",
                 ) as client,
             ):
                 response = await client.post("/runs", json={"question": "ws-alpha 429"})
@@ -146,7 +148,9 @@ class CheckpointTests(PostgreSQLCase):
             async with (
                 app.router.lifespan_context(app),
                 httpx2.AsyncClient(
-                    transport=httpx2.ASGITransport(app=app), base_url="http://test"
+                    cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
+                    transport=httpx2.ASGITransport(app=app),
+                    base_url="http://test",
                 ) as client,
             ):
                 self.assertEqual((await client.get(f"/runs/{run_id}")).json(), saved)
