@@ -51,6 +51,8 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
     signal: AbortSignal.timeout(8000),
   });
   if (!response.ok) {
+    if (response.status === 401)
+      window.dispatchEvent(new Event("supportops-unauthorized"));
     const detail = await response.json().catch(() => null);
     throw new Error(
       typeof detail?.detail === "string"
@@ -61,7 +63,7 @@ async function api<T>(path: string, options?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export function App() {
+function Workspace() {
   const [question, setQuestion] = useState(
     "CloudDesk ws-alpha升级后一直返回429，帮我排查原因。",
   );
@@ -328,7 +330,7 @@ export function App() {
         </section>
       )}
       <footer>
-        CloudDesk为合成演示。使用固定本地演示身份。当前服务仅用于本机开发。
+        CloudDesk为合成演示。身份来自已登录的种子账号。当前服务仅用于本机开发。
       </footer>
     </main>
   );
@@ -344,4 +346,119 @@ function describeEvent(event: Run["events"][number]): string {
   if (event.kind === "tool.finished")
     return `工具 ${event.tool} ${event.result?.ok === false ? "失败" : "完成"}（${event.call_id}）`;
   return event.kind === "model.finished" ? "模型步骤完成" : event.kind;
+}
+
+type Principal = { user_id: string; tenant_id: string; role: string };
+
+export function App() {
+  const [principal, setPrincipal] = useState<Principal | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState("user-alpha");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+  useEffect(() => {
+    const clear = () => setPrincipal(null);
+    window.addEventListener("supportops-unauthorized", clear);
+    return () => window.removeEventListener("supportops-unauthorized", clear);
+  }, []);
+  useEffect(() => {
+    let active = true;
+    api<Principal>("/session")
+      .then((p) => {
+        if (active) setPrincipal(p);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  async function login(event: FormEvent) {
+    event.preventDefault();
+    setPending(true);
+    setError("");
+    try {
+      setPrincipal(
+        await api<Principal>("/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        }),
+      );
+      setPassword("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "登录失败。");
+    } finally {
+      setPending(false);
+    }
+  }
+  async function logout() {
+    setPending(true);
+    setError("");
+    try {
+      await api("/session", { method: "DELETE" });
+      setPrincipal(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "退出失败。");
+    } finally {
+      setPending(false);
+    }
+  }
+  if (loading)
+    return (
+      <main>
+        <p>读取会话…</p>
+      </main>
+    );
+  if (!principal)
+    return (
+      <main>
+        <h1>SupportOps Agent 登录</h1>
+        <p>本机种子账号使用管理员配置的独立口令。</p>
+        <form onSubmit={login}>
+          <label>
+            账号
+            <select
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            >
+              {["user-alpha", "support-alpha", "user-beta", "support-beta"].map(
+                (u) => (
+                  <option key={u}>{u}</option>
+                ),
+              )}
+            </select>
+          </label>
+          <label>
+            口令
+            <input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          <button disabled={pending}>登录</button>
+        </form>
+        {error && <p role="alert">{error}</p>}
+      </main>
+    );
+  return (
+    <>
+      <div style={{ padding: "1rem" }}>
+        <span>
+          {principal.user_id} / {principal.tenant_id} / {principal.role}
+        </span>
+        <button onClick={logout} disabled={pending}>
+          退出登录
+        </button>
+        {error && <p role="alert">{error}</p>}
+      </div>
+      <Workspace key={principal.user_id} />
+    </>
+  );
 }
