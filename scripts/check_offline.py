@@ -6,13 +6,25 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
 for args in (
-    ["-m", "ruff", "check", "apps/api", "packages", "scripts", "tests", "evals", "migrations"],
+    [
+        "-m",
+        "ruff",
+        "check",
+        "apps/api",
+        "apps/mcp",
+        "packages",
+        "scripts",
+        "tests",
+        "evals",
+        "migrations",
+    ],
     [
         "-m",
         "ruff",
         "format",
         "--check",
         "apps/api",
+        "apps/mcp",
         "packages",
         "scripts",
         "tests",
