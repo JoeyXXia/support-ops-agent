@@ -57,6 +57,17 @@ class PersistentRunStore(RunStore):
         except LookupError:
             return None
 
+    def history(self, limit=20):
+        from .runs import run_summary
+
+        rows = self.repository.history(self.context, limit)
+        return [
+            run_summary(self.records[row["id"]])
+            if row["id"] in self.active_ids and row["id"] in self.records
+            else row
+            for row in rows
+        ]
+
     def resume(self, run_id):
         owned = self.repository.load(run_id, self.context)
         record = owned["record"]

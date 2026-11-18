@@ -46,6 +46,7 @@ def public_event(event):
 def public_record(record):
     allowed = {
         "id",
+        "created_at",
         "question",
         "ticket_draft",
         "mode",

@@ -58,6 +58,31 @@ class RunRepository:
             raise LookupError("run_not_found")
         return row
 
+    def history(self, context, limit=20):
+        if not 1 <= limit <= 50:
+            raise ValueError("invalid_history_limit")
+        with self.engine.connect() as connection:
+            return [
+                dict(row)
+                for row in connection.execute(
+                    text("""
+                SELECT id::text AS id, record->>'created_at' AS created_at,
+                       record->>'question' AS question, record->>'status' AS status,
+                       record->>'reason' AS reason
+                FROM agent_runs
+                WHERE tenant_id=:tenant AND user_id=:user AND owner_context=CAST(:owner AS jsonb)
+                ORDER BY record->>'created_at' DESC NULLS LAST, id DESC
+                LIMIT :limit
+            """),
+                    {
+                        "tenant": context.tenant_id,
+                        "user": context.user_id,
+                        "owner": context.model_dump_json(),
+                        "limit": limit,
+                    },
+                ).mappings()
+            ]
+
     def save(self, record, context):
         with self.engine.begin() as connection:
             changed = connection.execute(

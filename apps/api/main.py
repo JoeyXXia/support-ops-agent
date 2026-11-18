@@ -4,7 +4,7 @@ from typing import Literal
 from urllib.parse import urlsplit
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -320,3 +320,26 @@ async def run_events(run_id: UUID, request: Request):
         headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
         background=BackgroundTask(release),
     )
+
+
+@app.get("/runs")
+async def list_runs(request: Request, limit: int = Query(default=20, ge=1, le=50)):
+    from .persistent_runs import PersistentRunStore
+
+    store = request.state.runs
+    return {
+        "runs": store.history(limit),
+        "limit": limit,
+        "storage": "postgresql" if isinstance(store, PersistentRunStore) else "memory",
+    }
+
+
+@app.get("/runs/{run_id}/citations/{chunk_id}")
+async def get_citation(run_id: UUID, chunk_id: UUID, request: Request):
+    record = request.state.runs.get(run_id)
+    if record is None:
+        raise HTTPException(404, "运行或引用不存在，或当前身份无权访问。")
+    for citation in record.get("citations", []):
+        if citation.get("chunk_id") == str(chunk_id):
+            return citation
+    raise HTTPException(404, "运行或引用不存在，或当前身份无权访问。")

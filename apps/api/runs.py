@@ -2,6 +2,7 @@
 
 import asyncio
 from collections import OrderedDict
+from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID, uuid4
 
@@ -56,6 +57,7 @@ class RunStore:
         run_id = str(uuid4())
         record = {
             "id": run_id,
+            "created_at": datetime.now(UTC).isoformat(),
             "question": question,
             "ticket_draft": ticket_draft,
             "mode": "mock",
@@ -105,6 +107,11 @@ class RunStore:
     def get(self, run_id: UUID):
         return self.records.get(str(run_id))
 
+    def history(self, limit=20):
+        if not 1 <= limit <= 50:
+            raise ValueError("invalid_history_limit")
+        return [run_summary(row) for row in reversed(list(self.records.values()))][:limit]
+
     async def close(self):
         tasks = list(self.tasks)
         for task in tasks:
@@ -133,3 +140,7 @@ class DemoProvider:
                 mode="mock",
             )
         return await SupportScenarioMock().generate(request)
+
+
+def run_summary(record):
+    return {key: record.get(key) for key in ("id", "created_at", "question", "status", "reason")}
