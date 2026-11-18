@@ -143,3 +143,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 24 范围（2026-11-18）
 
 补齐本人有界历史列表、刷新可定位的运行/引用/工单详情、引用侧栏与审批等待反馈。复用已有 PostgreSQL JSON record 存放真实创建时间，旧时间保持缺失；无迁移。引用只从本人运行的已保存引用集合读取，不访问客户端提供的文件路径。无新增框架、服务、分页、历史搜索、MCP 或自动断线续传。
+
+
+## Day 25 范围（2026-11-18 晚间）
+
+主线验收已有证据，本日新增独立受控 stdio MCP Server 和最小官方 SDK Client，暴露两个既有工作区只读工具。主体由本机可信启动环境固定，复用原 schema、业务与权限；不从参数或 `_meta` 取得身份。锁定官方 SDK2.3.0及必需依赖，既有包版本不变。没有网页/Agent MCP adapter、远程 HTTP/OAuth、写工具、Inspector、第三方 server 或新的模型调用。

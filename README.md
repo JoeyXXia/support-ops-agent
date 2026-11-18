@@ -2,7 +2,7 @@
 
 为虚构 SaaS CloudDesk 提供有据可查的技术支持：从 API 429 排障出发，逐步实现文档引用、工具查询和人工批准后的工单创建。
 
-**当前进度为 Day 24，已有本人历史、可刷新详情、引用侧栏和工单详情跳转；页面通过受授权 SSE 显示步骤、工具与运行状态；HTTP 业务接口要求已登录的种子账号会话，运行、引用、审批和工单按主体与租户授权。运行支持错误分类、有界重试和调用预算停止。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查公开；mock 不需要模型密钥，但业务页面需要种子账号登录。live 模式会使用 API 计费。
+**当前进度为 Day 25，新增独立本地 stdio MCP 只读接口（尚未接入网页 Agent）；已有本人历史、可刷新详情、引用侧栏和工单详情跳转；页面通过受授权 SSE 显示步骤、工具与运行状态；HTTP 业务接口要求已登录的种子账号会话，运行、引用、审批和工单按主体与租户授权。运行支持错误分类、有界重试和调用预算停止。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查公开；mock 不需要模型密钥，但业务页面需要种子账号登录。live 模式会使用 API 计费。
 
 ## 快速启动（Windows PowerShell）
 
@@ -362,3 +362,18 @@ POST /session 使用 username/password 登录，GET /session 查看当前主体�
 `GET /runs?limit=20` 返回本人摘要，最大50条；`GET /runs/{id}/citations/{chunk_id}` 返回本次运行的单条引用。新 HTTP 运行保存真实创建时间；旧记录和缺少时间的操作员 CLI 记录不补造时间。内存模式只保留当前服务中的历史，持久历史需启用原有 PostgreSQL 模式。没有分页、搜索、全量导出或新增路由框架。
 
 [Day 24 实施与复现](docs/devlog/2026-11-18-day-24.md) · [实测输出与浏览器夹具](reports/day-24-validation.json)。本日模型和 embedding 使用 mock，浏览器与数据库真实验证，未调用付费 API。
+
+
+## Day 25 独立只读 MCP
+
+新增 `apps/mcp/server.py` 与官方 SDK 客户端，仅暴露原有 `get_workspace_usage`、`get_recent_errors`。使用真实子进程 stdio 协议发现和调用，复用原工具权限与严格参数，不是普通 HTTP 接口改名。
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.lock
+.\.venv\Scripts\python.exe -m apps.mcp.client --subject user-alpha
+.\.venv\Scripts\python.exe -m apps.mcp.client --subject user-beta
+```
+
+客户端托管固定 server 进程，无需网页、数据库、模型密钥或付费 API。主体名称由本机受信任启动器选择，不是认证凭据；MCP 参数与请求元数据不能改变该进程身份。网页 Agent 仍走原直接工具路径，Day26 再接入 adapter 与权限传播。没有远程 HTTP/OAuth、写工具或任意第三方 server。
+
+SDK 锁定为 mcp==2.3.0；本轮实测协议2026-07-28。新增必需依赖，既有版本不变；Windows 专用包带平台标记。[使用与架构说明](docs/mcp.md) · [Day25 日志](docs/devlog/2026-11-18-day-25.md) · [真实协议及回归输出](reports/day-25-validation.json)。
