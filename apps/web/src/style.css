@@ -166,3 +166,40 @@ form > label {
   margin: 0.25rem 0 0.75rem;
   overflow-wrap: anywhere;
 }
+
+nav[aria-label="项目导航"] {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.run-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.run-layout > * {
+  min-width: 0;
+}
+.citation-panel,
+.history-list li,
+dd {
+  overflow-wrap: anywhere;
+}
+.citation-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.history-list {
+  padding-left: 20px;
+}
+.history-list li {
+  padding: 14px 0;
+  border-bottom: 1px solid #d6ded3;
+}
+@media (max-width: 760px) {
+  .run-layout {
+    grid-template-columns: 1fr;
+  }
+}

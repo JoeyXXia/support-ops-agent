@@ -1,5 +1,6 @@
 export type Run = {
   id: string;
+  created_at?: string;
   question: string;
   mode: string;
   status: string;

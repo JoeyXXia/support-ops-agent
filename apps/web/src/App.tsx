@@ -1,27 +1,18 @@
+import { api } from "./api";
+import { parseRoute, runHash, ticketHash, creationLabel } from "./navigation";
+import type { Route } from "./navigation";
+import {
+  CitationPanel,
+  HistoryPage,
+  Navigation,
+  TicketPage,
+} from "./detailPanels";
 import { initialView, runReducer, decodeEvent, streamTypes } from "./runEvents";
 import type { Run } from "./runEvents";
 import { useEffect, useReducer, useState } from "react";
 import type { FormEvent } from "react";
 
-async function api<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`/api${path}`, {
-    ...options,
-    signal: AbortSignal.timeout(8000),
-  });
-  if (!response.ok) {
-    if (response.status === 401)
-      window.dispatchEvent(new Event("supportops-unauthorized"));
-    const detail = await response.json().catch(() => null);
-    throw new Error(
-      typeof detail?.detail === "string"
-        ? detail.detail
-        : `请求失败（HTTP ${response.status}），请检查服务或输入。`,
-    );
-  }
-  return response.json() as Promise<T>;
-}
-
-function Workspace() {
+function Workspace({ route }: { route: Route }) {
   const [question, setQuestion] = useState(
     "CloudDesk ws-alpha升级后一直返回429，帮我排查原因。",
   );
@@ -36,6 +27,24 @@ function Workspace() {
   const [busy, setBusy] = useState(false);
 
   const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    if (route.kind !== "run" && route.kind !== "citation") return;
+    let active = true;
+    setBusy(true);
+    api<Run>(`/runs/${route.id}`)
+      .then((value) => {
+        if (active) setRun(value);
+      })
+      .catch((e) => {
+        if (active) setError(e instanceof Error ? e.message : "读取运行失败。");
+      })
+      .finally(() => {
+        if (active) setBusy(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!run || !["queued", "running"].includes(run.status)) return;
@@ -115,6 +124,7 @@ function Workspace() {
         }),
       });
       setRun(created);
+      window.location.hash = runHash(created.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "提交失败。");
     } finally {
@@ -146,6 +156,20 @@ function Workspace() {
     }
   }
 
+  async function reloadCurrent() {
+    if (!run || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      setRun(await api<Run>(`/runs/${run.id}`));
+      setRetry((v) => v + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "读取运行失败。");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const running =
     !!run &&
     ["queued", "running"].includes(run.status) &&
@@ -159,183 +183,201 @@ function Workspace() {
     failed: "失败",
     stopped: "已停止",
   };
+  if (route.kind === "history") return <HistoryPage />;
+  if (route.kind === "ticket") return <TicketPage id={route.id} />;
+  if (route.kind === "invalid")
+    return (
+      <main>
+        <Navigation />
+        <p role="alert">链接无效，请从历史运行选择详情。</p>
+      </main>
+    );
   return (
     <main>
       <header>
         <span className="brand">SupportOps Agent</span>
         <span className="badge">本地 mock</span>
       </header>
-      <section className="intro">
-        <p className="eyebrow">CLOUDDESK / 技术支持</p>
-        <h1>
-          让每一次排障，
-          <br />
-          都有据可查。
-        </h1>
-        <p className="summary">输入问题，查看只读工具步骤和排障结果。</p>
-      </section>
-      <section className="card">
-        <h2>{knowledge ? "文档引用演示" : "429 排障演示"}</h2>
-        <p className="muted">
-          {knowledge
-            ? "可查询配额、升级、401、分钟限流或月额度的固定示例。"
-            : "当前为固定 ws-alpha 场景的确定性 mock。"}
-        </p>
-        <form onSubmit={submit}>
-          <label>
-            <input
-              type="checkbox"
-              checked={knowledge}
-              onChange={(event) => {
-                setKnowledge(event.target.checked);
-                setTicketDraft(false);
-              }}
-            />
-            使用文档引用演示
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={ticketDraft}
-              onChange={(event) => {
-                setTicketDraft(event.target.checked);
-                setKnowledge(false);
-              }}
-            />
-            生成待审核工单草稿（需启用持久化模式）
-          </label>
-          {knowledge && (
-            <label>
-              产品版本
-              <select
-                value={version}
-                onChange={(event) => setVersion(event.target.value)}
-              >
-                <option value="">请选择版本</option>
-                <option value="1.0">1.0</option>
-                <option value="2.0">2.0</option>
-              </select>
-            </label>
-          )}
-          <label htmlFor="question">你的问题</label>
-          <textarea
-            id="question"
-            value={question}
-            maxLength={2000}
-            rows={3}
-            onChange={(e) => setQuestion(e.target.value)}
-            required
-          />
-          <button disabled={busy || running || !question.trim()}>
-            {busy ? "提交中…" : running ? "排查中…" : "开始排查"}
-          </button>
-        </form>
-      </section>
+      <Navigation />
+      {route.kind === "compose" && (
+        <>
+          <section className="intro">
+            <p className="eyebrow">CLOUDDESK / 技术支持</p>
+            <h1>
+              让每一次排障，
+              <br />
+              都有据可查。
+            </h1>
+            <p className="summary">输入问题，查看只读工具步骤和排障结果。</p>
+          </section>
+          <section className="card">
+            <h2>{knowledge ? "文档引用演示" : "429 排障演示"}</h2>
+            <p className="muted">
+              {knowledge
+                ? "可查询配额、升级、401、分钟限流或月额度的固定示例。"
+                : "当前为固定 ws-alpha 场景的确定性 mock。"}
+            </p>
+            <form onSubmit={submit}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={knowledge}
+                  onChange={(event) => {
+                    setKnowledge(event.target.checked);
+                    setTicketDraft(false);
+                  }}
+                />
+                使用文档引用演示
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={ticketDraft}
+                  onChange={(event) => {
+                    setTicketDraft(event.target.checked);
+                    setKnowledge(false);
+                  }}
+                />
+                生成待审核工单草稿（需启用持久化模式）
+              </label>
+              {knowledge && (
+                <label>
+                  产品版本
+                  <select
+                    value={version}
+                    onChange={(event) => setVersion(event.target.value)}
+                  >
+                    <option value="">请选择版本</option>
+                    <option value="1.0">1.0</option>
+                    <option value="2.0">2.0</option>
+                  </select>
+                </label>
+              )}
+              <label htmlFor="question">你的问题</label>
+              <textarea
+                id="question"
+                value={question}
+                maxLength={2000}
+                rows={3}
+                onChange={(e) => setQuestion(e.target.value)}
+                required
+              />
+              <button disabled={busy || running || !question.trim()}>
+                {busy ? "提交中…" : running ? "排查中…" : "开始排查"}
+              </button>
+            </form>
+          </section>
+        </>
+      )}
+      {busy && !run && <p role="status">正在读取运行…</p>}
       {error && (
         <section className="card" role="alert">
           <p className="error">{error}</p>
           {run && (
-            <button
-              onClick={() => {
-                setError("");
-                setRetry((v) => v + 1);
-              }}
-            >
+            <button disabled={busy} onClick={reloadCurrent}>
               重新查询当前运行
             </button>
           )}
         </section>
       )}
       {run && (
-        <section className="card" aria-live="polite">
-          <h2>运行：{labels[run.status] || run.status}</h2>
-          <p className="muted">
-            ID：{run.id} · {run.mode} · 实时连接：
-            {
+        <div className="run-layout">
+          <section className="card" aria-live="polite">
+            <h2>运行：{labels[run.status] || run.status}</h2>
+            <p className="muted">
+              ID：{run.id} · {run.mode} · 实时连接：
               {
-                idle: "未连接",
-                connecting: "连接中",
-                open: "已连接",
-                closed: "已结束",
-                error: "已中断",
-              }[view.transport]
-            }
-          </p>
-          <ol>
-            {run.events.map((e, i) => (
-              <li key={i}>
-                步骤 {e.step} · {describeEvent(e)}
-              </li>
-            ))}
-          </ol>
-          {run.answer && <p className="answer">{run.answer}</p>}
-          {run.proposed_action && (
-            <section className="action-draft" aria-label="待审核工单草稿">
-              <h3>待审核工单草稿</h3>
-              <dl>
-                <dt>目标租户</dt>
-                <dd>{run.proposed_action.tenant_id}</dd>
-                <dt>工作区</dt>
-                <dd>{run.proposed_action.params.workspace_id}</dd>
-                <dt>动作</dt>
-                <dd>{run.proposed_action.action}</dd>
-                <dt>标题</dt>
-                <dd>{run.proposed_action.params.title}</dd>
-                <dt>内容</dt>
-                <dd style={{ whiteSpace: "pre-wrap" }}>
-                  {run.proposed_action.params.description}
-                </dd>
-                <dt>状态</dt>
-                <dd>{run.proposed_action.status}</dd>
-                {run.proposed_action.expires_at && (
-                  <>
-                    <dt>审批有效期至（北京时间）</dt>
-                    <dd>
-                      {new Date(run.proposed_action.expires_at).toLocaleString(
-                        "zh-CN",
-                        { timeZone: "Asia/Shanghai" },
-                      )}
-                    </dd>
-                  </>
-                )}
-              </dl>
-              {run.status === "awaiting_approval" &&
-                run.proposed_action.payload_digest && (
-                  <>
-                    <button disabled={busy} onClick={() => decide(true)}>
-                      批准并创建工单
-                    </button>{" "}
-                    <button disabled={busy} onClick={() => decide(false)}>
-                      拒绝草稿
-                    </button>
-                  </>
-                )}
-            </section>
-          )}
-          {run.ticket && (
-            <p>
-              工单 ID：{run.ticket.ticket_id} · {run.ticket.title}
+                {
+                  idle: "未连接",
+                  connecting: "连接中",
+                  open: "已连接",
+                  closed: "已结束",
+                  error: "已中断",
+                }[view.transport]
+              }
             </p>
-          )}
-          {run.citations?.map((citation) => (
-            <details key={citation.chunk_id}>
-              <summary>
-                {citation.source} · 产品 {citation.product_version} · 修订{" "}
-                {citation.version_number}
-              </summary>
+            <p className="muted">{creationLabel(run.created_at)}</p>
+            <ol>
+              {run.events.map((e, i) => (
+                <li key={i}>
+                  步骤 {e.step} · {describeEvent(e)}
+                </li>
+              ))}
+            </ol>
+            {run.answer && <p className="answer">{run.answer}</p>}
+            {run.proposed_action && (
+              <section className="action-draft" aria-label="待审核工单草稿">
+                <h3>待审核工单草稿</h3>
+                <dl>
+                  <dt>目标租户</dt>
+                  <dd>{run.proposed_action.tenant_id}</dd>
+                  <dt>工作区</dt>
+                  <dd>{run.proposed_action.params.workspace_id}</dd>
+                  <dt>动作</dt>
+                  <dd>创建工单</dd>
+                  <dt>标题</dt>
+                  <dd>{run.proposed_action.params.title}</dd>
+                  <dt>内容</dt>
+                  <dd style={{ whiteSpace: "pre-wrap" }}>
+                    {run.proposed_action.params.description}
+                  </dd>
+                  <dt>状态</dt>
+                  <dd>
+                    {{
+                      pending: "待批准",
+                      approved: "已批准",
+                      rejected: "已拒绝",
+                      executed: "已执行",
+                    }[run.proposed_action.status] || run.proposed_action.status}
+                  </dd>
+                  {run.proposed_action.expires_at && (
+                    <>
+                      <dt>审批有效期至（北京时间）</dt>
+                      <dd>
+                        {new Date(
+                          run.proposed_action.expires_at,
+                        ).toLocaleString("zh-CN", {
+                          timeZone: "Asia/Shanghai",
+                        })}
+                      </dd>
+                    </>
+                  )}
+                </dl>
+                {run.status === "awaiting_approval" &&
+                  run.proposed_action.payload_digest && (
+                    <>
+                      <p>
+                        确认后将在以上工作区创建一张工单；拒绝不会创建工单。
+                      </p>
+                      <button disabled={busy} onClick={() => decide(true)}>
+                        {busy ? "正在提交审批…" : "批准并创建工单"}
+                      </button>{" "}
+                      <button disabled={busy} onClick={() => decide(false)}>
+                        拒绝草稿
+                      </button>
+                    </>
+                  )}
+              </section>
+            )}
+            {run.ticket && (
               <p>
-                {citation.source_path} · 第 {citation.start_line}–
-                {citation.end_line} 行
+                工单 ID：{run.ticket.ticket_id} · {run.ticket.title}{" "}
+                <a href={ticketHash(run.ticket.ticket_id)}>查看工单当前详情</a>
               </p>
-              <p style={{ whiteSpace: "pre-wrap" }}>{citation.body}</p>
-            </details>
-          ))}
-          {["failed", "stopped"].includes(run.status) && (
-            <p className="error">
-              执行已结束：{run.reason}。请核对问题或联系开发者。
-            </p>
-          )}
-        </section>
+            )}
+            {["failed", "stopped"].includes(run.status) && (
+              <p className="error">
+                执行已结束：{run.reason}。请核对问题或联系开发者。
+              </p>
+            )}
+          </section>
+          <CitationPanel
+            run={run}
+            citationId={
+              route.kind === "citation" ? route.citationId : undefined
+            }
+          />
+        </div>
       )}
       <footer>
         CloudDesk为合成演示。身份来自已登录的种子账号。当前服务仅用于本机开发。
@@ -361,6 +403,13 @@ function describeEvent(event: Run["events"][number]): string {
 type Principal = { user_id: string; tenant_id: string; role: string };
 
 export function App() {
+  const [hash, setHash] = useState(window.location.hash);
+  useEffect(() => {
+    const changed = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", changed);
+    return () => window.removeEventListener("hashchange", changed);
+  }, []);
+
   const [principal, setPrincipal] = useState<Principal | null>(null);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState("user-alpha");
@@ -468,7 +517,7 @@ export function App() {
         </button>
         {error && <p role="alert">{error}</p>}
       </div>
-      <Workspace key={principal.user_id} />
+      <Workspace key={principal.user_id + hash} route={parseRoute(hash)} />
     </>
   );
 }
