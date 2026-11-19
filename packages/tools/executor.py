@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from dataclasses import dataclass
@@ -50,6 +51,8 @@ REGISTRY = {
 
 
 class ToolExecutor:
+    read_tool_transport = "direct"
+
     def __init__(self, data_dir: Path | None = None, *, engine=None, run_id=None):
         self.engine, self.run_id = engine, run_id
         self.data_dir = data_dir or Path(__file__).resolve().parents[2] / "data/demo"
@@ -65,6 +68,9 @@ class ToolExecutor:
             )
             for name, spec in REGISTRY.items()
         ]
+
+    async def execute_async(self, name, arguments, *, context):
+        return await asyncio.to_thread(self.execute, name, arguments, context=context)
 
     def execute(self, name: str, arguments: Any, *, context: AuthContext) -> ToolResult:
         def fail(code, message, *, retryable=False):

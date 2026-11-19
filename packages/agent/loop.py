@@ -268,8 +268,8 @@ class AgentLoop:
         for call in calls:
             output = await self.invoke(
                 turn,
-                lambda: asyncio.to_thread(
-                    self.executor.execute, call.name, call.arguments, context=turn.context
+                lambda: self.executor.execute_async(
+                    call.name, call.arguments, context=turn.context
                 ),
                 kind="tool",
                 counter="tool_calls",
