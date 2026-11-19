@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from packages.agent.graph import GraphAgent
 from packages.agent.knowledge_mock import KnowledgeScenarioMock
 from packages.agent.scenario_mock import SupportScenarioMock
-from packages.tools.executor import ToolExecutor
+from packages.tools.routing import build_executor
 from packages.tools.schemas import AuthContext
 
 
@@ -35,7 +35,7 @@ class RunStore:
         self.active_streams = 0
         self.max_active, self.max_records = max_active, max_records
         self.provider_factory = provider_factory or DemoProvider
-        self.executor = ToolExecutor()
+        self.executor = build_executor()
 
     def create(self, question, *, knowledge=False, product_version=None, ticket_draft=False):
         if ticket_draft and not self.supports_drafts:
@@ -58,6 +58,7 @@ class RunStore:
         record = {
             "id": run_id,
             "created_at": datetime.now(UTC).isoformat(),
+            "read_tool_transport": self.executor.read_tool_transport,
             "question": question,
             "ticket_draft": ticket_draft,
             "mode": "mock",

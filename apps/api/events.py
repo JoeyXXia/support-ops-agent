@@ -47,6 +47,7 @@ def public_record(record):
     allowed = {
         "id",
         "created_at",
+        "read_tool_transport",
         "question",
         "ticket_draft",
         "mode",

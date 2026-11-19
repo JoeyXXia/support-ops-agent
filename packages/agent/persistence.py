@@ -9,7 +9,7 @@ from langgraph.checkpoint.postgres import PostgresSaver
 from psycopg.rows import dict_row
 from sqlalchemy import text
 
-from packages.tools.executor import ToolExecutor
+from packages.tools.routing import build_executor
 
 from .graph import GraphAgent
 from .knowledge_mock import KnowledgeScenarioMock
@@ -155,7 +155,13 @@ async def execute_run(repository, saver, run_id, context, provider_factory, *, o
         if record.get("ticket_draft", False):
             provider = TicketDraftMock(record["question"])
         agent = GraphAgent(
-            provider, ToolExecutor(engine=repository.engine, run_id=str(run_id)), checkpointer=saver
+            provider,
+            build_executor(
+                engine=repository.engine,
+                run_id=str(run_id),
+                transport=record.get("read_tool_transport", "direct"),
+            ),
+            checkpointer=saver,
         )
         config = {"configurable": {"thread_id": str(run_id)}}
         snapshot = await agent.graph.aget_state(config)
