@@ -1,0 +1,91 @@
+{
+  "day": 27,
+  "date_beijing": "2026-11-19",
+  "baseline": "2902286b2641b2308366b718b97de9b9d4826de5",
+  "implementation_commits": [
+    "3ed80a1dbffc0b56e0669ab5a343e45837caa2ae",
+    "dcb18fd1db33f160db97d0d4c1ecc9b3fbebbb4c"
+  ],
+  "status": "mock_acceptance_passed_live_smoke_pending_authorization",
+  "checks": [
+    {
+      "command": "python scripts/check_offline.py",
+      "exit_code": 0,
+      "tests_passed": 110,
+      "unittest_seconds": 55.357
+    },
+    {
+      "command": "python -m unittest discover -s tests/integration -v",
+      "exit_code": 0,
+      "tests_passed": 45,
+      "unittest_seconds": 81.267,
+      "database": "dedicated PostgreSQL _test database"
+    },
+    {
+      "command": "npm --prefix apps/web run format:check",
+      "exit_code": 0
+    },
+    {
+      "command": "npm --prefix apps/web test",
+      "exit_code": 0,
+      "tests_passed": 8
+    },
+    {
+      "command": "npm --prefix apps/web run build",
+      "exit_code": 0,
+      "includes_typecheck": true
+    },
+    {
+      "command": "docker compose --parallel 1 -p supportops-day27-fresh up --build --wait --wait-timeout 120",
+      "exit_code": 0,
+      "source": "Git index export into empty directory; no local dotenv, venv or pre-existing npm modules",
+      "services_healthy": [
+        "db",
+        "api",
+        "web"
+      ],
+      "http": "GET /api/health: ok",
+      "host_port": 5275
+    },
+    {
+      "command": "docker compose -p supportops-day27-fresh exec -T api python -m scripts.seed_demo",
+      "exit_code": 0,
+      "public_versions_after_repeat": 8
+    },
+    {
+      "command": "npm --prefix apps/web run test:e2e",
+      "exit_code": 0,
+      "tests_passed": 3,
+      "runner_seconds": 6.6,
+      "transport": "real Chromium, real HTTP, Compose PostgreSQL, deterministic mock model and embedding",
+      "database_rows": {
+        "agent_runs": 3,
+        "approvals": 2,
+        "tickets": 1,
+        "action_executions": 1,
+        "document_versions": 8
+      }
+    },
+    {
+      "command": "docker compose -p supportops-day27-fresh down -v",
+      "exit_code": 0,
+      "scope": "only this run's disposable containers/network/volume"
+    },
+    {
+      "command": "python scripts/model_smoke.py --live",
+      "status": "not_run",
+      "reason": "Explicit confirmation for reuse of existing OpenAI credentials and one potentially billable call is pending",
+      "requests": 0
+    }
+  ],
+  "failures_resolved": [
+    "Initial Docker build lost Linux Engine (BuildKit RPC EOF); engine restarted, base images pulled separately and builds run serially.",
+    "First local Chromium run: all three cases timed out at account dropdown before any run was created. Used accessibility snapshot and role/name selectors; all passed on the next run.",
+    "Initial frontend format check picked up generated failure artifacts. Added browser output directories to ignore rules and reran.",
+    "Initial web build context was 111.39MB. Restricted Docker context and narrowed COPY; final web context 79.21kB and API context 191.82kB."
+  ],
+  "limits": [
+    "GitHub CI job configured. This report records local runs.",
+    "No production throughput or real model quality measured."
+  ]
+}

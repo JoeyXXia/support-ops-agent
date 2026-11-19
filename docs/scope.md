@@ -153,3 +153,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 26 范围（2026-11-19）
 
 现有 Agent 通过异步执行边界接入固定本地 MCP adapter，后端可选 direct/mcp，仅路由两个工作区读工具；完整可信会话上下文先核对再选择固定子进程主体，server 再做业务授权。加入超时、断连结构化错误、取消传播和原调用预算复用；保存每次运行传输模式，旧记录恢复默认 direct。审批写入、工单与知识工具继续本地。没有新增依赖、迁移、前端、服务、远程 OAuth、第三方 server、MCP 写工具或 Day27 E2E/Compose。
+
+
+## Day 27 范围（2026-11-19 晚间）
+
+以 Compose 运行现有 Web、API 和 pgvector，启动时迁移并播种公共合成语料。新增 Chromium 测试覆盖引用原文、批准建单和拒绝后的持久结果，并纳入 mock CI。真实 OpenAI 冒烟使用既有独立入口，运行和 mock 结果分别记录。

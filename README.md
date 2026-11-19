@@ -4,6 +4,31 @@
 
 **当前进度为 Day 26，Agent 可由后端配置切换 direct/MCP 两种工作区只读路径，保留会话权限与有界超时；已有本人历史、可刷新详情、引用侧栏和工单详情跳转；页面通过受授权 SSE 显示步骤、工具与运行状态；HTTP 业务接口要求已登录的种子账号会话，运行、引用、审批和工单按主体与租户授权。运行支持错误分类、有界重试和调用预算停止。文档问答支持原文引用、版本追问和无依据提示。真实语义基线待验收。** 已有 FastAPI 健康接口和展示运行步骤的 React 页面。CloudDesk 是合成演示场景，未接入商业生产系统；已有独立模型适配与mock；已有原生Agent loop；已有独立的PostgreSQL文档存储，已有本地引用问答演示，已有受控建单与人工批准、拒绝流程；mock运行记录默认在内存，可启用 PostgreSQL 持久化。健康检查公开；mock 不需要模型密钥，但业务页面需要种子账号登录。live 模式会使用 API 计费。
 
+## 用 Compose 运行本机演示（Day 27）
+
+使用已启动的 Docker Desktop 或 Docker Engine + Compose。新目录只需已跟踪的项目文件，镜像安装锁定的依赖，API 启动时迁移数据库并导入公共合成文档。
+
+```powershell
+docker compose up --build --wait --wait-timeout 120
+```
+
+打开 [本机演示](http://127.0.0.1:5173/) 并以 `user-alpha` / `local-alpha-demo` 登录。这是 Compose 专用的公开演示口令。仅网页发布到回环地址，API 和数据库留在 Compose 网络内。若 5173 已被占用，启动前设置环境变量 `SUPPORTOPS_DEMO_PORT`，例如 `$env:SUPPORTOPS_DEMO_PORT = '5274'`。
+
+- 引用回答：开启「使用文档引用演示」，选 2.0，问「starter配额是多少？」，打开引用并刷新原文。
+- 批准建单：新建排查，开启工单草稿，提交 `ws-alpha 429`，批准并打开工单详情。
+- 拒绝草稿：另外提交一份工单草稿，拒绝后刷新，状态保持「已拒绝」，没有工单入口。
+
+```powershell
+# 可重复导入同一公共语料，使用 mock embedding
+docker compose exec -T api python -m scripts.seed_demo
+# 自动化浏览器复现，先启动上述 Compose
+npm --prefix apps/web ci
+npm --prefix apps/web exec -- playwright install chromium
+npm --prefix apps/web run test:e2e
+```
+
+自定义端口时给浏览器测试设置 `SUPPORTOPS_E2E_URL`，如 `http://127.0.0.1:5274`。停止用 `docker compose down`，它保留演示数据卷。单独的真实模型冒烟沿用 `python scripts/model_smoke.py --live`，使用已授权的本地 OpenAI 凭据并可能计费。Compose、浏览器测试和 CI 使用确定性 mock。详见 [Day27 开发日志](docs/devlog/2026-11-19-day-27.md)。
+
 ## 快速启动（Windows PowerShell）
 
 前置条件：Python 3.12+、Node.js 22.12+、npm、Git。本文的命令均从项目根目录执行，前后端分别使用一个终端。
