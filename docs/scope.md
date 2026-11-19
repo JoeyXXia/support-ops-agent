@@ -148,3 +148,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 25 范围（2026-11-18 晚间）
 
 主线验收已有证据，本日新增独立受控 stdio MCP Server 和最小官方 SDK Client，暴露两个既有工作区只读工具。主体由本机可信启动环境固定，复用原 schema、业务与权限；不从参数或 `_meta` 取得身份。锁定官方 SDK2.3.0及必需依赖，既有包版本不变。没有网页/Agent MCP adapter、远程 HTTP/OAuth、写工具、Inspector、第三方 server 或新的模型调用。
+
+
+## Day 26 范围（2026-11-19）
+
+现有 Agent 通过异步执行边界接入固定本地 MCP adapter，后端可选 direct/mcp，仅路由两个工作区读工具；完整可信会话上下文先核对再选择固定子进程主体，server 再做业务授权。加入超时、断连结构化错误、取消传播和原调用预算复用；保存每次运行传输模式，旧记录恢复默认 direct。审批写入、工单与知识工具继续本地。没有新增依赖、迁移、前端、服务、远程 OAuth、第三方 server、MCP 写工具或 Day27 E2E/Compose。

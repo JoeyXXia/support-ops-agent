@@ -76,3 +76,36 @@ SDK 版本是2.3.0，本轮四个主体均实际协商到 `2026-07-28`。发现�
 最小客户端为本机验收设置单请求5秒和整体25秒等待保护；未注入跨进程挂死、强杀父进程等系统故障，不宣称覆盖 Day26 的 Agent 超时/取消策略。没有真实模型质量、生产吞吐或网络延迟指标。前端和浏览器本日未改动，未重复前端验收。
 
 依赖只新增官方裸 SDK 及其必需依赖，不安装 CLI extra、Inspector 或另一个 FastMCP 包。原有包版本实测未变化；pywin32 使用 Windows 平台标记。标记已在本机验证不同平台的计算结果，但没有本地 Linux 或托管 CI 通过声明。[锁定包发布页](https://pypi.org/project/mcp/2.3.0/)
+
+## Day26：Agent 的直接/MCP 路径
+
+后端环境 `SUPPORTOPS_READ_TOOL_TRANSPORT` 仅允许 `direct`（默认）或 `mcp`。它不读浏览器正文或模型参数；修改后重启后端。应用不自动从 dotenv 导入该配置。启用示例：
+
+```powershell
+$env:SUPPORTOPS_READ_TOOL_TRANSPORT = 'mcp'
+.\.venv\Scripts\python.exe -m uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
+```
+
+已有网页登录与运行接口保持原用法。新 run 的 `read_tool_transport` 保存所选模式，详情及 SSE 投影可查看；持久化恢复沿用保存模式，缺少该字段的旧记录视为 direct。该字段是服务端运行元数据，不是 RunInput 可接受字段。
+
+调用路径是 HTTP 会话 → 不可变 AuthContext → Agent execute_async → MCPReadAdapter → 官方 Client/固定 stdio server → 原 ToolExecutor 授权。原生 AgentLoop 和 LangGraph 均复用该边界。仅 `get_workspace_usage`、`get_recent_errors` 路由 MCP；`search_docs`、`get_ticket`、`propose_ticket` 和批准后的建单继续本地逻辑、既有数据库与事务。
+
+adapter 从可信 context 选择启动主体，不使用全局 `SUPPORTOPS_MCP_SUBJECT` 覆盖网页登录身份。先比较整个上下文与四个种子身份是否完全一致，包括 support 分配；不能表达的更窄或不同分配均拒绝，防止按名字重新派生更大权限。跨进程后 server 仍执行参数校验和租户过滤。独立 Day25 客户端仍需要自己的 `--subject`，不因此具备网页会话认证。
+
+固定本地启动项仍来自 apps/mcp/client.py，不接受任意 server/命令/URL。adapter 还验证 server 名、精确的两个工具列表和完整输入/输出 schema，不把广告中的说明文本作为模型指令。只消费严格结构化结果，检查 workspace、工具类型、成功/错误状态一致，忽略任意 text content。
+
+| 情况 | adapter 结果与上层行为 |
+| --- | --- |
+| 输入含身份伪造、limit 类型错误 | invalid_arguments，启动前拒绝，不重试 |
+| 完整执行上下文不受本地 server 支持 | forbidden，启动前拒绝，不扩大权限 |
+| 跨租户或不存在 | 保留业务 not_found，不重试 |
+| MCP 请求超时 | timeout，可按现有三次尝试/调用预算重试 |
+| 子进程断连、连接关闭 | unavailable，可有界重试 |
+| 广告/schema/输出不符 | internal_error，不重试，无 direct 回退 |
+| 显式任务取消 | 继续传播取消，由现有运行关闭逻辑处理 |
+
+单次 MCP 请求默认期限5秒，涵盖初始化、发现与调用。SDK 上下文负责关闭进程，清理可能增加实际等待；不得把5秒当作严格端到端 SLA。真实挂起、断连与取消的复现见 tests/fixtures/mcp_fault_server.py 和 tests/test_mcp_adapter.py；夹具只有测试补丁能选取，应用配置不能启动它。
+
+每次只读调用单独创建子进程，当前没有进程池、远程 OAuth、多实例身份分发或动态 support 绑定；不是生产远程多租户认证方案。未改模型 API，也未测真实模型或生产性能。[官方 Client 生命周期](https://py.sdk.modelcontextprotocol.io/client/)、[stdio 环境与进程传输](https://py.sdk.modelcontextprotocol.io/client/transports/)说明本项目复用的 SDK 边界。
+
+Day26 完整证据见 [开发日志](devlog/2026-11-19-day-26.md) 与 [验证报告](../reports/day-26-validation.json)。Day25 上文描述保留为当日独立入口的历史边界，网页 Agent 接入以本节为准。
