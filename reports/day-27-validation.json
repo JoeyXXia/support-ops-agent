@@ -87,5 +87,32 @@
   "limits": [
     "GitHub CI job configured. This report records local runs.",
     "No production throughput or real model quality measured."
-  ]
+  ],
+  "ci_followup_2026_11_20": {
+    "previous_workflow": "https://github.com/JoeyXXia/support-ops-agent/actions/runs/44538874337",
+    "previous_jobs": {
+      "browser": "success",
+      "offline": "success",
+      "database": "failure"
+    },
+    "prior_database_failure_also_seen_at": "2902286",
+    "failure_reproduction": {
+      "platform": "Linux Compose API image, pgvector 0.8.7-pg17",
+      "command": "python -m unittest discover -s tests/integration -v",
+      "tests": 45,
+      "failures": 1,
+      "failing_test": "test_mcp_mode_retains_local_approval_write_and_knowledge",
+      "exit_code": 1
+    },
+    "root_cause": "The integration fixture supplied an isolated repository engine but omitted DATABASE_URL for the local knowledge tool. The host-local configuration masked the omission.",
+    "change": "Set DATABASE_URL inside the integration test from the same fixture engine URL and restore it after the test.",
+    "linux_retest": {
+      "command": "python -m unittest discover -s tests/integration -v",
+      "tests_passed": 45,
+      "elapsed_seconds": 44.875,
+      "exit_code": 0,
+      "temporary_database_volume_removed": true
+    },
+    "live_openai_requests": 0
+  }
 }

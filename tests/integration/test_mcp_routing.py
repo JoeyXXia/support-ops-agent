@@ -103,8 +103,13 @@ class MCPRoutingTests(PostgreSQLCase):
                 self.assertEqual(answered["status"], "completed")
                 self.assertTrue(answered["citations"])
 
-        with patch(
-            "packages.tools.mcp_adapter.MCPReadAdapter.execute", new_callable=AsyncMock
-        ) as remote:
+        # The local knowledge tool reads DATABASE_URL just as it does in the API process.
+        database = self.checkpoint_engine.url.render_as_string(hide_password=False)
+        with (
+            patch.dict(os.environ, {"DATABASE_URL": database}),
+            patch(
+                "packages.tools.mcp_adapter.MCPReadAdapter.execute", new_callable=AsyncMock
+            ) as remote,
+        ):
             asyncio.run(verify())
             remote.assert_not_awaited()
