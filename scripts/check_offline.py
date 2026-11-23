@@ -33,6 +33,7 @@ for args in (
     ],
     ["-m", "unittest", "discover", "-s", "tests", "-v"],
     ["scripts/validate_demo.py"],
+    ["-m", "scripts.freeze_day29"],
     ["scripts/agent_smoke.py"],
 ):
     result = subprocess.run([sys.executable, *args], cwd=root)
