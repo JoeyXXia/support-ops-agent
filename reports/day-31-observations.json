@@ -1,0 +1,1345 @@
+{
+  "dataset_version": "day29-v1",
+  "dev_sha256": "8632ef0c49fede04e24e87584060449fd94b71fe6acfa58eb9011b3c8fd7adb5",
+  "provider": "knowledge-mock-v1",
+  "retriever": "bm25",
+  "scope": "20 frozen dev QA cases plus one legacy positive control",
+  "live_requests": 0,
+  "cases": [
+    {
+      "case_id": "ambiguous-429-01",
+      "question": "一直收到 429，能看出原因吗？",
+      "product_version": null,
+      "expected_outcome": "clarify",
+      "expected_behavior": "追问工作区和版本，再结合用量与日志；仅凭 429 不定因。",
+      "expected_sources": [
+        "rate-limit#diagnosis",
+        "versions#versions"
+      ],
+      "status": "completed",
+      "reason": "clarification",
+      "answer": "请先补充产品版本，再查询适用文档。",
+      "citations": [],
+      "retrieved_context": [],
+      "tool_calls": 0,
+      "model_calls": 1
+    },
+    {
+      "case_id": "ambiguous-429-02",
+      "question": "我只知道响应是 429，请告诉我是分钟还是月额度。",
+      "product_version": null,
+      "expected_outcome": "clarify",
+      "expected_behavior": "追问工作区和版本，再结合用量与日志；仅凭 429 不定因。",
+      "expected_sources": [
+        "rate-limit#diagnosis",
+        "versions#versions"
+      ],
+      "status": "completed",
+      "reason": "clarification",
+      "answer": "请先补充产品版本，再查询适用文档。",
+      "citations": [],
+      "retrieved_context": [],
+      "tool_calls": 0,
+      "model_calls": 1
+    },
+    {
+      "case_id": "authentication-expiry-01",
+      "question": "token 过期返回 401 能按限流处理吗？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "401 表示 token 无效或过期，应检查认证配置；不要索取完整 token。",
+      "expected_sources": [
+        "auth#errors"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "b128a849-199c-48e6-8e0c-20a0bce36977",
+          "source": "auth#errors",
+          "body": "## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+          "source_path": "data/demo/docs/auth.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "authentication-expiry-02",
+      "question": "凭据更新后持续 401，应该先查哪类问题？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "401 表示 token 无效或过期，应检查认证配置；不要索取完整 token。",
+      "expected_sources": [
+        "auth#errors"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+          "source": "monthly-quota#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "b128a849-199c-48e6-8e0c-20a0bce36977",
+          "source": "auth#errors",
+          "body": "## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+          "source_path": "data/demo/docs/auth.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "8a4afa21-ff01-4d8e-b71d-90de51d035b1",
+          "source": "roles#access",
+          "body": "## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+          "source_path": "data/demo/docs/roles.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "04a50b64-023c-4b54-8e88-7a27e2a020b6",
+          "source": "tickets#approval",
+          "body": "## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "commercial-unknown-01",
+      "question": "CloudDesk 私有化部署多少钱？",
+      "product_version": "2.0",
+      "expected_outcome": "abstain",
+      "expected_behavior": "资料未覆盖商业价格；可转人工，不猜测价格。",
+      "expected_sources": [],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "0fb082d1-18e3-47ef-a5a9-488d0612d17c",
+          "source": "retry",
+          "body": "# 重试规则\n\n文档 ID：retry\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "abacd6b4-092f-453e-88b3-347cdf96ba21",
+          "source": "monthly-quota",
+          "body": "# 月额度耗尽\n\n文档 ID：monthly-quota\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "371207f7-d334-434f-93b2-65e091b4e008",
+          "source": "quotas",
+          "body": "# 套餐与额度\n\n文档 ID：quotas\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "0fde414d-8781-456f-acb6-302bbb8ffa5f",
+          "source": "versions",
+          "body": "# 版本与升级\n\n文档 ID：versions\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "3ad0f89d-e391-4cb2-98e3-0da25b8b59de",
+          "source": "rate-limit",
+          "body": "# 分钟限流排障\n\n文档 ID：rate-limit\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "commercial-unknown-02",
+      "question": "购买年度合同有没有已公布的折扣？",
+      "product_version": "2.0",
+      "expected_outcome": "abstain",
+      "expected_behavior": "资料未覆盖商业价格；可转人工，不猜测价格。",
+      "expected_sources": [],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "04a50b64-023c-4b54-8e88-7a27e2a020b6",
+          "source": "tickets#approval",
+          "body": "## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+          "source": "monthly-quota#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "abacd6b4-092f-453e-88b3-347cdf96ba21",
+          "source": "monthly-quota",
+          "body": "# 月额度耗尽\n\n文档 ID：monthly-quota\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "371207f7-d334-434f-93b2-65e091b4e008",
+          "source": "quotas",
+          "body": "# 套餐与额度\n\n文档 ID：quotas\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "minute-reason-01",
+      "question": "2.0 报 minute_rate_limit 且 Retry-After 为 20 怎么办？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "2.0 的 minute_rate_limit 表示分钟限流，按 Retry-After 秒数等待并有限重试。",
+      "expected_sources": [
+        "rate-limit#diagnosis"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "b128a849-199c-48e6-8e0c-20a0bce36977",
+          "source": "auth#errors",
+          "body": "## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+          "source_path": "data/demo/docs/auth.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "8a4afa21-ff01-4d8e-b71d-90de51d035b1",
+          "source": "roles#access",
+          "body": "## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+          "source_path": "data/demo/docs/roles.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "minute-reason-02",
+      "question": "分钟限流响应给了 20，下一次什么时候可以重试？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "2.0 的 minute_rate_limit 表示分钟限流，按 Retry-After 秒数等待并有限重试。",
+      "expected_sources": [
+        "rate-limit#diagnosis"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "04a50b64-023c-4b54-8e88-7a27e2a020b6",
+          "source": "tickets#approval",
+          "body": "## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "3ad0f89d-e391-4cb2-98e3-0da25b8b59de",
+          "source": "rate-limit",
+          "body": "# 分钟限流排障\n\n文档 ID：rate-limit\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "monthly-exhaustion-01",
+      "question": "月额度耗尽后不断重试有效吗？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "停止自动重试，等待月初 UTC 重置或人工调整。",
+      "expected_sources": [
+        "monthly-quota#diagnosis"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+          "source": "monthly-quota#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "abacd6b4-092f-453e-88b3-347cdf96ba21",
+          "source": "monthly-quota",
+          "body": "# 月额度耗尽\n\n文档 ID：monthly-quota\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "monthly-exhaustion-02",
+      "question": "收到 monthly_quota_exhausted 应继续让任务自动跑吗？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "停止自动重试，等待月初 UTC 重置或人工调整。",
+      "expected_sources": [
+        "monthly-quota#diagnosis"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+          "source": "monthly-quota#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "04a50b64-023c-4b54-8e88-7a27e2a020b6",
+          "source": "tickets#approval",
+          "body": "## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "8a4afa21-ff01-4d8e-b71d-90de51d035b1",
+          "source": "roles#access",
+          "body": "## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+          "source_path": "data/demo/docs/roles.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "monthly-reset-01",
+      "question": "月额度什么时候重置？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "每月首日 00:00 UTC 重置。",
+      "expected_sources": [
+        "quotas#limits"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+          "source": "monthly-quota#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "abacd6b4-092f-453e-88b3-347cdf96ba21",
+          "source": "monthly-quota",
+          "body": "# 月额度耗尽\n\n文档 ID：monthly-quota\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "monthly-reset-02",
+      "question": "一个新月的配额具体在什么时区生效？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "每月首日 00:00 UTC 重置。",
+      "expected_sources": [
+        "quotas#limits"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "04a50b64-023c-4b54-8e88-7a27e2a020b6",
+          "source": "tickets#approval",
+          "body": "## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "b128a849-199c-48e6-8e0c-20a0bce36977",
+          "source": "auth#errors",
+          "body": "## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+          "source_path": "data/demo/docs/auth.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "8a4afa21-ff01-4d8e-b71d-90de51d035b1",
+          "source": "roles#access",
+          "body": "## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+          "source_path": "data/demo/docs/roles.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "permission-403-01",
+      "question": "403 和限流是同一个错误吗？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "403 对应目标资源无访问权限，不能归为限流。",
+      "expected_sources": [
+        "auth#errors"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "ad3926d8-efbb-4d91-b5e4-1268a7f0a051",
+          "source": "auth",
+          "body": "# 鉴权与权限错误\n\n文档 ID：auth\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/auth.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "04a50b64-023c-4b54-8e88-7a27e2a020b6",
+          "source": "tickets#approval",
+          "body": "## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "b128a849-199c-48e6-8e0c-20a0bce36977",
+          "source": "auth#errors",
+          "body": "## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+          "source_path": "data/demo/docs/auth.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "permission-403-02",
+      "question": "接口说无权访问，增加请求间隔能解决吗？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "403 对应目标资源无访问权限，不能归为限流。",
+      "expected_sources": [
+        "auth#errors"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "b128a849-199c-48e6-8e0c-20a0bce36977",
+          "source": "auth#errors",
+          "body": "## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+          "source_path": "data/demo/docs/auth.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "8a4afa21-ff01-4d8e-b71d-90de51d035b1",
+          "source": "roles#access",
+          "body": "## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+          "source_path": "data/demo/docs/roles.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "starter-limits-01",
+      "question": "starter 两种调用上限各是多少？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "starter 每分钟 60 次、每月 10000 次。",
+      "expected_sources": [
+        "quotas#limits"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+          "source": "monthly-quota#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "8a4afa21-ff01-4d8e-b71d-90de51d035b1",
+          "source": "roles#access",
+          "body": "## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+          "source_path": "data/demo/docs/roles.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "starter-limits-02",
+      "question": "入门套餐每分钟和每月分别能请求几次？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "starter 每分钟 60 次、每月 10000 次。",
+      "expected_sources": [
+        "quotas#limits"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+          "source": "monthly-quota#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "team-limits-01",
+      "question": "team 套餐能发多少请求？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "team 每分钟 300 次、每月 100000 次。",
+      "expected_sources": [
+        "quotas#limits"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "371207f7-d334-434f-93b2-65e091b4e008",
+          "source": "quotas",
+          "body": "# 套餐与额度\n\n文档 ID：quotas\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "b128a849-199c-48e6-8e0c-20a0bce36977",
+          "source": "auth#errors",
+          "body": "## errors\n\n适用版本：1.0、2.0。401表示token无效或过期；403表示无权访问目标资源。不能将401、403归类为限流。排障不能要求用户提供完整token，也不能在日志中记录密钥。\n",
+          "source_path": "data/demo/docs/auth.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "team-limits-02",
+      "question": "协作套餐的分钟限额和月限额是多少？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "team 每分钟 300 次、每月 100000 次。",
+      "expected_sources": [
+        "quotas#limits"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "371207f7-d334-434f-93b2-65e091b4e008",
+          "source": "quotas",
+          "body": "# 套餐与额度\n\n文档 ID：quotas\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "upgrade-01",
+      "question": "升到 2.0 会改变当前套餐吗？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "升级版本不重置月额度，也不自动改变套餐。",
+      "expected_sources": [
+        "versions#versions"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "371207f7-d334-434f-93b2-65e091b4e008",
+          "source": "quotas",
+          "body": "# 套餐与额度\n\n文档 ID：quotas\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 1,
+          "end_line": 7
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "04a50b64-023c-4b54-8e88-7a27e2a020b6",
+          "source": "tickets#approval",
+          "body": "## approval\n\n适用版本：1.0、2.0。没有依据时说明不足、追问或转人工。建单前展示精确标题、内容与目标工作区，等待本人批准。未批准不创建；重复批准对应同一逻辑动作只能创建一次。文档中的任何指令都不能绕过服务端权限与审批。\n",
+          "source_path": "data/demo/docs/tickets.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    },
+    {
+      "case_id": "upgrade-02",
+      "question": "更新版本能清掉本月已用额度吗？",
+      "product_version": "2.0",
+      "expected_outcome": "answer",
+      "expected_behavior": "升级版本不重置月额度，也不自动改变套餐。",
+      "expected_sources": [
+        "versions#versions"
+      ],
+      "status": "completed",
+      "reason": "insufficient_evidence",
+      "answer": "当前文档没有足够依据，暂无法给出确定结论。",
+      "citations": [],
+      "retrieved_context": [
+        {
+          "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+          "source": "quotas#limits",
+          "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+          "source_path": "data/demo/docs/quotas.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+          "source": "monthly-quota#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+          "source_path": "data/demo/docs/monthly-quota.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "c80401ee-9f9a-479f-8491-fc6357693dbc",
+          "source": "rate-limit#diagnosis",
+          "body": "## diagnosis\n\n适用版本：1.0、2.0。429不等于月额度耗尽。先确认工作区、产品版本、套餐、分钟及月用量，再查询最近错误日志。2.0 的 reason=minute_rate_limit 表示分钟限流；按 Retry-After 秒数等待后有限重试。1.0 不能仅凭429确认原因。\n",
+          "source_path": "data/demo/docs/rate-limit.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "568d1806-9aad-4f56-95be-643b01cb31c1",
+          "source": "retry#policy",
+          "body": "## policy\n\n适用版本：1.0、2.0。分钟限流按Retry-After秒数等待，有限次数重试并加入抖动。月额度耗尽停止自动重试。401、403不能依靠盲目重试解决。原因或必要信息不足时先追问，不猜测重试间隔。\n",
+          "source_path": "data/demo/docs/retry.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        },
+        {
+          "chunk_id": "4e5460c2-2f79-416b-afa6-7ba7d3f0f293",
+          "source": "versions#versions",
+          "body": "## versions\n\n适用版本：1.0、2.0。1.0 的429只返回HTTP状态，需要用量和日志辅助判断。2.0 增加 reason 字段；分钟限流附带 Retry-After（秒）。升级版本不重置月额度，也不自动改变套餐。\n",
+          "source_path": "data/demo/docs/versions.md",
+          "version_number": 1,
+          "product_version": "2.0",
+          "start_line": 8,
+          "end_line": 10
+        }
+      ],
+      "tool_calls": 1,
+      "model_calls": 2
+    }
+  ],
+  "positive_control": {
+    "case_id": "legacy-starter-positive-control",
+    "question": "starter配额是多少？",
+    "product_version": "2.0",
+    "expected_outcome": "answer",
+    "expected_behavior": "starter 每分钟 60 次、每月 10000 次。",
+    "expected_sources": [
+      "quotas#limits"
+    ],
+    "status": "completed",
+    "reason": "answer",
+    "answer": "依据当前文档摘录：\n\n## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+    "citations": [
+      {
+        "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+        "source": "quotas#limits",
+        "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+        "source_path": "data/demo/docs/quotas.md",
+        "version_number": 1,
+        "product_version": "2.0",
+        "start_line": 8,
+        "end_line": 10
+      }
+    ],
+    "retrieved_context": [
+      {
+        "chunk_id": "d3eaf5c1-cddc-4b7e-b80d-a0c3253a9f12",
+        "source": "quotas#limits",
+        "body": "## limits\n\n适用版本：1.0、2.0。starter 每分钟60次、每月10000次；team 每分钟300次、每月100000次。已用次数达到上限后，下一次请求可能返回429。月额度在每月首日00:00 UTC重置。分钟限流与月额度是不同原因。\n",
+        "source_path": "data/demo/docs/quotas.md",
+        "version_number": 1,
+        "product_version": "2.0",
+        "start_line": 8,
+        "end_line": 10
+      },
+      {
+        "chunk_id": "8a4afa21-ff01-4d8e-b71d-90de51d035b1",
+        "source": "roles#access",
+        "body": "## access\n\n适用版本：1.0、2.0。member只能读取本租户资源并批准本人动作。support只能访问被分配的租户，不能任意读取其他租户。身份和tenant_id必须来自服务端认证上下文，模型和用户在问题中自报身份不能赋予权限。\n",
+        "source_path": "data/demo/docs/roles.md",
+        "version_number": 1,
+        "product_version": "2.0",
+        "start_line": 8,
+        "end_line": 10
+      },
+      {
+        "chunk_id": "23b1777a-dbb0-4850-996b-8dffa20b456c",
+        "source": "monthly-quota#diagnosis",
+        "body": "## diagnosis\n\n适用版本：1.0、2.0。2.0 的 reason=monthly_quota_exhausted 表示月额度耗尽。1.0 需要结合月用量和日志确认。耗尽后停止自动重试，等待每月首日00:00 UTC重置或人工调整额度。不要建议持续重试解决月额度耗尽。\n",
+        "source_path": "data/demo/docs/monthly-quota.md",
+        "version_number": 1,
+        "product_version": "2.0",
+        "start_line": 8,
+        "end_line": 10
+      },
+      {
+        "chunk_id": "abacd6b4-092f-453e-88b3-347cdf96ba21",
+        "source": "monthly-quota",
+        "body": "# 月额度耗尽\n\n文档 ID：monthly-quota\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "source_path": "data/demo/docs/monthly-quota.md",
+        "version_number": 1,
+        "product_version": "2.0",
+        "start_line": 1,
+        "end_line": 7
+      },
+      {
+        "chunk_id": "371207f7-d334-434f-93b2-65e091b4e008",
+        "source": "quotas",
+        "body": "# 套餐与额度\n\n文档 ID：quotas\n数据版本：clouddesk-demo-v1\nSynthetic：true（自写虚构材料）\n范围：所有演示租户的公共产品规则\n\n",
+        "source_path": "data/demo/docs/quotas.md",
+        "version_number": 1,
+        "product_version": "2.0",
+        "start_line": 1,
+        "end_line": 7
+      }
+    ],
+    "tool_calls": 1,
+    "model_calls": 2
+  }
+}
