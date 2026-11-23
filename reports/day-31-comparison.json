@@ -1,0 +1,178 @@
+{
+  "development_qa_outputs": 20,
+  "assistant_provisional_labels": 20,
+  "human_labels": 0,
+  "human_review_status": "pending",
+  "captured_outcomes": {
+    "clarification": 2,
+    "insufficient_evidence": 18
+  },
+  "rule_version": "completion-citation-membership-v1",
+  "rule_passes": 20,
+  "provisional_fully_acceptable": 2,
+  "disagreements": 18,
+  "llm_judge": null,
+  "positive_control": "answer",
+  "cases": [
+    {
+      "case_id": "ambiguous-429-01",
+      "reason": "clarification",
+      "expected_source_in_context": false,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "ambiguous-429-02",
+      "reason": "clarification",
+      "expected_source_in_context": false,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "authentication-expiry-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "authentication-expiry-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "commercial-unknown-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": false,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": true,
+      "disagree": false
+    },
+    {
+      "case_id": "commercial-unknown-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": false,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": true,
+      "disagree": false
+    },
+    {
+      "case_id": "minute-reason-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "minute-reason-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "monthly-exhaustion-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "monthly-exhaustion-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "monthly-reset-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "monthly-reset-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "permission-403-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "permission-403-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "starter-limits-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "starter-limits-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "team-limits-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "team-limits-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "upgrade-01",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    },
+    {
+      "case_id": "upgrade-02",
+      "reason": "insufficient_evidence",
+      "expected_source_in_context": true,
+      "structural_rule_pass": true,
+      "provisional_fully_acceptable": false,
+      "disagree": true
+    }
+  ]
+}
