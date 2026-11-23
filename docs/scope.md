@@ -158,3 +158,8 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 27 范围（2026-11-19 晚间）
 
 以 Compose 运行现有 Web、API 和 pgvector，启动时迁移并播种公共合成语料。新增 Chromium 测试覆盖引用原文、批准建单和拒绝后的持久结果，并纳入 mock CI。真实 OpenAI 冒烟使用既有独立入口，运行和 mock 结果分别记录。
+
+
+## Day 28 范围（2026-11-23）
+
+录制 mock 业务闭环、发布中期评审与 v0.4-demo，并增补未冻结的开发样例。真实 OpenAI 冒烟按用户决定延期，保留 Day27 的 401 记录。

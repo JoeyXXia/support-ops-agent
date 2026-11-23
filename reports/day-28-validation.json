@@ -1,0 +1,68 @@
+{
+  "day": 28,
+  "date_beijing": "2026-11-23",
+  "starting_commit": "05b11c3af4b3691f3da26ad61df2c6f90b7afa48",
+  "video": {
+    "path": "reports/day-28-demo.webm",
+    "duration_seconds": 118.28,
+    "width": 1200,
+    "height": 800,
+    "bytes": 6427186,
+    "sha256": "e1918c49542f004bd83861013c03e672325ef700d7b8e5ee119d7b7132bbd8cd",
+    "observed_checkpoints_seconds": {
+      "mock_entry": 1.1,
+      "citation": 12.8,
+      "pending_approval": 38.5,
+      "ticket_created": 56.5,
+      "pending_rejection": 79.5,
+      "approval_rejected": 95.4
+    },
+    "decoded_frames_visually_checked": [
+      "citation",
+      "ticket_created",
+      "approval_rejected"
+    ]
+  },
+  "browser_result": "All three recorded workflows passed their result assertions",
+  "database_rows": {
+    "runs": 3,
+    "approvals": 2,
+    "tickets": 1,
+    "action_executions": 1
+  },
+  "isolated_compose_volume_removed": true,
+  "development_corpus": {
+    "path": "evals/day-28-dev.jsonl",
+    "verified_schema_cases": 45,
+    "base_cases": 25,
+    "added_cases": 20,
+    "model_calls": 0,
+    "status": "development_only_not_frozen"
+  },
+  "checks": [
+    {
+      "command": "python -m scripts.validate_day28_cases",
+      "exit_code": 0
+    },
+    {
+      "command": "npm --prefix apps/web run format:check",
+      "exit_code": 0
+    },
+    {
+      "command": "npm --prefix apps/web test",
+      "exit_code": 0,
+      "passed": 8
+    },
+    {
+      "command": "python scripts/check_offline.py",
+      "exit_code": 0,
+      "passed": 110,
+      "unittest_seconds": 62.779
+    }
+  ],
+  "live_model": {
+    "status": "deferred_by_user",
+    "previous_http_status": 401,
+    "requests_this_day": 0
+  }
+}

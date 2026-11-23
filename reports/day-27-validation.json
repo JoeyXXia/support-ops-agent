@@ -6,7 +6,7 @@
     "3ed80a1dbffc0b56e0669ab5a343e45837caa2ae",
     "dcb18fd1db33f160db97d0d4c1ecc9b3fbebbb4c"
   ],
-  "status": "mock_acceptance_passed_live_smoke_failed_authentication",
+  "status": "mock_acceptance_passed_live_smoke_deferred_by_user",
   "checks": [
     {
       "command": "python scripts/check_offline.py",
@@ -133,5 +133,10 @@
         "browser": "success"
       }
     }
+  },
+  "live_smoke_disposition": {
+    "date_beijing": "2026-11-23",
+    "decision": "User allowed subsequent milestones to proceed with the unsuccessful live smoke deferred",
+    "latest_observed_http_status": 401
   }
 }
