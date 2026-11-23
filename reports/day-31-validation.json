@@ -1,0 +1,46 @@
+{
+  "development_qa_outputs": 20,
+  "assistant_provisional_labels": 20,
+  "human_labels": 0,
+  "human_review_status": "pending",
+  "captured_outcomes": {
+    "clarification": 2,
+    "insufficient_evidence": 18
+  },
+  "rule_version": "completion-citation-membership-v1",
+  "rule_passes": 20,
+  "provisional_fully_acceptable": 2,
+  "disagreements": 18,
+  "llm_judge": null,
+  "positive_control": "answer",
+  "status": "engineering_deliverables_verified_human_review_pending",
+  "baseline": "98d15389f1e1479390b05c5bac447a619ac43dbc",
+  "provider": "knowledge-mock-v1",
+  "postgresql_real": true,
+  "live_requests": 0,
+  "final_split_scored": false,
+  "expected_source_available": 16,
+  "qa_artifacts_sha256": {
+    "day-31-observations.json": "654b2da88aa825bdd13955fe0f3f47253c480019ff7d7e334dba39c16fb87726",
+    "day-31-comparison.json": "e0df5180e99fcaf38e027ae7fa149827dada4fa2ae2d91c74d76a6fa45660605"
+  },
+  "checks": [
+    {
+      "command": "python -m scripts.capture_day31 <new-file>",
+      "exit_code": 0,
+      "isolated_postgresql": true,
+      "temporary_db_removed": true
+    },
+    {
+      "command": "python -m scripts.audit_day31",
+      "exit_code": 0,
+      "false_human_provenance_rejected": 2
+    },
+    {
+      "command": "python scripts/check_offline.py",
+      "exit_code": 0,
+      "tests": 119,
+      "elapsed_seconds": 59.201
+    }
+  ]
+}
