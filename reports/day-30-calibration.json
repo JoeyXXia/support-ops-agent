@@ -1,0 +1,130 @@
+{
+  "version": "day30-v1",
+  "dataset_version": "day29-v1",
+  "mode": "synthetic_scorer_calibration_not_model_evaluation",
+  "results": [
+    {
+      "sample_id": "read-ok",
+      "case_id": "usage-alpha-01",
+      "behavior": {
+        "case_id": "usage-alpha-01",
+        "passed": true,
+        "reasons": []
+      }
+    },
+    {
+      "sample_id": "wrong-tool",
+      "case_id": "usage-alpha-01",
+      "behavior": {
+        "case_id": "usage-alpha-01",
+        "passed": false,
+        "reasons": [
+          "unexpected_tool_sequence"
+        ]
+      }
+    },
+    {
+      "sample_id": "boolean-schema-error",
+      "case_id": "errors-alpha-01",
+      "behavior": {
+        "case_id": "errors-alpha-01",
+        "passed": false,
+        "reasons": [
+          "invalid_tool_arguments"
+        ]
+      }
+    },
+    {
+      "sample_id": "wrong-valid-parameter",
+      "case_id": "errors-alpha-01",
+      "behavior": {
+        "case_id": "errors-alpha-01",
+        "passed": false,
+        "reasons": [
+          "unexpected_tool_parameters"
+        ]
+      }
+    },
+    {
+      "sample_id": "step-budget",
+      "case_id": "usage-alpha-01",
+      "behavior": {
+        "case_id": "usage-alpha-01",
+        "passed": false,
+        "reasons": [
+          "step_budget_exceeded"
+        ]
+      }
+    },
+    {
+      "sample_id": "approved-commit",
+      "case_id": "accept-ticket-01",
+      "behavior": {
+        "case_id": "accept-ticket-01",
+        "passed": true,
+        "reasons": []
+      }
+    },
+    {
+      "sample_id": "claimed-approval-without-commit",
+      "case_id": "accept-ticket-01",
+      "behavior": {
+        "case_id": "accept-ticket-01",
+        "passed": false,
+        "reasons": [
+          "unexpected_committed_ticket_count",
+          "final_ticket_mismatch",
+          "unexpected_ticket_fields"
+        ]
+      }
+    },
+    {
+      "sample_id": "duplicate-write",
+      "case_id": "accept-ticket-01",
+      "behavior": {
+        "case_id": "accept-ticket-01",
+        "passed": false,
+        "reasons": [
+          "unexpected_committed_ticket_count",
+          "final_ticket_mismatch",
+          "unexpected_ticket_fields"
+        ]
+      }
+    },
+    {
+      "sample_id": "wrong-final-ticket-state",
+      "case_id": "accept-ticket-01",
+      "behavior": {
+        "case_id": "accept-ticket-01",
+        "passed": false,
+        "reasons": [
+          "final_ticket_mismatch",
+          "unexpected_ticket_fields"
+        ]
+      }
+    },
+    {
+      "sample_id": "rejected-zero-write",
+      "case_id": "reject-ticket-01",
+      "behavior": {
+        "case_id": "reject-ticket-01",
+        "passed": true,
+        "reasons": []
+      }
+    },
+    {
+      "sample_id": "grounded-separate-hit",
+      "case_id": "grounded-cite-01",
+      "behavior": {
+        "case_id": "grounded-cite-01",
+        "passed": true,
+        "reasons": []
+      },
+      "retrieval": {
+        "hit_at_k": true,
+        "reciprocal_rank_at_k": 0.5,
+        "k": 5
+      }
+    }
+  ]
+}

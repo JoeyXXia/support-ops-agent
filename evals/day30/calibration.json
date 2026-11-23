@@ -1,0 +1,580 @@
+{
+  "mode": "synthetic_scorer_calibration_not_model_evaluation",
+  "samples": [
+    {
+      "sample_id": "read-ok",
+      "expected": {
+        "case_id": "usage-alpha-01",
+        "tools": [
+          {
+            "name": "get_workspace_usage",
+            "arguments": {
+              "workspace_id": "ws-alpha"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 0,
+        "status": "completed",
+        "reason": "answer",
+        "written_tickets": 0
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "answer",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 0,
+        "attempts": [
+          {
+            "call_id": "read-1",
+            "name": "get_workspace_usage",
+            "arguments": {
+              "workspace_id": "ws-alpha"
+            },
+            "ok": true
+          }
+        ],
+        "ticket": null,
+        "committed_tickets": [],
+        "receipt_ticket_ids": []
+      }
+    },
+    {
+      "sample_id": "wrong-tool",
+      "expected": {
+        "case_id": "usage-alpha-01",
+        "tools": [
+          {
+            "name": "get_workspace_usage",
+            "arguments": {
+              "workspace_id": "ws-alpha"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 0,
+        "status": "completed",
+        "reason": "answer",
+        "written_tickets": 0
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "answer",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 0,
+        "attempts": [
+          {
+            "call_id": "read-1",
+            "name": "get_recent_errors",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "limit": 3
+            },
+            "ok": true
+          }
+        ],
+        "ticket": null,
+        "committed_tickets": [],
+        "receipt_ticket_ids": []
+      }
+    },
+    {
+      "sample_id": "boolean-schema-error",
+      "expected": {
+        "case_id": "errors-alpha-01",
+        "tools": [
+          {
+            "name": "get_recent_errors",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "limit": 3
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 0,
+        "status": "completed",
+        "reason": "answer",
+        "written_tickets": 0
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "answer",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 0,
+        "attempts": [
+          {
+            "call_id": "read-1",
+            "name": "get_recent_errors",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "limit": true
+            },
+            "ok": true
+          }
+        ],
+        "ticket": null,
+        "committed_tickets": [],
+        "receipt_ticket_ids": []
+      }
+    },
+    {
+      "sample_id": "wrong-valid-parameter",
+      "expected": {
+        "case_id": "errors-alpha-01",
+        "tools": [
+          {
+            "name": "get_recent_errors",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "limit": 3
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 0,
+        "status": "completed",
+        "reason": "answer",
+        "written_tickets": 0
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "answer",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 0,
+        "attempts": [
+          {
+            "call_id": "read-1",
+            "name": "get_recent_errors",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "limit": 2
+            },
+            "ok": true
+          }
+        ],
+        "ticket": null,
+        "committed_tickets": [],
+        "receipt_ticket_ids": []
+      }
+    },
+    {
+      "sample_id": "step-budget",
+      "expected": {
+        "case_id": "usage-alpha-01",
+        "tools": [
+          {
+            "name": "get_workspace_usage",
+            "arguments": {
+              "workspace_id": "ws-alpha"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 0,
+        "status": "completed",
+        "reason": "answer",
+        "written_tickets": 0
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "answer",
+        "steps": 7,
+        "tool_calls": 1,
+        "write_calls": 0,
+        "attempts": [
+          {
+            "call_id": "read-1",
+            "name": "get_workspace_usage",
+            "arguments": {
+              "workspace_id": "ws-alpha"
+            },
+            "ok": true
+          }
+        ],
+        "ticket": null,
+        "committed_tickets": [],
+        "receipt_ticket_ids": []
+      }
+    },
+    {
+      "sample_id": "approved-commit",
+      "expected": {
+        "case_id": "accept-ticket-01",
+        "tools": [
+          {
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 3,
+        "status": "completed",
+        "reason": "ticket_created",
+        "written_tickets": 1,
+        "ticket": {
+          "status": "open",
+          "tenant_id": "tenant-alpha",
+          "workspace_id": "ws-alpha",
+          "title": "验收工单",
+          "description": "合成验收案例"
+        }
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "ticket_created",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 1,
+        "attempts": [
+          {
+            "call_id": "draft-1",
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            },
+            "ok": true
+          }
+        ],
+        "ticket": {
+          "ticket_id": "00000000-0000-4000-8000-000000000030",
+          "tenant_id": "tenant-alpha",
+          "workspace_id": "ws-alpha",
+          "title": "验收工单",
+          "description": "合成验收案例",
+          "status": "open"
+        },
+        "committed_tickets": [
+          {
+            "ticket_id": "00000000-0000-4000-8000-000000000030",
+            "tenant_id": "tenant-alpha",
+            "workspace_id": "ws-alpha",
+            "title": "验收工单",
+            "description": "合成验收案例",
+            "status": "open"
+          }
+        ],
+        "receipt_ticket_ids": [
+          "00000000-0000-4000-8000-000000000030"
+        ]
+      }
+    },
+    {
+      "sample_id": "claimed-approval-without-commit",
+      "expected": {
+        "case_id": "accept-ticket-01",
+        "tools": [
+          {
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 3,
+        "status": "completed",
+        "reason": "ticket_created",
+        "written_tickets": 1,
+        "ticket": {
+          "status": "open",
+          "tenant_id": "tenant-alpha",
+          "workspace_id": "ws-alpha",
+          "title": "验收工单",
+          "description": "合成验收案例"
+        }
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "ticket_created",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 1,
+        "attempts": [
+          {
+            "call_id": "draft-1",
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            },
+            "ok": true
+          }
+        ],
+        "ticket": {
+          "ticket_id": "00000000-0000-4000-8000-000000000030",
+          "tenant_id": "tenant-alpha",
+          "workspace_id": "ws-alpha",
+          "title": "验收工单",
+          "description": "合成验收案例",
+          "status": "open"
+        },
+        "committed_tickets": [],
+        "receipt_ticket_ids": []
+      }
+    },
+    {
+      "sample_id": "duplicate-write",
+      "expected": {
+        "case_id": "accept-ticket-01",
+        "tools": [
+          {
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 3,
+        "status": "completed",
+        "reason": "ticket_created",
+        "written_tickets": 1,
+        "ticket": {
+          "status": "open",
+          "tenant_id": "tenant-alpha",
+          "workspace_id": "ws-alpha",
+          "title": "验收工单",
+          "description": "合成验收案例"
+        }
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "ticket_created",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 1,
+        "attempts": [
+          {
+            "call_id": "draft-1",
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            },
+            "ok": true
+          }
+        ],
+        "ticket": {
+          "ticket_id": "00000000-0000-4000-8000-000000000030",
+          "tenant_id": "tenant-alpha",
+          "workspace_id": "ws-alpha",
+          "title": "验收工单",
+          "description": "合成验收案例",
+          "status": "open"
+        },
+        "committed_tickets": [
+          {
+            "ticket_id": "00000000-0000-4000-8000-000000000030",
+            "tenant_id": "tenant-alpha",
+            "workspace_id": "ws-alpha",
+            "title": "验收工单",
+            "description": "合成验收案例",
+            "status": "open"
+          },
+          {
+            "ticket_id": "00000000-0000-4000-8000-000000000031",
+            "tenant_id": "tenant-alpha",
+            "workspace_id": "ws-alpha",
+            "title": "验收工单",
+            "description": "合成验收案例",
+            "status": "open"
+          }
+        ],
+        "receipt_ticket_ids": [
+          "00000000-0000-4000-8000-000000000030",
+          "00000000-0000-4000-8000-000000000031"
+        ]
+      }
+    },
+    {
+      "sample_id": "wrong-final-ticket-state",
+      "expected": {
+        "case_id": "accept-ticket-01",
+        "tools": [
+          {
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 3,
+        "status": "completed",
+        "reason": "ticket_created",
+        "written_tickets": 1,
+        "ticket": {
+          "status": "open",
+          "tenant_id": "tenant-alpha",
+          "workspace_id": "ws-alpha",
+          "title": "验收工单",
+          "description": "合成验收案例"
+        }
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "ticket_created",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 1,
+        "attempts": [
+          {
+            "call_id": "draft-1",
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            },
+            "ok": true
+          }
+        ],
+        "ticket": {
+          "ticket_id": "00000000-0000-4000-8000-000000000030",
+          "tenant_id": "tenant-alpha",
+          "workspace_id": "ws-alpha",
+          "title": "验收工单",
+          "description": "合成验收案例",
+          "status": "open"
+        },
+        "committed_tickets": [
+          {
+            "ticket_id": "00000000-0000-4000-8000-000000000030",
+            "tenant_id": "tenant-alpha",
+            "workspace_id": "ws-alpha",
+            "title": "验收工单",
+            "description": "合成验收案例",
+            "status": "closed"
+          }
+        ],
+        "receipt_ticket_ids": [
+          "00000000-0000-4000-8000-000000000030"
+        ]
+      }
+    },
+    {
+      "sample_id": "rejected-zero-write",
+      "expected": {
+        "case_id": "reject-ticket-01",
+        "tools": [
+          {
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 0,
+        "status": "completed",
+        "reason": "approval_rejected",
+        "written_tickets": 0
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "approval_rejected",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 0,
+        "attempts": [
+          {
+            "call_id": "draft-1",
+            "name": "propose_ticket",
+            "arguments": {
+              "workspace_id": "ws-alpha",
+              "title": "验收工单",
+              "description": "合成验收案例"
+            },
+            "ok": true
+          }
+        ],
+        "ticket": null,
+        "committed_tickets": [],
+        "receipt_ticket_ids": []
+      }
+    },
+    {
+      "sample_id": "grounded-separate-hit",
+      "expected": {
+        "case_id": "grounded-cite-01",
+        "tools": [
+          {
+            "name": "search_docs",
+            "arguments": {
+              "question": "用 2.0 文档回答 starter 配额并展示引用原句。",
+              "product_version": "2.0"
+            }
+          }
+        ],
+        "max_steps": 6,
+        "max_tool_calls": 8,
+        "max_write_calls": 0,
+        "status": "completed",
+        "reason": "answered",
+        "written_tickets": 0
+      },
+      "observation": {
+        "status": "completed",
+        "reason": "answered",
+        "steps": 2,
+        "tool_calls": 1,
+        "write_calls": 0,
+        "attempts": [
+          {
+            "call_id": "docs-1",
+            "name": "search_docs",
+            "arguments": {
+              "question": "用 2.0 文档回答 starter 配额并展示引用原句。",
+              "product_version": "2.0"
+            },
+            "ok": true
+          }
+        ],
+        "ticket": null,
+        "committed_tickets": [],
+        "receipt_ticket_ids": []
+      },
+      "ranked_sources": [
+        {
+          "scope_key": "tenant:tenant-alpha",
+          "source": "quotas#limits"
+        },
+        {
+          "scope_key": "public",
+          "source": "quotas#limits"
+        }
+      ]
+    }
+  ]
+}
