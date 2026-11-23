@@ -1,0 +1,62 @@
+{
+  "day": 30,
+  "date_beijing": "2026-11-23",
+  "baseline": "141c47dad7cdad4ae59dc760e9ca79b0827b09a5",
+  "calibration": {
+    "observations": 11,
+    "development_cases": 5,
+    "accepted_controls": 4,
+    "detected_counterexamples": 7,
+    "export_sha256": "b8069a66d4e444f411665d247e92d63c7d0421464bad4df191a48031ff55e1c7",
+    "byte_identical_reexport": true
+  },
+  "checks": [
+    {
+      "command": "python -m scripts.score_day30 evals/day30/calibration.json <new-output-file>",
+      "exit_code": 0
+    },
+    {
+      "command": "python -m unittest discover -s tests -p test_behavior_scoring.py -v",
+      "exit_code": 0,
+      "tests": 5
+    },
+    {
+      "command": "python -m unittest discover -s tests/integration -v",
+      "exit_code": 0,
+      "tests": 46,
+      "elapsed_seconds": 67.009,
+      "environment": "temporary pgvector PostgreSQL, isolated schemas; full run before final scorer validation tightening"
+    },
+    {
+      "command": "python -m unittest discover -s tests/integration -p test_behavior_scoring.py -v",
+      "exit_code": 0,
+      "tests": 1,
+      "elapsed_seconds": 1.143,
+      "environment": "final scorer, real PostgreSQL, isolated schema, deterministic mock model"
+    },
+    {
+      "command": "python scripts/check_offline.py",
+      "exit_code": 1,
+      "tests": 119,
+      "failures": 1,
+      "observed": "Concurrent run of existing MCP fault test did not reach injected subprocess fault marker"
+    },
+    {
+      "command": "python scripts/check_offline.py",
+      "exit_code": 0,
+      "tests": 119,
+      "elapsed_seconds": 59.428,
+      "mode": "sequential rerun with final scorer"
+    }
+  ],
+  "database_evidence": {
+    "approved_expected_ticket_count": 1,
+    "rejected_expected_ticket_count": 0,
+    "claimed_success_with_zero_commits_failed": true
+  },
+  "limits": [
+    "No full development or final split evaluation.",
+    "Retrieval metrics are independent of behavior.",
+    "No natural-language quality scoring or live model requests."
+  ]
+}
