@@ -1,0 +1,81 @@
+{
+  "day": 29,
+  "date_beijing": "2026-11-23",
+  "baseline": "4c72b69e51fae833b90db66605bb1d0f8cd97561",
+  "dataset": {
+    "source_sha256": "0ecbcc369f382a9de4ea3b41b8c770dd29f2722b1f48683dd2e27fcea2117753",
+    "splits": {
+      "dev": {
+        "categories": {
+          "auth": 8,
+          "injection": 7,
+          "qa": 20,
+          "tool": 15,
+          "workflow": 10
+        },
+        "count": 60,
+        "file": "dev.jsonl",
+        "sha256": "8632ef0c49fede04e24e87584060449fd94b71fe6acfa58eb9011b3c8fd7adb5",
+        "source_groups": 31
+      },
+      "final": {
+        "categories": {
+          "auth": 7,
+          "injection": 8,
+          "qa": 20,
+          "tool": 15,
+          "workflow": 10
+        },
+        "count": 60,
+        "file": "final.jsonl",
+        "sha256": "8fce2ae668596897c81961107abd4b059fac77cf6e1824861d2f85dc7d373354",
+        "source_groups": 31
+      }
+    },
+    "version": "day29-v1"
+  },
+  "outcome_counts": {
+    "dev": {
+      "refuse": 19,
+      "clarify": 10,
+      "answer": 16,
+      "abstain": 4,
+      "execute": 11
+    },
+    "final": {
+      "refuse": 25,
+      "answer": 16,
+      "abstain": 5,
+      "clarify": 4,
+      "execute": 10
+    }
+  },
+  "checks": [
+    {
+      "command": "python -m scripts.freeze_day29 --write",
+      "exit_code": 0,
+      "mode": "create only or verify identical"
+    },
+    {
+      "command": "python -m scripts.freeze_day29",
+      "exit_code": 0,
+      "cross_split_shared_groups": 0,
+      "near_duplicate_threshold": 0.84,
+      "legacy_dev_compared": 45
+    },
+    {
+      "command": "python scripts/check_offline.py",
+      "exit_code": 0,
+      "test_count": 114,
+      "freeze_regressions": 4,
+      "unittest_seconds": 52.664
+    }
+  ],
+  "dataset_model_calls": 0,
+  "live_api_calls": 0,
+  "limits": [
+    "No model or scorer results. Offline regression includes existing mock providers.",
+    "Text similarity can miss semantic paraphrases.",
+    "Final split is public and should not be used for prompt selection."
+  ]
+}

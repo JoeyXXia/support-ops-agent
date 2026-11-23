@@ -163,3 +163,7 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 28 范围（2026-11-23）
 
 录制 mock 业务闭环、发布中期评审与 v0.4-demo，并增补未冻结的开发样例。真实 OpenAI 冒烟按用户决定延期，保留 Day27 的 401 记录。
+
+## Day 29 范围（2026-11-23 晚间）
+
+编排 120 条 CloudDesk 合成评测场景，按来源问题簇冻结开发和最终分区。记录类别配额、无答案预期及内容哈希。验证结构与近重复保护，评分器、人工质量评分和真实模型验收留待后续。
