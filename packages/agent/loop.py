@@ -97,7 +97,11 @@ class AgentLoop:
                 ),
                 Message(role="user", content=question),
             ],
-            tools=self.executor.definitions(),
+            tools=[
+                tool
+                for tool in self.executor.definitions()
+                if not grounded or tool.name == "search_docs"
+            ],
         )
         return AgentTurn(request, context, grounded, on_event)
 
@@ -265,6 +269,9 @@ class AgentLoop:
     async def call_tools(self, turn):
         result, request = turn.result, turn.request
         calls, step = turn.response.tool_calls, result.steps
+        if turn.grounded and any(call.name != "search_docs" for call in calls):
+            self._stop(turn, "tool_forbidden", status="failed")
+            return False
         for call in calls:
             output = await self.invoke(
                 turn,
