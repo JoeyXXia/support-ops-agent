@@ -2,7 +2,7 @@
   "development_qa_outputs": 20,
   "assistant_provisional_labels": 20,
   "human_labels": 0,
-  "human_review_status": "pending",
+  "human_review_status": "not_collected_user_accepted_assistant_review",
   "captured_outcomes": {
     "clarification": 2,
     "insufficient_evidence": 18
@@ -13,7 +13,7 @@
   "disagreements": 18,
   "llm_judge": null,
   "positive_control": "answer",
-  "status": "engineering_deliverables_verified_human_review_pending",
+  "status": "accepted_by_user_after_assistant_review",
   "baseline": "98d15389f1e1479390b05c5bac447a619ac43dbc",
   "provider": "knowledge-mock-v1",
   "postgresql_real": true,
@@ -42,5 +42,11 @@
       "tests": 119,
       "elapsed_seconds": 59.201
     }
-  ]
+  ],
+  "acceptance": {
+    "date_beijing": "2026-11-24",
+    "assistant_rechecked_cases": 20,
+    "user_approved_progress": true,
+    "individual_human_labels_collected": 0
+  }
 }
