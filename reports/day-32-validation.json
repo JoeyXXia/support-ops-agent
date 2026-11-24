@@ -1,0 +1,92 @@
+{
+  "day": 32,
+  "date_beijing": "2026-11-24",
+  "baseline": "cf29359bc5a1a722827882595a033baa6ea1df5a",
+  "status": "verified_fixed_synthetic_set",
+  "day31_acceptance": "user-approved assistant review; zero individual human labels",
+  "scope": {
+    "new_scenarios": 6,
+    "postgresql_scenarios": 4,
+    "offline_scenarios": 2,
+    "live_model_calls": 0,
+    "provider": "deterministic test doubles",
+    "surface": "local graph, tools, isolated PostgreSQL and in-process ASGI"
+  },
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -p test_day32_boundary.py -v",
+      "passed": 2,
+      "exit_code": 0
+    },
+    {
+      "command": "python -m unittest discover -s tests/integration -v",
+      "passed": 50,
+      "seconds": 54.996,
+      "exit_code": 0,
+      "phase": "before final guard placement and fixture refinement"
+    },
+    {
+      "command": "python -m unittest discover -s tests/integration -p test_day32_boundary.py -v",
+      "passed": 4,
+      "seconds": 2.061,
+      "exit_code": 0,
+      "phase": "final execution guard"
+    },
+    {
+      "command": "python scripts/check_offline.py",
+      "passed": 121,
+      "seconds": 56.598,
+      "exit_code": 0
+    }
+  ],
+  "observed": [
+    {
+      "scenario": "retrieved document boundary",
+      "reason": "tool_forbidden",
+      "tool_attempts": 1,
+      "commits": {
+        "approvals": 0,
+        "tickets": 0,
+        "receipts": 0
+      }
+    },
+    {
+      "scenario": "pre-existing grounded tool batch",
+      "reason": "tool_forbidden",
+      "tool_attempts": 0
+    },
+    {
+      "scenario": "untrusted tool result",
+      "reason": "tool_not_found",
+      "business_workspace_reads": [
+        "ws-alpha"
+      ],
+      "foreign_workspace_reads": 0
+    },
+    {
+      "scenario": "model claims approval",
+      "reason": "approval_invalid",
+      "commits": {
+        "approvals": 1,
+        "tickets": 0,
+        "receipts": 0
+      }
+    },
+    {
+      "scenario": "cross-tenant citation",
+      "owner_control_status": 200,
+      "non_owner_and_foreign_membership_status": 404,
+      "foreign_excerpt_returned": false
+    },
+    {
+      "scenario": "approved then expired",
+      "reason": "approval_invalid",
+      "commits": {
+        "approvals": 1,
+        "tickets": 0,
+        "receipts": 0
+      }
+    }
+  ],
+  "failed_intermediate_check": "Repeated query triggered no_progress before new execution guard; changed second query to a different synthetic lookup and reran."
+}
