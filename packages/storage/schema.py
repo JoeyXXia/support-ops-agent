@@ -192,3 +192,12 @@ action_executions = sa.Table(
     ),
     sa.UniqueConstraint("tenant_id", "idempotency_key", name="uq_execution_action_key"),
 )
+
+user_preferences = sa.Table(
+    "user_preferences",
+    metadata,
+    sa.Column("tenant_id", sa.Text, primary_key=True),
+    sa.Column("user_id", sa.Text, primary_key=True),
+    sa.Column("product_version", sa.Text, nullable=False),
+    sa.CheckConstraint("product_version IN ('1.0','2.0')", name="ck_preference_product_version"),
+)
