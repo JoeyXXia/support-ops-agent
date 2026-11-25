@@ -183,3 +183,7 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 33 范围（2026-11-25）
 
 新增 API 端所有者隔离的有界短期上下文与单一结构化版本事实。明确更正、撤回和运行受理历史，长期偏好需用户确认并可删除。沿用 PostgreSQL 与 Alembic，不加入生成式摘要、其他偏好类型或 UI。
+
+## Day 34 范围（2026-11-25）
+
+用离线 mock、合成文档和隔离的本地 PostgreSQL 重跑冻结开发集，导出逐例 JSON 与 Markdown。补齐明确的套餐配额同义问法，保留文档证据约束。报告区分原始提示与权限测试夹具，按实际结果记录行为失败和覆盖缺口。真实 API、最终集及 CI 门禁留待后续。
