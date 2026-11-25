@@ -1,0 +1,61 @@
+{
+  "day": 33,
+  "date_beijing": "2026-11-25",
+  "baseline": "346350241b5ac82df7c856003bd060ec4e7db55f",
+  "status": "verified",
+  "checks": [
+    {
+      "command": "python -m unittest discover -s tests -p test_conversation_memory.py -v",
+      "passed": 2,
+      "seconds": 1.517
+    },
+    {
+      "command": "python -m unittest discover -s tests/integration -p test_conversation_preferences.py -v",
+      "passed": 1,
+      "seconds": 1.898
+    },
+    {
+      "command": "python -m unittest discover -s tests/integration -v",
+      "passed": 51,
+      "seconds": 64.299
+    },
+    {
+      "command": "python scripts/check_offline.py",
+      "passed": 123,
+      "seconds": 59.491
+    }
+  ],
+  "observations": {
+    "turns_accepted_and_completed": 15,
+    "retained_original_input_turns": [
+      12,
+      13,
+      14,
+      15
+    ],
+    "summary_budget_bytes": 96,
+    "summary_measurement": "ASCII UTF-8, not measured model tokens",
+    "before_correction_citation_version": "1.0",
+    "after_correction_citation_version": "2.0",
+    "withdrawn_version": {
+      "reason": "clarification",
+      "tool_calls": 0
+    },
+    "foreign_conversation_response": 404,
+    "unauthenticated_response": 401,
+    "unconfirmed_or_invalid_preference_response": 422,
+    "preference_delete_response": 204,
+    "preference_survived_new_app_lifecycle": true,
+    "conversation_survived_new_app_lifecycle": false,
+    "deletion_cleared_inherited_value": true,
+    "deletion_preserved_manual_value_and_other_tenant": true
+  },
+  "failed_intermediate_checks": [
+    "Immediate run read raced the asynchronous transition; the test now waits for the terminal result.",
+    "Initial full database run failed one migration table-set assertion; added user_preferences to the explicit head expectation and reran all 51 tests."
+  ],
+  "environment": "local ASGI, actual isolated PostgreSQL, existing deterministic mock providers",
+  "live_model_requests": 0,
+  "temporary_container_removed": true,
+  "new_dependencies": 0
+}
