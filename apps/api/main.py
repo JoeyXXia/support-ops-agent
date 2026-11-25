@@ -8,6 +8,10 @@ from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from packages.agent.conversation import ConversationStore
+
+from .memory import conversation_for
+from .memory import router as memory_router
 from .runs import RunInput, RunStore
 from .sessions import COOKIE, Sessions
 
@@ -21,10 +25,13 @@ async def lifespan(app):
     load_dotenv(Path(__file__).resolve().parents[2] / ".env.local", override=False)
     app.state.sessions = Sessions()
     app.state.subject_stores = {}
+    app.state.conversations = ConversationStore()
+    app.state.preferences = None
     async with AsyncExitStack() as stack:
         if os.getenv("SUPPORTOPS_PERSIST_RUNS") == "1":
             from packages.agent.persistence import checkpoint_saver
             from packages.storage.database import engine_from_environment
+            from packages.storage.preferences import PreferenceRepository
 
             from .persistent_runs import PersistentRunStore
 
@@ -32,6 +39,7 @@ async def lifespan(app):
             stack.callback(engine.dispose)
             saver = await stack.enter_async_context(checkpoint_saver(engine))
             app.state.runs = PersistentRunStore(engine, saver)
+            app.state.preferences = PreferenceRepository(engine)
         else:
             app.state.runs = RunStore()
         try:
@@ -43,6 +51,7 @@ async def lifespan(app):
 
 
 app = FastAPI(title="SupportOps Agent", version="0.1.0", lifespan=lifespan)
+app.include_router(memory_router)
 
 
 class HealthResponse(BaseModel):
@@ -59,17 +68,26 @@ async def health() -> HealthResponse:
 async def create_run(body: RunInput, request: Request):
     if body.ticket_draft and body.knowledge:
         raise HTTPException(status_code=422, detail="请选择一种演示模式。")
+    conversation = None
+    if body.conversation_id is not None:
+        if not body.knowledge or body.product_version is not None:
+            raise HTTPException(422, "仅知识问答可引用会话；请通过会话接口更正版本。")
+        conversation = conversation_for(request, body.conversation_id)
+    version = conversation.version if conversation is not None else body.product_version
     try:
-        return request.state.runs.create(
+        record = request.state.runs.create(
             body.question,
             knowledge=body.knowledge,
-            product_version=body.product_version,
+            product_version=version,
             ticket_draft=body.ticket_draft,
         )
     except ValueError:
         raise HTTPException(status_code=409, detail="工单草稿需要启用持久化运行模式。") from None
     except OverflowError:
         raise HTTPException(status_code=503, detail="演示运行已满，请稍后重试。") from None
+    if conversation is not None:
+        conversation.append(body.question, record["id"])
+    return record
 
 
 @app.get("/runs/{run_id}")

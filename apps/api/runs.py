@@ -21,6 +21,7 @@ class RunInput(BaseModel):
     ticket_draft: bool = False
     knowledge: bool = False
     product_version: Literal["1.0", "2.0"] | None = None
+    conversation_id: UUID | None = Field(default=None, strict=False)
 
 
 class RunStore:
