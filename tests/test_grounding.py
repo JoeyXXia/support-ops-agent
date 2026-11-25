@@ -39,6 +39,26 @@ class GroundingTests(IsolatedAsyncioTestCase):
         self.assertEqual(run.citations, [source.model_dump()])
         self.assertTrue(run.answer.endswith(source.body))
 
+    async def test_quota_paraphrase_requires_supporting_document(self):
+        source = evidence("quota", "team 每分钟300次、每月100000次。")
+        for question, rows, reason in (
+            ("Team 套餐能发多少请求？", [source], "answer"),
+            ("协作套餐的分钟限额是多少？", [], "insufficient_evidence"),
+            ("团队买 team 配额有什么合同折扣？", [source], "insufficient_evidence"),
+        ):
+            with (
+                self.subTest(question=question),
+                patch(
+                    "packages.tools.knowledge.search_docs",
+                    return_value=SearchDocsResult(sources=rows),
+                ),
+            ):
+                run = await AgentLoop(KnowledgeScenarioMock(question, "2.0"), ToolExecutor()).run(
+                    question, context=ALPHA, grounded=True
+                )
+            self.assertEqual(run.reason, reason)
+            self.assertEqual(run.citations, [source.model_dump()] if reason == "answer" else [])
+
     async def test_missing_version_and_empty_or_conflicting_evidence(self):
         for version, rows, reason in (
             (None, [], "clarification"),

@@ -1,6 +1,7 @@
 """Fixed synthetic knowledge demo with conservative abstention."""
 
 import json
+import re
 
 from .models import ModelResponse, ToolCall
 
@@ -11,6 +12,21 @@ QUESTIONS = {
     "reason=minute_rate_limit且Retry-After=20，怎么办？": "rate-limit#diagnosis",
     "reason=monthly_quota_exhausted，持续重试有用吗？": "monthly-quota#diagnosis",
 }
+
+
+PLAN = re.compile(r"\b(?:starter|team)\b|入门套餐|协作套餐")
+QUOTA = re.compile(r"配额|限额|调用上限|多少[次条个]?(?:请求|调用)|请求几次")
+COMMERCIAL = re.compile(r"价格|折扣|报价|合同|费用|付费|收费|多少钱")
+
+
+def target_source(question):
+    explicit = QUESTIONS.get(question)
+    if explicit:
+        return explicit
+    question = question.casefold()
+    if PLAN.search(question) and QUOTA.search(question) and not COMMERCIAL.search(question):
+        return "quotas#limits"
+    return None
 
 
 class KnowledgeScenarioMock:
@@ -42,7 +58,7 @@ class KnowledgeScenarioMock:
                 ],
             )
         else:
-            target = QUESTIONS.get(self.question)
+            target = target_source(self.question)
             matching = [row for row in outputs[-1]["data"]["sources"] if row["source"] == target]
             if len({row["body"] for row in matching}) > 1:
                 status, ids = "conflict", []
