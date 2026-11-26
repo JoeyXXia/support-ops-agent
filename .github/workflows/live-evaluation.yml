@@ -1,0 +1,32 @@
+name: Manual OpenAI QA evaluation
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_budget:
+        description: Approve up to 3 OpenAI requests with 32 output tokens each
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: manual-openai-evaluation
+  cancel-in-progress: false
+jobs:
+  live-qa:
+    if: github.ref == 'refs/heads/main' && inputs.confirm_budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.lock
+      - name: Score fixed synthetic QA cases
+        env:
+          OPENAI_API_KEY: ${{ secrets.SUPPORTOPS_LIVE_EVAL_OPENAI_API_KEY }}
+          PYTHONUTF8: '1'
+        run: python -m scripts.evaluate_day35_live --live
