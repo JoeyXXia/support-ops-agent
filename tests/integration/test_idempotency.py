@@ -80,7 +80,7 @@ class IdempotencyTests(PostgreSQLCase):
                     base_url="http://test",
                 ) as client,
             ):
-                app.state.runs = PersistentRunStore(self.engine, None)
+                app.state.runs = PersistentRunStore(self.engine)
                 body = {
                     "approval_id": proposal.approval_id,
                     "idempotency_key": proposal.idempotency_key,
@@ -199,7 +199,7 @@ class IdempotencyTests(PostgreSQLCase):
                     base_url="http://test",
                 ) as client,
             ):
-                app.state.runs = PersistentRunStore(self.engine, None)
+                app.state.runs = PersistentRunStore(self.engine)
                 with self.assertRaises(httpx2.ReadError):
                     await client.post(
                         "/tickets",

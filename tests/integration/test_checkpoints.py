@@ -107,7 +107,7 @@ class CheckpointTests(PostgreSQLCase):
     def test_api_load_after_restart_and_terminal_resume(self):
         async def verify():
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
                     transport=httpx2.ASGITransport(app=app),
@@ -146,7 +146,7 @@ class CheckpointTests(PostgreSQLCase):
             )
 
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
                     transport=httpx2.ASGITransport(app=app),

@@ -21,6 +21,7 @@ from sqlalchemy.engine import make_url
 
 from apps.api.main import app
 from apps.api.sessions import COOKIE
+from apps.api.worker import running_worker
 from packages.storage.schema import action_executions, approvals, tickets
 from packages.tools.executor import ToolExecutor
 from scripts.capture_day31 import observe
@@ -439,7 +440,7 @@ async def evaluate_case(case, api):
 
 async def evaluate(cases, engine):
     rows = []
-    async with app.router.lifespan_context(app):
+    async with app.router.lifespan_context(app), running_worker(engine):
         transport = httpx2.ASGITransport(app=app)
         async with httpx2.AsyncClient(transport=transport, base_url="http://test") as client:
             api = DemoAPI(client, engine)

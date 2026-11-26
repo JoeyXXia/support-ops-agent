@@ -171,7 +171,7 @@ class SecurityBoundaryTests(PostgreSQLCase):
 
         async def verify():
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     transport=httpx2.ASGITransport(app=app), base_url="http://test"
                 ) as client,

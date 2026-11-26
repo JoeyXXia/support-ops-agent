@@ -121,7 +121,7 @@ class TicketTests(PostgreSQLCase):
     def test_api_draft_visible_and_pending_cannot_execute(self):
         async def verify():
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
                     transport=httpx2.ASGITransport(app=app),

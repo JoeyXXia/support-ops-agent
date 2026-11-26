@@ -173,7 +173,7 @@ class ApprovalTests(PostgreSQLCase):
 
         async def verify():
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
                     transport=httpx2.ASGITransport(app=app),
@@ -247,7 +247,7 @@ class ApprovalTests(PostgreSQLCase):
 
         async def verify():
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
                     transport=httpx2.ASGITransport(app=app),
@@ -271,7 +271,7 @@ class ApprovalTests(PostgreSQLCase):
                 )
             self.assertEqual(self.count(), 0)
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
                     transport=httpx2.ASGITransport(app=app),

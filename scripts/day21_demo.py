@@ -23,6 +23,7 @@ def main():
     from support import PostgreSQLCase
 
     from apps.api.main import app
+    from apps.api.worker import running_worker
     from packages.storage.schema import action_executions, approvals, tickets
 
     output = ROOT / "reports/day-21-demo.json"
@@ -66,6 +67,7 @@ def main():
 
                 async with (
                     app.router.lifespan_context(app),
+                    running_worker(app.state.runs.repository.engine),
                     httpx2.AsyncClient(
                         cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
                         transport=httpx2.ASGITransport(app=app),

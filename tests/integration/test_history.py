@@ -61,7 +61,7 @@ class HistoryDatabaseTests(PostgreSQLCase):
         async def verify():
             for _ in range(2):
                 async with (
-                    app.router.lifespan_context(app),
+                    self.serving(app),
                     httpx2.AsyncClient(
                         transport=httpx2.ASGITransport(app=app),
                         base_url="http://test",
@@ -94,7 +94,7 @@ class HistoryDatabaseTests(PostgreSQLCase):
                 self.fail("run did not settle")
 
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     transport=httpx2.ASGITransport(app=app),
                     base_url="http://test",

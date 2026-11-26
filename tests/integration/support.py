@@ -2,6 +2,7 @@
 
 import os
 import unittest
+from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
@@ -53,6 +54,14 @@ class PostgreSQLCase(unittest.TestCase):
             raise RuntimeError("Unsafe cleanup target")
         with self.admin.begin() as conn:
             conn.execute(sa.text(f'DROP SCHEMA "{self.schema}" CASCADE'))
+
+    @asynccontextmanager
+    async def serving(self, app):
+        from apps.api.worker import running_worker
+
+        async with app.router.lifespan_context(app):
+            async with running_worker(app.state.runs.repository.engine):
+                yield
 
     def migrate(self, action):
         cfg = Config(str(ROOT / "alembic.ini"))

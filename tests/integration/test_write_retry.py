@@ -68,7 +68,7 @@ class WriteRetryTests(PostgreSQLCase):
 
         async def verify():
             async with (
-                app.router.lifespan_context(app),
+                self.serving(app),
                 httpx2.AsyncClient(
                     cookies={"supportops_session": app.state.sessions.issue("user-alpha")},
                     transport=httpx2.ASGITransport(app=app),

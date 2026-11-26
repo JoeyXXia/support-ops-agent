@@ -37,7 +37,7 @@ class PersistentMemoryTests(PostgreSQLCase):
             async with httpx2.AsyncClient(
                 transport=httpx2.ASGITransport(app=app), base_url="http://test"
             ) as client:
-                async with app.router.lifespan_context(app):
+                async with self.serving(app):
                     alpha, beta = header("user-alpha"), header("user-beta")
                     for body in (
                         {"product_version": "1.0"},
@@ -101,7 +101,7 @@ class PersistentMemoryTests(PostgreSQLCase):
                     run = await settled(client, reply.json()["id"], alpha)
                     self.assertEqual((run["reason"], run["tool_calls"]), ("clarification", 0))
 
-                async with app.router.lifespan_context(app):
+                async with self.serving(app):
                     alpha, beta = header("user-alpha"), header("user-beta")
                     self.assertEqual((await client.get(uri, headers=alpha)).status_code, 404)
                     self.assertEqual(
