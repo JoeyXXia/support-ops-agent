@@ -20,7 +20,12 @@ jobs:
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
       - run: python -m pip install -r requirements.lock
-      - run: python scripts/check_offline.py
+      - name: Deterministic behavior scoring and read-only tool scope
+        run: >-
+          python -m unittest discover -s tests -v
+          -k test_behavior_scoring -k test_tenant_denial_matches_unknown
+      - name: Full offline regression
+        run: python scripts/check_offline.py
       - run: npm --prefix apps/web ci
       - run: npm --prefix apps/web run format:check
       - run: npm --prefix apps/web test
@@ -52,7 +57,12 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install -r requirements.lock
-      - run: python -m unittest discover -s tests/integration -v
+      - name: Actor and tenant isolation, approval binding and ticket idempotency
+        run: >-
+          python -m unittest discover -s tests/integration -v
+          -k test_session_isolation -k test_approvals -k test_idempotency
+      - name: Full PostgreSQL regression
+        run: python -m unittest discover -s tests/integration -v
 
   browser:
     runs-on: ubuntu-latest
