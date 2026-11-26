@@ -187,3 +187,7 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 34 范围（2026-11-25）
 
 用离线 mock、合成文档和隔离的本地 PostgreSQL 重跑冻结开发集，导出逐例 JSON 与 Markdown。补齐明确的套餐配额同义问法，保留文档证据约束。报告区分原始提示与权限测试夹具，按实际结果记录行为失败和覆盖缺口。真实 API、最终集及 CI 门禁留待后续。
+
+## Day 35 范围（2026-11-26）
+
+在现有 GitHub CI 具名检查确定性评分、权限与幂等，保留完整的离线及 PostgreSQL 回归。真实模型评测为独立手动流程，要求预算确认，使用公开合成开发 QA，限制单次尝试的请求数和提示词、输出大小。发布第二篇技术复盘和 v0.5-eval 标签。

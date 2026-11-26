@@ -1,0 +1,77 @@
+{
+  "day": 35,
+  "date": "2026-11-26",
+  "baseline_sha": "bb608045f199d3dfd01eceb8106f3ff558b7b53f",
+  "implementation_sha": "40b377cd23d8044dbfb248aed41df9235e1d1327",
+  "checks": {
+    "offline_gate": {
+      "passed": 6
+    },
+    "offline_full": {
+      "passed": 127,
+      "duration_seconds": 58.825
+    },
+    "database_gate": {
+      "passed": 11,
+      "duration_seconds": 18.263
+    },
+    "database_full": {
+      "passed": 51,
+      "duration_seconds": 63.812
+    },
+    "live_workflow_mock": {
+      "passed": 3
+    },
+    "workflow_yaml": {
+      "passed": true,
+      "dispatch_only": true,
+      "confirm_default": false,
+      "branch": "main"
+    },
+    "missing_key": {
+      "exit_code": 2,
+      "attempted": 0
+    }
+  },
+  "permission_negative_control": {
+    "test": "test_tools.ToolTests.test_tenant_denial_matches_unknown",
+    "fixture": "synthetic",
+    "scope": "isolated process",
+    "weakened": {
+      "tests": 1,
+      "assertion_failures": 1,
+      "errors": 0
+    },
+    "restored": {
+      "tests": 1,
+      "passed": 1
+    }
+  },
+  "retry_evidence": {
+    "first_full_with_final_tests": {
+      "tests": 127,
+      "failures": 1,
+      "test": "test_mcp_adapter.AdapterTests.test_real_subprocess_hang_and_disconnect_are_bounded",
+      "assertion": "must reach the actual tool before injected fault",
+      "duration_seconds": 66.853
+    },
+    "serial_full": {
+      "tests": 127,
+      "failed": 0
+    }
+  },
+  "live_evaluation": {
+    "api_requests": 0,
+    "score": null,
+    "usage": null,
+    "cost": null,
+    "limits_per_attempt": {
+      "requests": 3,
+      "prompt_utf8_bytes_per_request": 1200,
+      "output_tokens_per_request": 32,
+      "seconds_per_request": 20,
+      "retries": 0
+    }
+  },
+  "release_tag": "v0.5-eval"
+}
