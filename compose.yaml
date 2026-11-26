@@ -35,6 +35,17 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://supportops:local-compose-db@db:5432/supportops
+    depends_on:
+      api:
+        condition: service_healthy
+    command: ["python", "-m", "apps.api.worker"]
+    restart: unless-stopped
   web:
     build:
       context: .

@@ -55,9 +55,18 @@ class RunStore:
             if old is None:
                 raise OverflowError("full")
             del self.records[old]
-        run_id = str(uuid4())
-        record = {
-            "id": run_id,
+        record = self._new_record(question, ticket_draft=ticket_draft)
+        self.records[record["id"]] = record
+        task = asyncio.create_task(
+            self._execute(record, knowledge=knowledge, product_version=product_version)
+        )
+        self.tasks.add(task)
+        task.add_done_callback(self.tasks.discard)
+        return record.copy()
+
+    def _new_record(self, question, *, ticket_draft):
+        return {
+            "id": str(uuid4()),
             "created_at": datetime.now(UTC).isoformat(),
             "read_tool_transport": self.executor.read_tool_transport,
             "question": question,
@@ -72,17 +81,6 @@ class RunStore:
             "model_calls": 0,
             "tool_calls": 0,
         }
-        self._save_new(record, knowledge=knowledge, product_version=product_version)
-        self.records[run_id] = record
-        task = asyncio.create_task(
-            self._execute(record, knowledge=knowledge, product_version=product_version)
-        )
-        self.tasks.add(task)
-        task.add_done_callback(self.tasks.discard)
-        return record.copy()
-
-    def _save_new(self, record, *, knowledge, product_version):
-        pass
 
     async def _execute(self, record, *, knowledge, product_version):
         record["status"] = "running"

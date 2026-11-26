@@ -29,7 +29,6 @@ async def lifespan(app):
     app.state.preferences = None
     async with AsyncExitStack() as stack:
         if os.getenv("SUPPORTOPS_PERSIST_RUNS") == "1":
-            from packages.agent.persistence import checkpoint_saver
             from packages.storage.database import engine_from_environment
             from packages.storage.preferences import PreferenceRepository
 
@@ -37,8 +36,7 @@ async def lifespan(app):
 
             engine = engine_from_environment()
             stack.callback(engine.dispose)
-            saver = await stack.enter_async_context(checkpoint_saver(engine))
-            app.state.runs = PersistentRunStore(engine, saver)
+            app.state.runs = PersistentRunStore(engine)
             app.state.preferences = PreferenceRepository(engine)
         else:
             app.state.runs = RunStore()
@@ -157,14 +155,16 @@ async def decide_approval(approval_id, body, request, *, approve):
     if not isinstance(store, PersistentRunStore):
         raise HTTPException(status_code=409, detail="请启用持久化运行模式。")
     try:
-        TicketRepository(store.repository.engine).decide(
-            approval_id,
-            store.context,
-            run_id=body.run_id,
-            digest=body.payload_digest,
-            approve=approve,
-        )
-        return store.resume(body.run_id)
+        with store.repository.engine.begin() as connection:
+            TicketRepository(store.repository.engine).decide(
+                approval_id,
+                store.context,
+                run_id=body.run_id,
+                digest=body.payload_digest,
+                approve=approve,
+                connection=connection,
+            )
+            return store.resume_decision(body.run_id, connection)
     except LookupError:
         raise HTTPException(status_code=404, detail="审批不存在或不可访问。") from None
     except (ApprovalConflict, OverflowError):
@@ -220,7 +220,7 @@ async def authenticate(request: Request, call_next):
                 from .persistent_runs import PersistentRunStore
 
                 stores[key] = (
-                    PersistentRunStore(base.repository.engine, base.saver, context=context)
+                    PersistentRunStore(base.repository.engine, context=context)
                     if isinstance(base, PersistentRunStore)
                     else RunStore(context=context)
                 )

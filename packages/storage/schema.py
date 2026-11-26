@@ -119,7 +119,14 @@ agent_runs = sa.Table(
     sa.Column("owner_context", JSONB, nullable=False),
     sa.Column("input", JSONB, nullable=False),
     sa.Column("record", JSONB, nullable=False),
+    sa.Column("job_pending", sa.Boolean, server_default=sa.false(), nullable=False),
+    sa.Column("job_attempts", sa.Integer, server_default="0", nullable=False),
+    sa.Column("job_lease_id", UUID(as_uuid=True)),
+    sa.Column("job_lease_until", sa.DateTime(timezone=True)),
     sa.Index("ix_agent_runs_owner", "tenant_id", "user_id"),
+    sa.Index(
+        "ix_agent_runs_pending", "job_lease_until", "id", postgresql_where=sa.text("job_pending")
+    ),
 )
 
 

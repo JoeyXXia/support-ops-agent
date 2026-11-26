@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 import json
+from contextlib import nullcontext
 from uuid import UUID, uuid4
 
 import sqlalchemy as sa
@@ -147,8 +148,9 @@ class TicketRepository:
         if row["expires_at"] is None or row["expires_at"] <= now:
             raise ApprovalConflict("approval_expired")
 
-    def decide(self, approval_id, context, *, run_id, digest, approve):
-        with self.engine.begin() as connection:
+    def decide(self, approval_id, context, *, run_id, digest, approve, connection=None):
+        transaction = self.engine.begin() if connection is None else nullcontext(connection)
+        with transaction as connection:
             row = (
                 connection.execute(
                     sa.select(approvals)

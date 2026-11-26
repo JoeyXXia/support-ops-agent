@@ -24,18 +24,19 @@ class RunRepository:
     def __init__(self, engine):
         self.engine = engine
 
-    def create(self, record, context, *, knowledge, product_version):
+    def create(self, record, context, *, knowledge, product_version, enqueue=False):
         with self.engine.begin() as connection:
             connection.execute(
                 text("""INSERT INTO agent_runs
-                    (id, tenant_id, user_id, owner_context, input, record)
+                    (id, tenant_id, user_id, owner_context, input, record, job_pending)
                     VALUES (:id, :tenant, :user, CAST(:owner AS jsonb),
-                            CAST(:input AS jsonb), CAST(:record AS jsonb))"""),
+                            CAST(:input AS jsonb), CAST(:record AS jsonb), :enqueue)"""),
                 {
                     "id": record["id"],
                     "tenant": context.tenant_id,
                     "user": context.user_id,
                     "owner": context.model_dump_json(),
+                    "enqueue": enqueue,
                     "input": json.dumps(
                         {"knowledge": knowledge, "product_version": product_version}
                     ),
@@ -132,7 +133,9 @@ async def checkpoint_saver(engine):
         yield saver
 
 
-async def execute_run(repository, saver, run_id, context, provider_factory, *, on_event=None):
+async def execute_run(
+    repository, saver, run_id, context, provider_factory, *, on_event=None, persist_progress=False
+):
     owned = repository.load(run_id, context)
     # Transaction-scoped lock is released by PostgreSQL when the process dies.
     with repository.engine.begin() as lock:
@@ -178,12 +181,21 @@ async def execute_run(repository, saver, run_id, context, provider_factory, *, o
                 )
                 approval_ready = status in {"approved", "rejected", "executed"}
         record.update(status="running", reason="")
+        if persist_progress:
+            # Discard speculative events emitted after the last durable graph checkpoint.
+            turn = snapshot.values.get("turn", {})
+            record["events"] = list(turn.get("result", {}).get("events", []))
         repository.save(record, context)
+
+        def publish(event):
+            record["events"].append(event)
+            repository.save(record, context)
+
         result = await agent.run(
             record["question"],
             context=context,
             grounded=settings["knowledge"],
-            on_event=on_event,
+            on_event=publish if persist_progress else on_event,
             thread_id=str(run_id),
             resume=bool(snapshot.values),
             approval_ready=approval_ready,
