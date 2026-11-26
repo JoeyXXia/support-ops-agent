@@ -303,6 +303,20 @@ $env:SUPPORTOPS_PERSIST_RUNS = '1'
 可信操作员 CLI 为 `python scripts/checkpoint_run.py create`、`resume <run-id>` 和 `show <run-id>`。CLI 固定使用合成只读 429 场景。进程退出后数据库记录可能仍显示 running，需要显式请求恢复。默认内存模式沿用此前的行为。故障注入、权限验证、状态保存内容与重跑边界见 [Day 16 报告](docs/devlog/2026-11-11-day-16.md)。
 
 
+## Day 36 持久化 worker
+
+`docker compose up --build` 启动 API、PostgreSQL 和一个独立 worker。API 迁移数据库并导入演示资料，worker 在 API 就绪后开始领取任务。
+
+手工启动时，先用 `python -m alembic upgrade head` 更新同一个 PostgreSQL。启用 `SUPPORTOPS_PERSIST_RUNS=1` 启动 API，并在另一终端从项目根目录运行：
+
+```powershell
+.\.venv\Scripts\python.exe -m apps.api.worker
+```
+
+持久模式下，`POST /runs` 成功返回 202 和原始运行 ID，任务已写入数据库。用 `GET /runs/{id}` 查看 queued、running、awaiting_approval 或终态。浏览器断开与 API 重启均不消除任务。worker 重启后会继续未完成任务，需等待旧租约到期。旧版迁移前遗留的未完成运行可由所有者用原 ID 显式恢复。
+
+运行中的 SSE 来自数据库运行快照，检查点恢复可能使快照回退。收到 `history_changed` 时可重新查询该运行。详见 [Day36 实施与验收](docs/devlog/2026-11-26-day-36.md)。
+
 ## Day 17 工单与待审核草稿
 
 先执行数据库迁移并按 Day 16 说明启用持久模式。页面勾选待审核工单草稿，可查看固定 ws-alpha 演示的目标租户、工作区、动作、标题、描述和 pending 状态。API 请求为 `POST /runs`，传入 `question` 和 `ticket_draft: true`，再 GET 原运行 ID 获取 `proposed_action`。每个运行的重复相同提议复用原草稿。

@@ -191,3 +191,7 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 35 范围（2026-11-26）
 
 在现有 GitHub CI 具名检查确定性评分、权限与幂等，保留完整的离线及 PostgreSQL 回归。真实模型评测为独立手动流程，要求预算确认，使用公开合成开发 QA，限制单次尝试的请求数和提示词、输出大小。发布第二篇技术复盘和 v0.5-eval 标签。
+
+## Day 36 范围（2026-11-26）
+
+在现有 PostgreSQL 之上持久化运行任务，独立 worker 领取、续租和重试。审批决定与重新入队原子提交，图检查点与既有工单幂等继续约束恢复。单 worker 运行，取消、全局背压、总时限与跨重连事件游标留待后续。

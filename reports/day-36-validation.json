@@ -1,0 +1,59 @@
+{
+  "day": 36,
+  "date": "2026-11-26",
+  "baseline_sha": "82a4cd51fbbcdf6eb52990373d3f072b9ee98639",
+  "implementation_sha": "5ae0945c5bce8700b6f6fc9a738fe833386c5edb",
+  "verification_code_sha": "dc0f1aefd9f93b504c560072e3e64d5625bbc81a",
+  "tests": {
+    "offline": {
+      "passed": 127,
+      "seconds": 72.458
+    },
+    "postgresql": {
+      "passed": 54,
+      "seconds": 83.046,
+      "worker_specialized": 3
+    },
+    "compose_config": "passed",
+    "dev_regression": {
+      "passed": 29,
+      "total": 60,
+      "failures": {
+        "coverage": 6,
+        "model": 25
+      }
+    }
+  },
+  "worker_recovery": {
+    "api_initial_status": 202,
+    "queued_after_api_restart": true,
+    "postgresql_real": true,
+    "worker_process_killed": true,
+    "observed_heartbeat": true,
+    "fixture_lease_seconds": 2,
+    "attempts_before_and_after": [
+      1,
+      2
+    ],
+    "completed_same_run": true,
+    "final_model_calls_mock": 2,
+    "final_tool_calls_synthetic": 2,
+    "final_events": 8,
+    "final_lease_cleared": true
+  },
+  "lease_fencing": {
+    "concurrent_claimers": 2,
+    "winners": 1,
+    "stale_renewal_refused": true,
+    "stale_result_refused": true,
+    "attempt_limit": 3,
+    "exhausted_reason": "worker_retry_exhausted"
+  },
+  "approval_transaction": {
+    "injected_enqueue_failure_status": 500,
+    "approval_state_after_rollback": "pending",
+    "tickets_after_retry": 1,
+    "execution_receipts_after_retry": 1
+  },
+  "live_model_requests": 0
+}
