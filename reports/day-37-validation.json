@@ -1,0 +1,48 @@
+{
+  "day": 37,
+  "date": "2026-11-27",
+  "baseline_sha": "7d36657068b43db9389a8237592da0bb166aa09b",
+  "implementation_sha": "427af49e39cb68abc9d6c11c4334382ff9e8156f",
+  "tests": {
+    "targeted_postgresql": {
+      "passed": 12,
+      "seconds": 27.714,
+      "day37_specific": 4
+    },
+    "postgresql": {
+      "passed": 58,
+      "seconds": 98.681
+    },
+    "offline": {
+      "passed": 127,
+      "seconds": 66.085
+    },
+    "frontend": {
+      "passed": 8,
+      "format": "passed",
+      "typecheck": "passed"
+    },
+    "compose_config": "passed"
+  },
+  "verified": {
+    "capacity_status": {
+      "owner": 429,
+      "global": 503,
+      "foreign_cancel": 404
+    },
+    "peak_worker_concurrency": 2,
+    "queued_cancel_frees_slot": true,
+    "cancelled_resumption_stays_cancelled": true,
+    "operations_started_after_cancel_boundary": 0,
+    "operations_started_after_timeout_boundary": 0,
+    "timeout_fixture": "manually expired PostgreSQL deadline while first mock tool was executing",
+    "timeout_terminal": {
+      "status": "failed",
+      "reason": "run_timeout"
+    },
+    "committed_ticket_retained": true,
+    "idempotent_receipt_replayed": true,
+    "new_write_after_cancel": 409
+  },
+  "live_model_requests": 0
+}

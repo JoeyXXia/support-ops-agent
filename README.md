@@ -317,6 +317,14 @@ $env:SUPPORTOPS_PERSIST_RUNS = '1'
 
 运行中的 SSE 来自数据库运行快照，检查点恢复可能使快照回退。收到 `history_changed` 时可重新查询该运行。详见 [Day36 实施与验收](docs/devlog/2026-11-26-day-36.md)。
 
+## Day 37 并发、积压与取消
+
+持久模式在 PostgreSQL 事务中检查容量。默认允许每账号 4 个未结任务、全局 64 个未结任务，包含正在执行和等待重试的任务。待审批阶段释放容量，批准或拒绝时重新申请容量。单账号超限返回 429，全局超限返回 503。
+
+可在 Compose 启动环境或对应进程中设定 `SUPPORTOPS_USER_RUN_LIMIT`、`SUPPORTOPS_QUEUE_LIMIT`。同一个 worker 进程默认同时执行 2 个任务，可用 `SUPPORTOPS_WORKER_CONCURRENCY` 调到 1–4；`SUPPORTOPS_RUN_TIMEOUT_SECONDS` 默认 120 秒，从本轮首次领取开始，租约重领不延长。
+
+运行所有者可发送 `POST /runs/{id}/cancel`，然后继续查询原 ID。排队任务立即进入 `cancelled`。执行中的任务在下一次模型、工具或写入边界停止，已开始的当前操作可结束。超时记录为 `failed`，原因是 `run_timeout`。已提交的工单继续可查。[实施与验证](docs/devlog/2026-11-27-day-37.md)
+
 ## Day 17 工单与待审核草稿
 
 先执行数据库迁移并按 Day 16 说明启用持久模式。页面勾选待审核工单草稿，可查看固定 ws-alpha 演示的目标租户、工作区、动作、标题、描述和 pending 状态。API 请求为 `POST /runs`，传入 `question` 和 `ticket_draft: true`，再 GET 原运行 ID 获取 `proposed_action`。每个运行的重复相同提议复用原草稿。
