@@ -10,12 +10,10 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 from uuid import UUID, uuid4
 
-import httpx2
 from sqlalchemy import text
 from support import ROOT, PostgreSQLCase
 
 from apps.api.main import app
-from apps.api.sessions import COOKIE
 from packages.agent.persistence import RunRepository
 from packages.agent.run_queue import MAX_ATTEMPTS, RunQueue
 from packages.tools.schemas import AuthContext
@@ -78,23 +76,6 @@ class WorkerDatabaseTests(PostgreSQLCase):
         self.assertIsNone(queue.claim(30))
         self.assertEqual(repo.load(run_id, OWNER)["record"]["reason"], "worker_retry_exhausted")
 
-    def api_environment(self):
-        url = self.url.update_query_dict({"options": f"-csearch_path={self.schema},public"})
-        return {
-            "DATABASE_URL": url.render_as_string(hide_password=False),
-            "SUPPORTOPS_PERSIST_RUNS": "1",
-            "SUPPORTOPS_DEMO_PASSWORDS": "",
-            "SUPPORTOPS_READ_TOOL_TRANSPORT": "direct",
-            "PYTHONUTF8": "1",
-        }
-
-    def client(self, *, raise_app_exceptions=True):
-        return httpx2.AsyncClient(
-            cookies={COOKIE: app.state.sessions.issue("user-alpha")},
-            transport=httpx2.ASGITransport(app=app, raise_app_exceptions=raise_app_exceptions),
-            base_url="http://test",
-        )
-
     def test_approval_and_enqueue_share_transaction(self):
         async def verify():
             async def settle(run_id):
@@ -105,7 +86,7 @@ class WorkerDatabaseTests(PostgreSQLCase):
                     await asyncio.sleep(0.02)
                 self.fail("run did not settle")
 
-            async with self.serving(app), self.client(raise_app_exceptions=False) as http:
+            async with self.serving(app), self.client(app, raise_app_exceptions=False) as http:
                 created = await http.post(
                     "/runs", json={"question": "ws-alpha 429", "ticket_draft": True}
                 )
@@ -151,12 +132,12 @@ class WorkerDatabaseTests(PostgreSQLCase):
             self.fail(log.read_text(encoding="utf-8"))
 
         async def verify(directory):
-            async with app.router.lifespan_context(app), self.client() as http:
+            async with app.router.lifespan_context(app), self.client(app) as http:
                 response = await http.post("/runs", json={"question": "ws-alpha 429"})
                 self.assertEqual(response.status_code, 202)
                 self.assertEqual(response.json()["status"], "queued")
                 run_id = response.json()["id"]
-            async with app.router.lifespan_context(app), self.client() as http:
+            async with app.router.lifespan_context(app), self.client(app) as http:
                 path = f"/runs/{run_id}"
                 self.assertEqual((await http.get(path)).json()["status"], "queued")
                 self.assertEqual(tuple(state(run_id)), (True, 0, None, None))

@@ -6,11 +6,13 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import uuid4
 
+import httpx2
 import sqlalchemy as sa
 from alembic import command
 from alembic.config import Config
 from sqlalchemy.engine import make_url
 
+from apps.api.sessions import COOKIE
 from packages.knowledge.markdown import load_directory
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -62,6 +64,23 @@ class PostgreSQLCase(unittest.TestCase):
         async with app.router.lifespan_context(app):
             async with running_worker(app.state.runs.repository.engine):
                 yield
+
+    def api_environment(self):
+        url = self.url.update_query_dict({"options": f"-csearch_path={self.schema},public"})
+        return {
+            "DATABASE_URL": url.render_as_string(hide_password=False),
+            "SUPPORTOPS_PERSIST_RUNS": "1",
+            "SUPPORTOPS_DEMO_PASSWORDS": "",
+            "SUPPORTOPS_READ_TOOL_TRANSPORT": "direct",
+            "PYTHONUTF8": "1",
+        }
+
+    def client(self, app, *, raise_app_exceptions=True):
+        return httpx2.AsyncClient(
+            cookies={COOKIE: app.state.sessions.issue("user-alpha")},
+            transport=httpx2.ASGITransport(app=app, raise_app_exceptions=raise_app_exceptions),
+            base_url="http://test",
+        )
 
     def migrate(self, action):
         cfg = Config(str(ROOT / "alembic.ini"))
