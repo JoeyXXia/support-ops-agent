@@ -1,4 +1,4 @@
-"""Single durable worker. Start with python -m apps.api.worker."""
+"""Durable worker with bounded concurrency. Start with python -m apps.api.worker."""
 
 import asyncio
 import logging
@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from sqlalchemy.exc import SQLAlchemyError
 
 from packages.agent.persistence import RunBusy, checkpoint_saver, execute_run
-from packages.agent.run_queue import ClaimedRunRepository, LeaseLost, RunQueue
+from packages.agent.run_queue import ClaimedRunRepository, LeaseLost, RunQueue, RunStop, setting
 from packages.storage.database import engine_from_environment
 
 from .runs import DemoProvider
@@ -27,7 +27,15 @@ async def heartbeat(queue, job, lease_seconds):
 async def process(queue, saver, job, lease_seconds, provider_factory):
     repo = ClaimedRunRepository(queue, job)
     execution = asyncio.create_task(
-        execute_run(repo, saver, job.run_id, job.context, provider_factory, persist_progress=True)
+        execute_run(
+            repo,
+            saver,
+            job.run_id,
+            job.context,
+            provider_factory,
+            persist_progress=True,
+            operation_guard=lambda: queue.check(job),
+        )
     )
     renew = asyncio.create_task(heartbeat(queue, job, lease_seconds))
     try:
@@ -39,6 +47,8 @@ async def process(queue, saver, job, lease_seconds, provider_factory):
             queue.save(job, record, finished=True)
         else:
             renew.result()
+    except RunStop:
+        queue.stop(job)
     except LeaseLost:
         LOGGER.warning("Job lease lost: %s", job.run_id)
     except RunBusy:
@@ -53,6 +63,13 @@ async def process(queue, saver, job, lease_seconds, provider_factory):
 
 
 async def run_worker(queue, saver, *, lease_seconds=LEASE_SECONDS, provider_factory=DemoProvider):
+    concurrency = setting("SUPPORTOPS_WORKER_CONCURRENCY", 2, 4)
+    async with asyncio.TaskGroup() as group:
+        for _ in range(concurrency):
+            group.create_task(consume(queue, saver, lease_seconds, provider_factory))
+
+
+async def consume(queue, saver, lease_seconds, provider_factory):
     while True:
         try:
             job = queue.claim(lease_seconds)

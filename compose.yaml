@@ -19,6 +19,8 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://supportops:local-compose-db@db:5432/supportops
       SUPPORTOPS_PERSIST_RUNS: "1"
+      SUPPORTOPS_QUEUE_LIMIT: "${SUPPORTOPS_QUEUE_LIMIT:-64}"
+      SUPPORTOPS_USER_RUN_LIMIT: "${SUPPORTOPS_USER_RUN_LIMIT:-4}"
       SUPPORTOPS_DEMO_PASSWORDS: '{"user-alpha":"local-alpha-demo","user-beta":"local-beta-demo","support-alpha":"local-alpha-support","support-beta":"local-beta-support"}'
     depends_on:
       db:
@@ -41,6 +43,8 @@ services:
       dockerfile: apps/api/Dockerfile
     environment:
       DATABASE_URL: postgresql+psycopg://supportops:local-compose-db@db:5432/supportops
+      SUPPORTOPS_WORKER_CONCURRENCY: "${SUPPORTOPS_WORKER_CONCURRENCY:-2}"
+      SUPPORTOPS_RUN_TIMEOUT_SECONDS: "${SUPPORTOPS_RUN_TIMEOUT_SECONDS:-120}"
     depends_on:
       api:
         condition: service_healthy

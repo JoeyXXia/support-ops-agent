@@ -43,5 +43,6 @@ export const statusLabel = (status: string) =>
       interrupted: "需要显式恢复",
       failed: "失败",
       stopped: "已停止",
+      cancelled: "已取消",
     }) as Record<string, string>
   )[status] || status;

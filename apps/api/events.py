@@ -33,7 +33,7 @@ PUBLIC_FIELDS = {
     "write_calls",
     "retryable",
 }
-SETTLED = {"completed", "failed", "stopped", "interrupted", "awaiting_approval"}
+SETTLED = {"cancelled", "completed", "failed", "stopped", "interrupted", "awaiting_approval"}
 
 
 def public_event(event):

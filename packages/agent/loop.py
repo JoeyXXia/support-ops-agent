@@ -61,6 +61,7 @@ class AgentLoop:
         step_timeout=20.0,
         max_model_calls=8,
         retry_policy=None,
+        operation_guard=None,
     ):
         if type(max_steps) is not int or not 1 <= max_steps <= 6:
             raise ValueError("max_steps must be between 1 and 6")
@@ -74,6 +75,7 @@ class AgentLoop:
         if retry_policy is not None and not isinstance(retry_policy, RetryPolicy):
             raise ValueError("retry_policy must be a RetryPolicy")
         self.retry_policy = retry_policy or RetryPolicy()
+        self.operation_guard = operation_guard
         self.provider, self.executor = provider, executor
         self.max_steps, self.max_tool_calls = max_steps, max_tool_calls
         self.step_timeout = step_timeout
@@ -124,6 +126,8 @@ class AgentLoop:
         """Count every attempt, including failed requests, before invoking an operation."""
         prefix = "tool_" if kind == "tool" else ""
         for attempt in range(1, self.retry_policy.max_attempts + 1):
+            if self.operation_guard is not None:
+                self.operation_guard()
             if getattr(turn.result, counter) >= limit:
                 self._stop(turn, kind + "_budget")
                 return None
@@ -184,6 +188,8 @@ class AgentLoop:
         return None
 
     async def classify(self, turn):
+        if self.operation_guard is not None:
+            self.operation_guard()
         result, request = turn.result, turn.request
         if result.steps >= self.max_steps:
             self._stop(turn, "step_budget")

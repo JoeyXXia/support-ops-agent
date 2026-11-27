@@ -16,8 +16,12 @@ class PersistentRunStore(RunStore):
 
     def create(self, question, *, knowledge=False, product_version=None, ticket_draft=False):
         record = self._new_record(question, ticket_draft=ticket_draft)
-        self.repository.create(
-            record, self.context, knowledge=knowledge, product_version=product_version, enqueue=True
+        self.queue.create(
+            self.repository,
+            record,
+            self.context,
+            knowledge=knowledge,
+            product_version=product_version,
         )
         return record
 
@@ -41,6 +45,9 @@ class PersistentRunStore(RunStore):
             )
             allow_paused = proposal.status != "pending"
         return self.queue.enqueue(run_id, self.context, allow_paused=allow_paused)
+
+    def cancel(self, run_id):
+        return self.queue.cancel(run_id, self.context)
 
     def resume_decision(self, run_id, connection):
         return self.queue.enqueue(run_id, self.context, allow_paused=True, connection=connection)

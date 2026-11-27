@@ -241,6 +241,23 @@ class TicketRepository:
                     .one()
                 )
             else:
+                gate = (
+                    connection.execute(
+                        sa.text("""SELECT cancel_requested, record->>'status' AS status,
+                               record->>'reason' AS reason,
+                               job_pending AND job_deadline <= clock_timestamp() AS expired
+                               FROM agent_runs WHERE id=:id FOR UPDATE"""),
+                        {"id": row["run_id"]},
+                    )
+                    .mappings()
+                    .one()
+                )
+                if (
+                    gate["cancel_requested"]
+                    or gate["status"] == "cancelled"
+                    or (gate["expired"] or gate["reason"] == "run_timeout")
+                ):
+                    raise ApprovalConflict("run_stopped")
                 if row["status"] != "approved":
                     raise PermissionError("approval_required")
                 self._valid(row, connection.scalar(sa.select(sa.func.clock_timestamp())))

@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from packages.agent.conversation import ConversationStore
+from packages.agent.run_queue import QueueFull
 
 from .memory import conversation_for
 from .memory import router as memory_router
@@ -81,6 +82,8 @@ async def create_run(body: RunInput, request: Request):
         )
     except ValueError:
         raise HTTPException(status_code=409, detail="工单草稿需要启用持久化运行模式。") from None
+    except QueueFull as error:
+        raise capacity_error(error) from None
     except OverflowError:
         raise HTTPException(status_code=503, detail="演示运行已满，请稍后重试。") from None
     if conversation is not None:
@@ -107,8 +110,29 @@ async def resume_run(run_id: UUID, request: Request):
         return store.resume(run_id)
     except LookupError:
         raise HTTPException(status_code=404, detail="运行不存在或当前身份无权访问。") from None
+    except QueueFull as error:
+        raise capacity_error(error) from None
     except OverflowError:
         raise HTTPException(status_code=409, detail="运行正在执行或已达到并发上限。") from None
+
+
+def capacity_error(error):
+    if error.owner_limit:
+        return HTTPException(429, "当前账号进行中的运行已达上限，请等待或取消后重试。")
+    return HTTPException(503, "运行队列已满，请稍后重试。")
+
+
+@app.post("/runs/{run_id}/cancel", status_code=202)
+async def cancel_run(run_id: UUID, request: Request):
+    from .persistent_runs import PersistentRunStore
+
+    store = request.state.runs
+    if not isinstance(store, PersistentRunStore):
+        raise HTTPException(409, "取消需要持久化运行模式。")
+    try:
+        return store.cancel(run_id)
+    except LookupError:
+        raise HTTPException(404, "运行不存在或当前身份无权访问。") from None
 
 
 class ExecuteTicketInput(BaseModel):
@@ -167,6 +191,8 @@ async def decide_approval(approval_id, body, request, *, approve):
             return store.resume_decision(body.run_id, connection)
     except LookupError:
         raise HTTPException(status_code=404, detail="审批不存在或不可访问。") from None
+    except QueueFull as error:
+        raise capacity_error(error) from None
     except (ApprovalConflict, OverflowError):
         raise HTTPException(
             status_code=409, detail="审批已失效、已决定或运行正忙，请重新查询。"

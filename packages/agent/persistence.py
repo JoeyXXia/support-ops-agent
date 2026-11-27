@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, nullcontext
 
 import psycopg
 from langgraph.checkpoint.postgres import PostgresSaver
@@ -15,6 +15,8 @@ from .graph import GraphAgent
 from .knowledge_mock import KnowledgeScenarioMock
 from .ticket_mock import TicketDraftMock
 
+TERMINAL = {"completed", "stopped", "failed", "cancelled"}
+
 
 class RunBusy(Exception):
     pass
@@ -24,8 +26,11 @@ class RunRepository:
     def __init__(self, engine):
         self.engine = engine
 
-    def create(self, record, context, *, knowledge, product_version, enqueue=False):
-        with self.engine.begin() as connection:
+    def create(
+        self, record, context, *, knowledge, product_version, enqueue=False, connection=None
+    ):
+        transaction = self.engine.begin() if connection is None else nullcontext(connection)
+        with transaction as connection:
             connection.execute(
                 text("""INSERT INTO agent_runs
                     (id, tenant_id, user_id, owner_context, input, record, job_pending)
@@ -134,7 +139,15 @@ async def checkpoint_saver(engine):
 
 
 async def execute_run(
-    repository, saver, run_id, context, provider_factory, *, on_event=None, persist_progress=False
+    repository,
+    saver,
+    run_id,
+    context,
+    provider_factory,
+    *,
+    on_event=None,
+    persist_progress=False,
+    operation_guard=None,
 ):
     owned = repository.load(run_id, context)
     # Transaction-scoped lock is released by PostgreSQL when the process dies.
@@ -147,7 +160,7 @@ async def execute_run(
             raise RunBusy("run_busy")
         owned = repository.load(run_id, context)
         record = owned["record"]
-        if record["status"] in {"completed", "stopped", "failed"}:
+        if record["status"] in TERMINAL:
             return record
         settings = owned["input"]
         provider = (
@@ -165,6 +178,7 @@ async def execute_run(
                 transport=record.get("read_tool_transport", "direct"),
             ),
             checkpointer=saver,
+            operation_guard=operation_guard,
         )
         config = {"configurable": {"thread_id": str(run_id)}}
         snapshot = await agent.graph.aget_state(config)

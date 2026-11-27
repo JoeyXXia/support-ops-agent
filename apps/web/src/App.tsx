@@ -182,6 +182,7 @@ function Workspace({ route }: { route: Route }) {
     interrupted: "需要显式恢复",
     failed: "失败",
     stopped: "已停止",
+    cancelled: "已取消",
   };
   if (route.kind === "history") return <HistoryPage />;
   if (route.kind === "ticket") return <TicketPage id={route.id} />;

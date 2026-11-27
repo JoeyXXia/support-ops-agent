@@ -119,6 +119,8 @@ agent_runs = sa.Table(
     sa.Column("owner_context", JSONB, nullable=False),
     sa.Column("input", JSONB, nullable=False),
     sa.Column("record", JSONB, nullable=False),
+    sa.Column("cancel_requested", sa.Boolean, server_default=sa.false(), nullable=False),
+    sa.Column("job_deadline", sa.DateTime(timezone=True)),
     sa.Column("job_pending", sa.Boolean, server_default=sa.false(), nullable=False),
     sa.Column("job_attempts", sa.Integer, server_default="0", nullable=False),
     sa.Column("job_lease_id", UUID(as_uuid=True)),
