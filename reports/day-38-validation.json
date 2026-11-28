@@ -1,0 +1,47 @@
+{
+  "day": 38,
+  "date": "2026-11-28",
+  "trigger": "manual",
+  "baseline_sha": "9867d67b23dfb6c7ae47753878036b6c73983e12",
+  "backend_sha": "32fd7dfc26a27ab8f34b31545041e72e64651062",
+  "frontend_sha": "0baa453cf56b0ce32f84d404df3b55490e065def",
+  "checks": {
+    "postgresql_targeted": {
+      "passed": 2,
+      "seconds": 2.18
+    },
+    "postgresql": {
+      "passed": 58,
+      "seconds": 70.638
+    },
+    "offline": {
+      "passed": 127,
+      "seconds": 53.399
+    },
+    "frontend": {
+      "passed": 9,
+      "format": "passed",
+      "typecheck": "passed"
+    },
+    "chromium": {
+      "passed": 4,
+      "seconds": 11,
+      "reconnect_case_seconds": 4.4
+    }
+  },
+  "observations": {
+    "monotonic_replay": true,
+    "atomic_snapshot_rollback": true,
+    "invalid_cursor_http": 400,
+    "foreign_subscription_http": 404,
+    "retention_hours": 24,
+    "expired_cursor_returns_current": true,
+    "request_carries_last_event_id": true,
+    "same_run_after_refresh": true,
+    "same_ticket_after_refresh": true,
+    "run_creations": 1,
+    "ticket_count": 1,
+    "late_snapshot_preserves_terminal": true
+  },
+  "live_model_requests": 0
+}

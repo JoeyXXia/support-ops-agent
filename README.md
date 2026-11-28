@@ -325,6 +325,12 @@ $env:SUPPORTOPS_PERSIST_RUNS = '1'
 
 运行所有者可发送 `POST /runs/{id}/cancel`，然后继续查询原 ID。排队任务立即进入 `cancelled`。执行中的任务在下一次模型、工具或写入边界停止，已开始的当前操作可结束。超时记录为 `failed`，原因是 `run_timeout`。已提交的工单继续可查。[实施与验证](docs/devlog/2026-11-27-day-37.md)
 
+## Day 38 SSE 重连与事件恢复
+
+持久模式在同一 PostgreSQL 事务内写入运行快照和该运行的递增序号。连接中断后，浏览器用 `Last-Event-ID` 重连。刷新从原运行 ID 获取当前快照，订阅和刷新均不重新提交运行。
+
+重放历史保留 24 小时，由 worker 分批清理。过期或缺失游标从当前权威快照恢复。最新终态可按同一序号回送以结束连接，运行详情继续保留。[实施与验证](docs/devlog/2026-11-28-day-38.md)
+
 ## Day 17 工单与待审核草稿
 
 先执行数据库迁移并按 Day 16 说明启用持久模式。页面勾选待审核工单草稿，可查看固定 ws-alpha 演示的目标租户、工作区、动作、标题、描述和 pending 状态。API 请求为 `POST /runs`，传入 `question` 和 `ticket_draft: true`，再 GET 原运行 ID 获取 `proposed_action`。每个运行的重复相同提议复用原草稿。
