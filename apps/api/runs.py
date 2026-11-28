@@ -8,6 +8,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from packages.agent.costs import record_progress
 from packages.agent.graph import GraphAgent
 from packages.agent.knowledge_mock import KnowledgeScenarioMock
 from packages.agent.scenario_mock import SupportScenarioMock
@@ -98,7 +99,7 @@ class RunStore:
                     record["question"],
                     context=self.context,
                     grounded=knowledge,
-                    on_event=lambda event: record["events"].append(event),
+                    on_event=lambda event: record_progress(record, event),
                 )
             record.update(result.model_dump())
         except asyncio.CancelledError:

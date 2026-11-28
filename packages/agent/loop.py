@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from packages.tools.executor import ToolExecutor
 from packages.tools.schemas import AuthContext, ToolResult
 
+from .costs import Accounting, CostPolicy
 from .grounding import grounded_answer
 from .models import Message, ModelProvider, ModelRequest, ModelResponse
 from .retry import RETRYABLE_TOOLS, TRANSIENT_CODES, RetryPolicy, classify_failure
@@ -20,6 +21,7 @@ from .trace import elapsed_ms, identifiers, log_operation, safe_code
 class RunResult(BaseModel):
     status: Literal["completed", "stopped", "failed", "awaiting_approval"]
     reason: str
+    accounting: Accounting = Field(default_factory=Accounting)
     answer: str = ""
     citations: list[dict] = Field(default_factory=list)
     steps: int = 0
@@ -47,6 +49,7 @@ class AgentTurn:
     response: ModelResponse | None = None
 
     operation_ms: float | None = None
+    cost_policy: CostPolicy = field(default_factory=CostPolicy)
 
     def emit(self, event):
         identity = identifiers(event.get("step"))
@@ -56,6 +59,8 @@ class AgentTurn:
         event = event | {key: value for key, value in identity.items() if value}
         self.result.events.append(event)
         if self.on_event is not None:
+            if event["kind"] in {"model.finished", "model.error"}:
+                event = event | {"accounting": self.result.accounting.model_dump(mode="json")}
             self.on_event(event)
 
 
@@ -71,6 +76,7 @@ class AgentLoop:
         max_model_calls=8,
         retry_policy=None,
         operation_guard=None,
+        cost_policy=None,
     ):
         if type(max_steps) is not int or not 1 <= max_steps <= 6:
             raise ValueError("max_steps must be between 1 and 6")
@@ -85,6 +91,7 @@ class AgentLoop:
             raise ValueError("retry_policy must be a RetryPolicy")
         self.retry_policy = retry_policy or RetryPolicy()
         self.operation_guard = operation_guard
+        self.cost_policy = cost_policy if cost_policy is not None else CostPolicy.configured()
         self.provider, self.executor = provider, executor
         self.max_steps, self.max_tool_calls = max_steps, max_tool_calls
         self.step_timeout = step_timeout
@@ -114,7 +121,7 @@ class AgentLoop:
                 if not grounded or tool.name == "search_docs"
             ],
         )
-        return AgentTurn(request, context, grounded, on_event)
+        return AgentTurn(request, context, grounded, on_event, cost_policy=self.cost_policy)
 
     def _stop(self, turn, reason, *, status="stopped"):
         turn.result.status, turn.result.reason = status, reason
@@ -182,6 +189,9 @@ class AgentLoop:
                 tool=name,
                 code=code,
             )
+            reason = (
+                turn.cost_policy.record(turn.result.accounting, None) if kind == "model" else None
+            )
             turn.emit(
                 {
                     "step": turn.result.steps,
@@ -193,6 +203,9 @@ class AgentLoop:
                     "tool": name,
                 }
             )
+            if reason:
+                self._stop(turn, reason)
+                return None
             if not (allow_retry and retryable and attempt < self.retry_policy.max_attempts):
                 self._stop(turn, prefix + code, status="failed")
                 return value
@@ -233,6 +246,7 @@ class AgentLoop:
         )
         if response is None:
             return "done"
+        reason = turn.cost_policy.record(result.accounting, response)
         turn.emit(
             {
                 "step": step,
@@ -241,6 +255,9 @@ class AgentLoop:
                 "duration_ms": turn.operation_ms,
             }
         )
+        if reason:
+            self._stop(turn, reason)
+            return "done"
         turn.response = response
         if not response.tool_calls:
             return "answer"

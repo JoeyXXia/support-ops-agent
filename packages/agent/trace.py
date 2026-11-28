@@ -15,6 +15,8 @@ RUN_ID = ContextVar("supportops_run_id", default=None)
 LOGGER = logging.getLogger("supportops.trace")
 CODES = frozenset(
     {
+        "cost_budget",
+        "cost_unknown",
         "timeout",
         "model_timeout",
         "write_timeout",

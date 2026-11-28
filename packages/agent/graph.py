@@ -10,6 +10,7 @@ from langsmith import tracing_context
 
 from packages.tools.schemas import AuthContext
 
+from .costs import CostPolicy
 from .loop import AgentLoop, AgentTurn, RunResult
 from .models import ModelRequest, ModelResponse
 from .retry import OperationFailure
@@ -163,6 +164,7 @@ class GraphAgent(AgentLoop):
     def _snapshot(turn):
         return {
             "request": turn.request.model_dump(mode="json"),
+            "cost_policy": turn.cost_policy.model_dump(mode="json"),
             "context": turn.context.model_dump(mode="json"),
             "grounded": turn.grounded,
             "result": turn.result.model_dump(mode="json"),
@@ -178,6 +180,11 @@ class GraphAgent(AgentLoop):
             result.steps = result.model_calls
         return AgentTurn(
             request=ModelRequest.model_validate(value["request"]),
+            cost_policy=(
+                CostPolicy.model_validate(value["cost_policy"])
+                if "cost_policy" in value
+                else self.cost_policy
+            ),
             context=AuthContext.model_validate_json(json.dumps(value["context"])),
             grounded=value["grounded"],
             on_event=self.on_event,

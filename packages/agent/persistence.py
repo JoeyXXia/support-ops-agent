@@ -11,6 +11,7 @@ from sqlalchemy import text
 
 from packages.tools.routing import build_executor
 
+from .costs import record_progress
 from .graph import GraphAgent
 from .knowledge_mock import KnowledgeScenarioMock
 from .ticket_mock import TicketDraftMock
@@ -204,7 +205,7 @@ async def execute_run(
         repository.save(record, context)
 
         def publish(event):
-            record["events"].append(event)
+            record_progress(record, event)
             repository.save(record, context)
 
         result = await agent.run(

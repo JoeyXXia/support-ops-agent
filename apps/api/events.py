@@ -52,7 +52,12 @@ def public_event(event):
     if run and type(event.get("step")) is int:
         data["step_id"] = f"{run}:{event['step']}"
     if event["kind"] == "tool.finished":
-        data["result"] = {"ok": event.get("result", {}).get("ok", False)}
+        result = event.get("result", {})
+        data["result"] = {"ok": result.get("ok", False)}
+        if data.get("tool") == "search_docs":
+            status = (result.get("data") or {}).get("cache_status")
+            if status in {"hit", "miss"}:
+                data["cache_status"] = status
     return data
 
 
@@ -65,6 +70,7 @@ def public_record(record):
         "question",
         "ticket_draft",
         "mode",
+        "accounting",
         "status",
         "reason",
         "answer",
