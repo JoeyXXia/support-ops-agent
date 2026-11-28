@@ -13,13 +13,12 @@ from .repository import scope_key
 HYBRID_DEPTH = 20
 
 
-def _candidate_query(*, tenant_id, product_version, provider, model):
+def _latest_revisions(tenant_id, product_version):
     if not isinstance(product_version, str) or not product_version.strip():
         raise ValueError("product_version_required")
     scopes = ["public", scope_key(tenant_id)] if tenant_id is not None else ["public"]
-    profile = f"{POLICY}|{provider}|{model}|{DIMENSIONS}|{INPUT_VERSION}"
     # Choose the latest applicable revision even if it is unready. Never fall back silently.
-    ranked = (
+    return (
         sa.select(
             document_versions.c.id,
             sa.func.row_number()
@@ -36,6 +35,23 @@ def _candidate_query(*, tenant_id, product_version, provider, model):
         )
         .subquery()
     )
+
+
+def revision_fingerprint(connection, tenant_id, product_version):
+    ranked = _latest_revisions(tenant_id, product_version)
+    # Successful ingestion changes this version row in the same transaction as its chunks.
+    selected = (
+        sa.select(document_versions.c.id, sa.literal_column("document_versions.xmin::text"))
+        .join(ranked, document_versions.c.id == ranked.c.id)
+        .where(ranked.c.revision_rank == 1)
+        .order_by(document_versions.c.id)
+    )
+    return tuple(connection.execute(selected))
+
+
+def _candidate_query(*, tenant_id, product_version, provider, model):
+    ranked = _latest_revisions(tenant_id, product_version)
+    profile = f"{POLICY}|{provider}|{model}|{DIMENSIONS}|{INPUT_VERSION}"
     return (
         sa.select(
             chunks.c.id.label("chunk_id"),

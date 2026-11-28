@@ -1,10 +1,12 @@
-"""Authorized local document search for the registered read-only tool."""
+"""Authorized local document search with a revision-scoped evidence cache."""
 
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+from packages.knowledge import search_cache
 from packages.knowledge.context import CANDIDATE_DEPTH, build_context
 from packages.knowledge.embeddings import MockEmbedding
-from packages.knowledge.retrieval import search_query
+from packages.knowledge.retrieval import revision_fingerprint, search_query
 from packages.storage.database import engine_from_environment
 
 from .schemas import DocEvidence, SearchDocsResult
@@ -12,12 +14,27 @@ from .schemas import DocEvidence, SearchDocsResult
 
 def search_docs(args, tenant_id):
     engine = engine_from_environment()
+    provider = MockEmbedding()
     try:
         with engine.connect().execution_options(isolation_level="REPEATABLE READ") as conn:
+            key = search_cache.cache_key(
+                engine.url.render_as_string(hide_password=True),
+                conn.scalar(text("SELECT current_schema()")),
+                tenant_id,
+                args.product_version,
+                provider,
+                revision_fingerprint(conn, tenant_id, args.product_version),
+                args.question,
+            )
+            cached = search_cache.get(key)
+            if cached is not None:
+                result = SearchDocsResult.model_validate_json(cached)
+                result.cache_status = "hit"
+                return result
             rows = search_query(
                 conn,
                 args.question,
-                MockEmbedding(),
+                provider,
                 tenant_id=tenant_id,
                 product_version=args.product_version,
                 mode="bm25",
@@ -29,7 +46,8 @@ def search_docs(args, tenant_id):
         engine.dispose()
     context = build_context(args.question, rows)
     selected = {row["chunk_id"] for row in context["sources"]}
-    return SearchDocsResult(
+    result = SearchDocsResult(
+        cache_status="miss",
         sources=[
             DocEvidence(
                 chunk_id=str(row["chunk_id"]),
@@ -43,5 +61,7 @@ def search_docs(args, tenant_id):
             )
             for row in rows
             if row["chunk_id"] in selected
-        ]
+        ],
     )
+    search_cache.put(key, result.model_dump_json())
+    return result

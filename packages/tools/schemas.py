@@ -68,6 +68,7 @@ class DocEvidence(StrictModel):
 
 
 class SearchDocsResult(StrictModel):
+    cache_status: Literal["hit", "miss"] | None = None
     sources: list[DocEvidence] = Field(max_length=5)
 
 
