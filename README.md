@@ -331,6 +331,10 @@ $env:SUPPORTOPS_PERSIST_RUNS = '1'
 
 重放历史保留 24 小时，由 worker 分批清理。过期或缺失游标从当前权威快照恢复。最新终态可按同一序号回送以结束连接，运行详情继续保留。[实施与验证](docs/devlog/2026-11-28-day-38.md)
 
+## Day 39 Trace 与故障定位
+
+运行详情显示请求 ID 和步骤耗时。运行所有者可查询 `GET /runs/{id}/trace`，核对失败步骤、错误分类与工单写入回执。API 与 worker 日志可用同一个 run ID 关联。[故障定位手册](docs/run-troubleshooting.md)
+
 ## Day 17 工单与待审核草稿
 
 先执行数据库迁移并按 Day 16 说明启用持久模式。页面勾选待审核工单草稿，可查看固定 ws-alpha 演示的目标租户、工作区、动作、标题、描述和 pending 状态。API 请求为 `POST /runs`，传入 `question` 和 `ticket_draft: true`，再 GET 原运行 ID 获取 `proposed_action`。每个运行的重复相同提议复用原草稿。

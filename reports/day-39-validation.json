@@ -1,0 +1,56 @@
+{
+  "day": 39,
+  "date": "2026-11-28",
+  "trigger": "manual",
+  "baseline_sha": "ee2e7a592f6215b76a3efa03f34e7697cd917ba8",
+  "implementation_sha": "64b5fc33e3568f44fe0f2c913cc3c72f94624dee",
+  "verification_sha": "1059b73183d07c4e0dc7eac7ebd8f3893dd5fd8a",
+  "checks": {
+    "targeted_postgresql": {
+      "passed": 2,
+      "seconds": 2.662
+    },
+    "postgresql": {
+      "passed": 60,
+      "seconds": 70.683
+    },
+    "offline": {
+      "passed": 127,
+      "seconds": 52.028
+    },
+    "frontend": {
+      "passed": 9,
+      "format": "passed",
+      "typecheck": "passed"
+    },
+    "compose_config": "passed"
+  },
+  "diagnosis": {
+    "tool_missing": {
+      "step": 1,
+      "operation": "tool",
+      "error_code": "not_found",
+      "draft_saved": false,
+      "ticket_receipt": "no_receipt",
+      "targeted_lookup_ms": 10,
+      "full_lookup_ms": 9
+    },
+    "write_response_failure": {
+      "operation": "write",
+      "error_code": "internal_error",
+      "draft_saved": true,
+      "ticket_receipt": "committed",
+      "targeted_lookup_ms": 12,
+      "full_lookup_ms": 11
+    },
+    "foreign_access_http": 404,
+    "synthetic_marker_absent": true,
+    "timing_scope": "local endpoint request and assertions given a known run ID"
+  },
+  "initial_offline_regressions": {
+    "failures": 2,
+    "reason": "Wall-clock event timings broke equality of standalone executions",
+    "fixed": true
+  },
+  "live_model_requests": 0
+}
