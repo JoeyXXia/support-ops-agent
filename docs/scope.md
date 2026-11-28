@@ -207,3 +207,7 @@ PostgreSQL+pgvector扩展、SQLAlchemy Core/psycopg与Alembic迁移，documents/
 ## Day 39 范围（2026-11-28）
 
 关联 HTTP 请求、运行和步骤，在本地结构化日志记录操作耗时。运行详情显示安全诊断线索，所有者可查询失败类别和 PostgreSQL 工单回执。使用现有依赖和日志设施。
+
+## Day 40 范围（2026-11-28）
+
+记录逐次模型用量来源和基于合成目录验证的美元估算，为运行提供可选预算停止。检索证据通过短时进程内缓存重用，并绑定租户、产品版本、embedding 模型和文档修订。沿用已有 embedding 缓存。

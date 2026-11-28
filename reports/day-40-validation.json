@@ -1,0 +1,58 @@
+{
+  "day": 40,
+  "date": "2026-11-28",
+  "trigger": "manual",
+  "baseline_sha": "ddda5c31bd27b874fd9b1339e5473090be001281",
+  "accounting_sha": "674925f32425a291eade56c550cc1b84dd8fc1ae",
+  "retrieval_sha": "2d103b5032f19457be90fd3ffaf498a25dfbf2da",
+  "checks": {
+    "accounting_unit": {
+      "passed": 3,
+      "seconds": 0.11
+    },
+    "cache_postgresql": {
+      "passed": 2,
+      "seconds": 1.149
+    },
+    "postgresql_full_before_added_persistence_test": {
+      "passed": 61,
+      "seconds": 73.293
+    },
+    "accounting_persistence": {
+      "passed": 1,
+      "seconds": 0.97
+    },
+    "offline": {
+      "passed": 130,
+      "seconds": 52.11
+    },
+    "day34_development": {
+      "passed": 29,
+      "total": 60
+    }
+  },
+  "fixture_accounting": {
+    "currency": "USD",
+    "input_tokens": 10,
+    "output_tokens": 5,
+    "estimated_total_usd": "0.02",
+    "reason_at_budget": "cost_budget",
+    "post_budget_tool_calls": 0,
+    "missing_estimate": null,
+    "reason_on_unknown_budgeted_attempt": "cost_unknown",
+    "ledger_equal_in_get_and_sse": true
+  },
+  "cache": {
+    "cold": "miss",
+    "warm": "hit",
+    "foreign": "miss",
+    "product_version_change": "miss",
+    "embedding_model_change": "miss",
+    "pending_revision": "miss_without_old_evidence",
+    "ready_revision": "miss_with_new_evidence",
+    "repeated_ready_revision": "hit",
+    "ttl_seconds": 60,
+    "max_entries": 128
+  },
+  "live_model_requests": 0
+}
