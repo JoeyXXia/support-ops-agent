@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from packages.agent.persistence import RunBusy, checkpoint_saver, execute_run
 from packages.agent.run_queue import ClaimedRunRepository, LeaseLost, RunQueue, RunStop, setting
 from packages.agent.run_snapshots import prune_snapshots
+from packages.agent.trace import configure_trace_logging
 from packages.storage.database import engine_from_environment
 
 from .runs import DemoProvider
@@ -120,4 +121,5 @@ async def main():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    configure_trace_logging()
     asyncio.run(main())

@@ -1,6 +1,7 @@
 export type Run = {
   id: string;
   created_at?: string;
+  request_id?: string | null;
   question: string;
   mode: string;
   status: string;
@@ -28,6 +29,8 @@ export type Run = {
   }>;
   events: Array<{
     kind: string;
+    duration_ms?: number;
+    step_id?: string;
     code?: string;
     reason?: string;
     attempt?: number;

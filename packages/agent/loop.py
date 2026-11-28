@@ -3,6 +3,7 @@
 import asyncio
 import json
 from dataclasses import dataclass, field
+from time import perf_counter
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -13,6 +14,7 @@ from packages.tools.schemas import AuthContext, ToolResult
 from .grounding import grounded_answer
 from .models import Message, ModelProvider, ModelRequest, ModelResponse
 from .retry import RETRYABLE_TOOLS, TRANSIENT_CODES, RetryPolicy, classify_failure
+from .trace import elapsed_ms, identifiers, log_operation, safe_code
 
 
 class RunResult(BaseModel):
@@ -44,7 +46,12 @@ class AgentTurn:
     evidence: dict[str, dict] = field(default_factory=dict)
     response: ModelResponse | None = None
 
+    operation_ms: float | None = None
+
     def emit(self, event):
+        event = event | {
+            key: value for key, value in identifiers(event.get("step")).items() if value
+        }
         self.result.events.append(event)
         if self.on_event is not None:
             self.on_event(event)
@@ -143,28 +150,45 @@ class AgentLoop:
                     }
                 )
             value = None
-            request_id = None
+            started = perf_counter()
+            operation_name = "retrieval" if name == "search_docs" else kind
             try:
                 async with asyncio.timeout(self.step_timeout):
                     value = await operation()
                 if not isinstance(value, ToolResult) or value.ok:
+                    turn.operation_ms = elapsed_ms(started)
+                    log_operation(
+                        operation_name,
+                        turn.operation_ms,
+                        step=turn.result.steps,
+                        attempt=attempt,
+                        tool=name,
+                    )
                     return value
                 code = value.error.code
                 retryable = value.error.retryable and code in TRANSIENT_CODES
             except Exception as error:
                 code, retryable = classify_failure(error)
-                request_id = getattr(error, "request_id", None)
                 if isinstance(error, TimeoutError) and kind != "tool":
                     code = kind + "_timeout"
+            turn.operation_ms = elapsed_ms(started)
+            log_operation(
+                operation_name,
+                turn.operation_ms,
+                step=turn.result.steps,
+                attempt=attempt,
+                tool=name,
+                code=code,
+            )
             turn.emit(
                 {
                     "step": turn.result.steps,
                     "kind": kind + ".error",
-                    "code": code,
+                    "code": safe_code(code),
+                    "duration_ms": turn.operation_ms,
                     "attempt": attempt,
                     "retryable": retryable,
                     "tool": name,
-                    "request_id": request_id,
                 }
             )
             if not (allow_retry and retryable and attempt < self.retry_policy.max_attempts):
@@ -212,7 +236,7 @@ class AgentLoop:
                 "step": step,
                 "kind": "model.finished",
                 "mode": response.mode,
-                "request_id": response.request_id,
+                "duration_ms": turn.operation_ms,
             }
         )
         turn.response = response
@@ -300,6 +324,7 @@ class AgentLoop:
                     "call_id": call.call_id,
                     "tool": call.name,
                     "result": output.model_dump(mode="json"),
+                    "duration_ms": turn.operation_ms,
                 }
             )
             request.messages.append(

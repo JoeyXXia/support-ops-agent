@@ -8,6 +8,7 @@ from copy import deepcopy
 from fastapi import HTTPException
 
 from packages.agent.run_snapshots import snapshots
+from packages.agent.trace import public_call_id, safe_code, safe_id, safe_tool
 
 PUBLIC_KINDS = {
     "step.started",
@@ -34,12 +35,22 @@ PUBLIC_FIELDS = {
     "tool_calls",
     "write_calls",
     "retryable",
+    "duration_ms",
 }
 SETTLED = {"cancelled", "completed", "failed", "stopped", "interrupted", "awaiting_approval"}
 
 
 def public_event(event):
     data = {k: v for k, v in event.items() if k in PUBLIC_FIELDS}
+    if "tool" in data and data["tool"] is not None:
+        data["tool"] = safe_tool(data["tool"])
+    if data.get("call_id"):
+        data["call_id"] = public_call_id(data["call_id"])
+    if "code" in data:
+        data["code"] = safe_code(data["code"])
+    run = safe_id(event.get("run_id"))
+    if run and type(event.get("step")) is int:
+        data["step_id"] = f"{run}:{event['step']}"
     if event["kind"] == "tool.finished":
         data["result"] = {"ok": event.get("result", {}).get("ok", False)}
     return data
@@ -48,6 +59,7 @@ def public_event(event):
 def public_record(record):
     allowed = {
         "id",
+        "request_id",
         "created_at",
         "read_tool_transport",
         "question",

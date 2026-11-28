@@ -2,7 +2,7 @@ import os
 from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Literal
 from urllib.parse import urlsplit
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.responses import JSONResponse
@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from packages.agent.conversation import ConversationStore
 from packages.agent.run_queue import QueueFull
+from packages.agent.trace import REQUEST_ID, configure_trace_logging, run_scope, timed
 
 from .memory import conversation_for
 from .memory import router as memory_router
@@ -24,6 +25,7 @@ async def lifespan(app):
     from dotenv import load_dotenv
 
     load_dotenv(Path(__file__).resolve().parents[2] / ".env.local", override=False)
+    configure_trace_logging()
     app.state.sessions = Sessions()
     app.state.subject_stores = {}
     app.state.conversations = ConversationStore()
@@ -93,10 +95,25 @@ async def create_run(body: RunInput, request: Request):
 
 @app.get("/runs/{run_id}")
 async def get_run(run_id: UUID, request: Request):
-    record = request.state.runs.get(run_id)
+    with run_scope({"id": run_id}), timed("database.run_read"):
+        record = request.state.runs.get(run_id)
     if record is None:
         raise HTTPException(status_code=404, detail="运行不存在或当前身份无权访问。")
     return record
+
+
+@app.get("/runs/{run_id}/trace")
+async def get_run_trace(run_id: UUID, request: Request):
+    from .diagnostics import run_diagnostics
+    from .persistent_runs import PersistentRunStore
+
+    store = request.state.runs
+    record = store.get(run_id)
+    if record is None:
+        raise HTTPException(404, "运行不存在或当前身份无权访问。")
+    with run_scope(record):
+        engine = store.repository.engine if isinstance(store, PersistentRunStore) else None
+        return run_diagnostics(record, engine)
 
 
 @app.post("/runs/{run_id}/resume", status_code=202)
@@ -179,7 +196,11 @@ async def decide_approval(approval_id, body, request, *, approve):
     if not isinstance(store, PersistentRunStore):
         raise HTTPException(status_code=409, detail="请启用持久化运行模式。")
     try:
-        with store.repository.engine.begin() as connection:
+        with (
+            run_scope({"id": body.run_id}),
+            timed("approval"),
+            store.repository.engine.begin() as connection,
+        ):
             TicketRepository(store.repository.engine).decide(
                 approval_id,
                 store.context,
@@ -254,6 +275,18 @@ async def authenticate(request: Request, call_next):
     response = await call_next(request)
     response.headers["Cache-Control"] = "no-store"
     return response
+
+
+@app.middleware("http")
+async def correlate_request(request: Request, call_next):
+    request_id = str(uuid4())
+    token = REQUEST_ID.set(request_id)
+    try:
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        return response
+    finally:
+        REQUEST_ID.reset(token)
 
 
 class LoginInput(BaseModel):

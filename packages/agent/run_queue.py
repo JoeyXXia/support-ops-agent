@@ -11,6 +11,7 @@ from sqlalchemy import text
 from packages.tools.schemas import AuthContext
 
 from .persistence import TERMINAL, RunRepository
+from .trace import run_scope, timed
 
 MAX_ATTEMPTS = 3
 STOP_REASON = """CASE WHEN cancel_requested THEN 'cancelled_by_owner'
@@ -77,7 +78,7 @@ class RunQueue:
             raise QueueFull(owner_limit=False)
 
     def create(self, repository, record, context, **settings):
-        with self.engine.begin() as conn:
+        with run_scope(record), timed("database.run_enqueue"), self.engine.begin() as conn:
             self._lock_admission(conn)
             self._check_capacity(conn, context)
             repository.create(record, context, **settings, enqueue=True, connection=conn)
@@ -305,5 +306,6 @@ class ClaimedRunRepository(RunRepository):
         self.queue, self.job = queue, job
 
     def save(self, record, context):
-        if not self.queue.save(self.job, record, finished=record["status"] != "running"):
-            raise LeaseLost
+        with timed("database.run_save"):
+            if not self.queue.save(self.job, record, finished=record["status"] != "running"):
+                raise LeaseLost

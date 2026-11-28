@@ -14,6 +14,7 @@ from packages.tools.routing import build_executor
 from .graph import GraphAgent
 from .knowledge_mock import KnowledgeScenarioMock
 from .ticket_mock import TicketDraftMock
+from .trace import run_scope, timed
 
 TERMINAL = {"completed", "stopped", "failed", "cancelled"}
 
@@ -151,7 +152,7 @@ async def execute_run(
 ):
     owned = repository.load(run_id, context)
     # Transaction-scoped lock is released by PostgreSQL when the process dies.
-    with repository.engine.begin() as lock:
+    with run_scope(owned["record"]), repository.engine.begin() as lock:
         acquired = lock.scalar(
             text("SELECT pg_try_advisory_xact_lock(hashtextextended(:id, 0))"),
             {"id": str(run_id)},
@@ -181,7 +182,8 @@ async def execute_run(
             operation_guard=operation_guard,
         )
         config = {"configurable": {"thread_id": str(run_id)}}
-        snapshot = await agent.graph.aget_state(config)
+        with timed("database.checkpoint_read"):
+            snapshot = await agent.graph.aget_state(config)
         approval_ready = False
         if snapshot.values and any(task.interrupts for task in snapshot.tasks):
             from packages.storage.tickets import TicketRepository

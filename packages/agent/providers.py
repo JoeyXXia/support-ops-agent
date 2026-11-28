@@ -1,14 +1,11 @@
 import asyncio
 import json
-import logging
 import os
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from .models import ModelRequest, ModelResponse, ProviderError, ToolCall, Usage
-
-logger = logging.getLogger(__name__)
 
 
 class MockProvider:
@@ -114,9 +111,7 @@ class OpenAIProvider:
                     store=False,
                     include=["reasoning.encrypted_content"],
                 )
-            result = normalize(response, self.model)
-            logger.info("model.finished mode=live request_id=%s", result.request_id)
-            return result
+            return normalize(response, self.model)
         except (TimeoutError, APITimeoutError):
             raise ProviderError("timeout", retryable=True) from None
         except RateLimitError as exc:

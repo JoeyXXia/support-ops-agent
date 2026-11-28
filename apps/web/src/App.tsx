@@ -287,6 +287,9 @@ function Workspace({ route }: { route: Route }) {
         <div className="run-layout">
           <section className="card" aria-live="polite">
             <h2>运行：{labels[run.status] || run.status}</h2>
+            {run.request_id && (
+              <p className="muted">请求 ID：{run.request_id}</p>
+            )}
             <p className="muted">
               ID：{run.id} · {run.mode} · 实时连接：
               {
@@ -390,6 +393,13 @@ function Workspace({ route }: { route: Route }) {
 }
 
 function describeEvent(event: Run["events"][number]): string {
+  const label = eventLabel(event);
+  return typeof event.duration_ms === "number"
+    ? `${label} · ${event.duration_ms.toFixed(1)} ms`
+    : label;
+}
+
+function eventLabel(event: Run["events"][number]): string {
   if (event.kind === "run.stopped")
     return `停止：${event.reason}，模型 ${event.model_calls} 次、工具 ${event.tool_calls} 次、写入 ${event.write_calls} 次`;
   if (event.kind === "step.started") return "正在处理当前步骤";
@@ -398,6 +408,8 @@ function describeEvent(event: Run["events"][number]): string {
     return `${event.tool || event.operation} 第 ${event.attempt} 次失败，${event.delay_seconds} 秒后重试`;
   if (event.kind.endsWith(".error"))
     return `${event.tool || event.kind.split(".")[0]} 失败：${event.code}（尝试 ${event.attempt || 1}）`;
+  if (event.kind === "tool.finished" && event.tool === "search_docs")
+    return "文档检索完成";
   if (event.kind === "tool.finished")
     return `工具 ${event.tool} ${event.result?.ok === false ? "失败" : "完成"}（${event.call_id}）`;
   return event.kind === "model.finished" ? "模型步骤完成" : event.kind;

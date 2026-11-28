@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from packages.agent.graph import GraphAgent
 from packages.agent.knowledge_mock import KnowledgeScenarioMock
 from packages.agent.scenario_mock import SupportScenarioMock
+from packages.agent.trace import REQUEST_ID, run_scope
 from packages.tools.routing import build_executor
 from packages.tools.schemas import AuthContext
 
@@ -68,6 +69,7 @@ class RunStore:
         return {
             "id": str(uuid4()),
             "created_at": datetime.now(UTC).isoformat(),
+            "request_id": REQUEST_ID.get(),
             "read_tool_transport": self.executor.read_tool_transport,
             "question": question,
             "ticket_draft": ticket_draft,
@@ -91,12 +93,13 @@ class RunStore:
                 else self.provider_factory()
             )
             graph = GraphAgent(provider, self.executor)
-            result = await graph.run(
-                record["question"],
-                context=self.context,
-                grounded=knowledge,
-                on_event=lambda event: record["events"].append(event),
-            )
+            with run_scope(record):
+                result = await graph.run(
+                    record["question"],
+                    context=self.context,
+                    grounded=knowledge,
+                    on_event=lambda event: record["events"].append(event),
+                )
             record.update(result.model_dump())
         except asyncio.CancelledError:
             record.update(status="failed", reason="server_shutdown")
