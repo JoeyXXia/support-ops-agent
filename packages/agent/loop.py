@@ -49,9 +49,11 @@ class AgentTurn:
     operation_ms: float | None = None
 
     def emit(self, event):
-        event = event | {
-            key: value for key, value in identifiers(event.get("step")).items() if value
-        }
+        identity = identifiers(event.get("step"))
+        if not identity["run_id"]:
+            # Diagnostic metadata must not change standalone deterministic event output.
+            event.pop("duration_ms", None)
+        event = event | {key: value for key, value in identity.items() if value}
         self.result.events.append(event)
         if self.on_event is not None:
             self.on_event(event)
