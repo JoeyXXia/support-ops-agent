@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from packages.agent.persistence import RunBusy, checkpoint_saver, execute_run
 from packages.agent.run_queue import ClaimedRunRepository, LeaseLost, RunQueue, RunStop, setting
+from packages.agent.run_snapshots import prune_snapshots
 from packages.storage.database import engine_from_environment
 
 from .runs import DemoProvider
@@ -65,8 +66,18 @@ async def process(queue, saver, job, lease_seconds, provider_factory):
 async def run_worker(queue, saver, *, lease_seconds=LEASE_SECONDS, provider_factory=DemoProvider):
     concurrency = setting("SUPPORTOPS_WORKER_CONCURRENCY", 2, 4)
     async with asyncio.TaskGroup() as group:
+        group.create_task(prune(queue.engine))
         for _ in range(concurrency):
             group.create_task(consume(queue, saver, lease_seconds, provider_factory))
+
+
+async def prune(engine):
+    while True:
+        try:
+            await asyncio.to_thread(prune_snapshots, engine)
+        except SQLAlchemyError:
+            LOGGER.warning("Run snapshot cleanup paused")
+        await asyncio.sleep(60)
 
 
 async def consume(queue, saver, lease_seconds, provider_factory):

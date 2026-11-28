@@ -121,6 +121,7 @@ agent_runs = sa.Table(
     sa.Column("record", JSONB, nullable=False),
     sa.Column("cancel_requested", sa.Boolean, server_default=sa.false(), nullable=False),
     sa.Column("job_deadline", sa.DateTime(timezone=True)),
+    sa.Column("event_seq", sa.BigInteger, server_default="1", nullable=False),
     sa.Column("job_pending", sa.Boolean, server_default=sa.false(), nullable=False),
     sa.Column("job_attempts", sa.Integer, server_default="0", nullable=False),
     sa.Column("job_lease_id", UUID(as_uuid=True)),
@@ -129,6 +130,27 @@ agent_runs = sa.Table(
     sa.Index(
         "ix_agent_runs_pending", "job_lease_until", "id", postgresql_where=sa.text("job_pending")
     ),
+)
+
+
+run_snapshots = sa.Table(
+    "run_snapshots",
+    metadata,
+    sa.Column(
+        "run_id",
+        UUID(as_uuid=True),
+        sa.ForeignKey("agent_runs.id", ondelete="CASCADE", deferrable=True, initially="DEFERRED"),
+        primary_key=True,
+    ),
+    sa.Column("seq", sa.BigInteger, primary_key=True),
+    sa.Column(
+        "created_at",
+        sa.DateTime(timezone=True),
+        server_default=sa.text("clock_timestamp()"),
+        nullable=False,
+    ),
+    sa.Column("record", JSONB, nullable=False),
+    sa.Index("ix_run_snapshots_created", "created_at"),
 )
 
 

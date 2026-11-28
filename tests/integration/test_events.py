@@ -4,9 +4,11 @@ import os
 from unittest.mock import patch
 
 import httpx2
+from sqlalchemy import text
 from support import PostgreSQLCase
 
 from apps.api.main import app
+from packages.agent.run_snapshots import prune_snapshots
 
 
 class DurableEventTests(PostgreSQLCase):
@@ -57,13 +59,47 @@ class DurableEventTests(PostgreSQLCase):
                     json={"run_id": run["id"], "payload_digest": proposal["payload_digest"]},
                 )
                 self.assertEqual(approved.status_code, 202)
-                second = events(await client.get(path))
+                cursor = first[-1]["seq"]
+                header = {"Last-Event-ID": str(cursor)}
+                self.assertEqual(
+                    (await client.get(path, headers={"Last-Event-ID": "bad"})).status_code,
+                    400,
+                )
+                second = events(await client.get(path, headers=header))
+                sequences = [event["seq"] for event in second]
+                self.assertEqual(sequences, list(range(cursor + 1, sequences[-1] + 1)))
+                self.assertNotIn("approval.required", [e["type"] for e in second[:-1]])
                 self.assertEqual(second[-1]["type"], "run.finished")
                 result = second[-1]["data"]["run"]
                 self.assertEqual(
                     (result["status"], result["reason"]), ("completed", "ticket_created")
                 )
                 self.assertTrue(result["ticket"]["ticket_id"])
+                last = second[-1]["seq"]
+                self.assertEqual(
+                    events(await client.get(path, headers={"Last-Event-ID": str(last)})),
+                    [second[-1]],
+                )
+                with self.engine.connect() as conn, conn.begin() as transaction:
+                    conn.execute(
+                        text(
+                            "UPDATE agent_runs SET record=record || "
+                            "jsonb_build_object('reason', 'discard')"
+                        )
+                    )
+                    transaction.rollback()
+                self.assertEqual(
+                    events(await client.get(path, headers={"Last-Event-ID": str(last)})),
+                    [second[-1]],
+                )
+                with self.engine.begin() as conn:
+                    self.assertEqual(conn.scalar(text("SELECT count(*) FROM tickets")), 1)
+                    conn.execute(
+                        text("""UPDATE run_snapshots
+                        SET created_at=clock_timestamp() - interval '25 hours'""")
+                    )
+                self.assertGreater(prune_snapshots(self.engine), 0)
+                self.assertEqual(events(await client.get(path, headers=header)), [second[-1]])
                 self.assertEqual(app.state.runs.active_streams, 0)
 
         url = self.url.update_query_dict({"options": f"-csearch_path={self.schema},public"})

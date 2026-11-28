@@ -328,13 +328,26 @@ async def run_events(run_id: UUID, request: Request):
     from fastapi.responses import StreamingResponse
     from starlette.background import BackgroundTask
 
-    from .events import stream_run
+    from .events import replay_run, stream_run
+    from .persistent_runs import PersistentRunStore
 
     store = request.state.runs
     if store.get(run_id) is None:
         raise HTTPException(404, "运行不存在或当前身份无权访问。")
-    if request.headers.get("last-event-id"):
-        raise HTTPException(409, "本日不支持游标恢复，请显式重新查询运行。")
+    durable = isinstance(store, PersistentRunStore)
+    last = request.headers.get("last-event-id")
+    cursor = None
+    if last:
+        if not durable:
+            raise HTTPException(409, "内存模式不支持游标恢复，请重新查询运行。")
+        if (
+            len(last) > 16
+            or not last.isascii()
+            or not last.isdecimal()
+            or not 0 < int(last) <= 2**53 - 1
+        ):
+            raise HTTPException(400, "无效的事件游标。")
+        cursor = int(last)
     if store.active_streams >= 4:
         raise HTTPException(429, "当前账号实时连接已满。")
     store.active_streams += 1
@@ -353,7 +366,12 @@ async def run_events(run_id: UUID, request: Request):
 
     async def body():
         try:
-            async for frame in stream_run(store, run_id, authorize):
+            source = (
+                replay_run(store, run_id, authorize, cursor)
+                if durable
+                else stream_run(store, run_id, authorize)
+            )
+            async for frame in source:
                 yield frame
         finally:
             await release()

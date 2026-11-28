@@ -30,6 +30,7 @@ class DocumentDatabaseTests(PostgreSQLCase):
                 "chunks",
                 "embedding_cache",
                 "agent_runs",
+                "run_snapshots",
                 "tickets",
                 "approvals",
                 "action_executions",

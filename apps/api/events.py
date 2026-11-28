@@ -1,4 +1,4 @@
-"""Bounded snapshot-to-SSE projection; no durable cursor or automatic replay protocol."""
+"""SSE for memory runs and durable replay of registered run snapshots."""
 
 import asyncio
 import json
@@ -6,6 +6,8 @@ import time
 from copy import deepcopy
 
 from fastapi import HTTPException
+
+from packages.agent.run_snapshots import snapshots
 
 PUBLIC_KINDS = {
     "step.started",
@@ -64,8 +66,71 @@ def public_record(record):
         "ticket",
     }
     result = {k: v for k, v in record.items() if k in allowed}
-    result["events"] = [public_event(e) for e in record["events"] if e["kind"] in PUBLIC_KINDS]
+    result["events"] = [
+        public_event(e) for e in record.get("events", []) if e["kind"] in PUBLIC_KINDS
+    ]
     return result
+
+
+def frame(run_id, seq, kind, data, *, cursor=True):
+    event = {"seq": seq, "type": kind, "run_id": str(run_id), "data": data}
+    identifier = f"id: {seq}\n" if cursor else ""
+    return f"{identifier}event: {kind}\ndata: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+
+async def replay_run(store, run_id, authorize, cursor, *, interval=0.1, timeout=180, heartbeat=10):
+    started = ping = time.monotonic()
+    while True:
+        try:
+            authorize()
+            if time.monotonic() - started >= timeout:
+                yield frame(
+                    run_id,
+                    (cursor or 0) + 1,
+                    "stream.error",
+                    {"code": "stream_timeout"},
+                    cursor=False,
+                )
+                return
+            result = snapshots(store.repository.engine, run_id, store.context, cursor)
+            if result is None:
+                yield frame(
+                    run_id,
+                    (cursor or 0) + 1,
+                    "stream.error",
+                    {"code": "run_unavailable"},
+                    cursor=False,
+                )
+                return
+            latest, rows = result
+            for seq, record in rows:
+                authorize()
+                status = record["status"]
+                kind = "run.snapshot"
+                if seq == latest and status in SETTLED:
+                    kind = "approval.required" if status == "awaiting_approval" else "run.finished"
+                cursor = seq
+                yield frame(run_id, seq, kind, {"run": public_record(record), "replay": True})
+                if kind != "run.snapshot":
+                    return
+        except HTTPException:
+            yield frame(
+                run_id, (cursor or 0) + 1, "stream.error", {"code": "unauthorized"}, cursor=False
+            )
+            return
+        except Exception:
+            yield frame(
+                run_id,
+                (cursor or 0) + 1,
+                "stream.error",
+                {"code": "stream_unavailable"},
+                cursor=False,
+            )
+            return
+        if time.monotonic() - ping >= heartbeat:
+            yield ": keep-alive\n\n"
+            ping = time.monotonic()
+        await asyncio.sleep(interval)
 
 
 class Projection:
@@ -76,8 +141,7 @@ class Projection:
 
     def frame(self, kind, data):
         self.seq += 1
-        event = {"seq": self.seq, "type": kind, "run_id": self.run_id, "data": data}
-        return f"id: {self.seq}\nevent: {kind}\ndata: {json.dumps(event, ensure_ascii=False)}\n\n"
+        return frame(self.run_id, self.seq, kind, data)
 
     def frames(self, record):
         if self.done:
