@@ -91,11 +91,13 @@ function Workspace({ route }: { route: Route }) {
     }
     source.onerror = () => {
       if (!active || ended) return;
+      if (source.readyState !== EventSource.CLOSED) {
+        dispatch({ type: "reconnect" });
+        return;
+      }
       ended = true;
       clearTimeout(watchdog);
-      source.close();
-      setError("实时连接已中断；后台任务可能继续，请显式重新查询当前运行。");
-      // One auth probe exposes a 401 to the existing login boundary; never reconnect SSE here.
+      setError("实时连接已中断，请重新查询当前运行。");
       void api("/session").catch(() => {});
     };
     return () => {

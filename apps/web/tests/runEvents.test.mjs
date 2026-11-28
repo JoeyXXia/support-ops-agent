@@ -94,3 +94,28 @@ test("invalid envelopes, unexpected types and mismatched snapshot IDs rejected",
     1,
   );
 });
+
+test("replay snapshots replace progress and late frames cannot undo a ticket", () => {
+  const snapshot = event(3, "run.snapshot", {
+    replay: true,
+    run: {
+      ...run,
+      status: "running",
+      events: [{ kind: "tool.started", step: 1 }],
+    },
+  });
+  let s = apply(start(), snapshot);
+  assert.equal(s.run.events.length, 1);
+  s = runReducer(s, { type: "reconnect" });
+  assert.equal(s.seq, 3);
+  assert.equal(apply(s, snapshot), s);
+  const done = event(5, "run.finished", {
+    replay: true,
+    run: { ...run, status: "completed", ticket: { ticket_id: "one-ticket" } },
+  });
+  s = apply(s, done);
+  assert.equal(apply(s, done), s);
+  s = apply(s, { ...snapshot, seq: 6 });
+  assert.equal(s.run.status, "completed");
+  assert.equal(s.run.ticket.ticket_id, "one-ticket");
+});

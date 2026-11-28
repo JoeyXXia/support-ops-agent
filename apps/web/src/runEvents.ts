@@ -82,6 +82,7 @@ export type Action =
   | { type: "loaded"; run: Run | null }
   | { type: "error"; message: string }
   | { type: "connect" }
+  | { type: "reconnect" }
   | { type: "open" }
   | { type: "event"; event: StreamEvent };
 
@@ -120,6 +121,7 @@ export function runReducer(state: View, action: Action): View {
   if (action.type === "loaded") return { ...initialView, run: action.run };
   if (action.type === "connect")
     return { ...state, error: "", seq: 0, transport: "connecting" };
+  if (action.type === "reconnect") return { ...state, transport: "connecting" };
   if (action.type === "open") return { ...state, transport: "open" };
   if (action.type === "error")
     return {
@@ -137,12 +139,19 @@ export function runReducer(state: View, action: Action): View {
       transport: "error",
       error: `${({ unauthorized: "登录已失效", stream_timeout: "实时反馈等待超时", run_unavailable: "运行暂不可读取", history_changed: "事件记录发生变化", stream_unavailable: "读取实时进度失败" } as Record<string, string>)[String(event.data.code)] || "实时连接中断"}；后台任务可能继续，请显式重新查询当前运行。`,
     };
+  const terminal = ["completed", "failed", "stopped", "cancelled"].includes(
+    state.run.status,
+  );
+  if (terminal) return next;
   if (["approval.required", "run.finished"].includes(event.type))
     return { ...next, run: event.data.run as Run, transport: "closed" };
   if (event.type === "run.snapshot")
     return {
       ...next,
-      run: { ...(event.data.run as Run), events: [], answer: "" },
+      run:
+        event.data.replay === true
+          ? (event.data.run as Run)
+          : { ...(event.data.run as Run), events: [], answer: "" },
     };
   if (event.type === "answer.delta")
     return {

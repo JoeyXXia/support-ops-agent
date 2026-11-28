@@ -86,3 +86,66 @@ test("rejection is stored and produces no ticket", async ({ page }) => {
     page.getByRole("link", { name: "查看工单当前详情" }),
   ).toHaveCount(0);
 });
+
+test("browser reconnects with the last durable event and refreshes the same ticket", async ({
+  page,
+}) => {
+  let cursor;
+  const resumed = page.waitForRequest(
+    async (request) =>
+      request.url().includes("/events") &&
+      cursor !== undefined &&
+      (await request.allHeaders())["last-event-id"] === cursor,
+  );
+  let submissions = 0;
+  page.on("request", (request) => {
+    if (
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === "/api/runs"
+    )
+      submissions++;
+  });
+  await page.route(
+    "**/api/runs/*/events",
+    async (route) => {
+      const response = await route.fetch();
+      const body = await response.text();
+      const frame = body
+        .split("\n\n")
+        .find((entry) => entry.includes("event: run.snapshot"));
+      // A very fast worker may have finished drafting before the browser subscribed.
+      // In that case the next request will replay the saved approval with the same ID.
+      const partial =
+        frame ||
+        body
+          .split("\n\n")[0]
+          .replace("event: approval.required", "event: run.snapshot")
+          .replace('"type": "approval.required"', '"type": "run.snapshot"');
+      cursor = /^id: (\d+)/m.exec(partial)?.[1];
+      expect(cursor).toBeDefined();
+      await route.fulfill({
+        status: 200,
+        contentType: "text/event-stream",
+        body: partial + "\n\n",
+      });
+    },
+    { times: 1 },
+  );
+  await page.getByLabel(/生成待审核工单草稿/).check();
+  await submit(page, "ws-alpha 429，SSE 重连验证");
+  await resumed;
+  await expect(
+    page.getByRole("heading", { name: "运行：等待审批" }),
+  ).toBeVisible();
+  const url = page.url();
+  await page.getByRole("button", { name: "批准并创建工单" }).click();
+  await expect(page.getByRole("heading", { name: "运行：完成" })).toBeVisible();
+  const ticket = (await savedRun(page)).ticket.ticket_id;
+  await page.reload();
+  await expect(page).toHaveURL(url);
+  await expect(
+    page.getByRole("link", { name: "查看工单当前详情" }),
+  ).toHaveCount(1);
+  expect((await savedRun(page)).ticket.ticket_id).toBe(ticket);
+  expect(submissions).toBe(1);
+});
